@@ -39,28 +39,47 @@ class ScaledDotProductAttention(nn.Module):
 class MultiHeadAttention(nn.Module):
     """original Transformer multi-head attention"""
 
-    def __init__(self, n_head, d_model, d_k, d_v, attn_dropout):
+    def __init__(self, n_head, d_model, d_k, d_v, attn_dropout, choice='linear', d_channel=-1):
         super().__init__()
-
         self.n_head = n_head
         self.d_k = d_k
         self.d_v = d_v
-        self.w_qs = nn.Linear(d_model, n_head * d_k, bias=False)
-        self.w_ks = nn.Linear(d_model, n_head * d_k, bias=False)
-        self.w_vs = nn.Linear(d_model, n_head * d_v, bias=False)
+        self.choice = choice
+        self.d_model = d_model
+        if self.choice == 'fde-conv-single' or self.choice == 'fde-conv-multi':
+            self.w_qs = nn.Conv1d(d_channel, d_channel, kernel_size=1, bias=False)
+            self.w_ks = nn.Conv1d(d_channel, d_channel, kernel_size=1, bias=False)
+            self.w_vs = nn.Conv1d(d_channel, d_channel, kernel_size=1, bias=False)
+        else:
+            self.w_qs = nn.Linear(d_model, n_head * d_k, bias=False)
+            self.w_ks = nn.Linear(d_model, n_head * d_k, bias=False)
+            self.w_vs = nn.Linear(d_model, n_head * d_v, bias=False)
 
         self.attention = ScaledDotProductAttention(d_k ** 0.5, attn_dropout)
         self.fc = nn.Linear(n_head * d_v, d_model, bias=False)
 
     def forward(self, q, k, v, attn_mask=None):
         d_k, d_v, n_head = self.d_k, self.d_v, self.n_head
-        sz_b, len_q, len_k, len_v = q.size(0), q.size(1), k.size(1), v.size(1)
+        
 
         # Pass through the pre-attention projection: b x lq x (n*dv)
         # Separate different heads: b x lq x n x dv
-        q = self.w_qs(q).view(sz_b, len_q, n_head, d_k)
-        k = self.w_ks(k).view(sz_b, len_k, n_head, d_k)
-        v = self.w_vs(v).view(sz_b, len_v, n_head, d_v)
+        if self.choice == 'fde-conv-multi':
+            sz_b, len_q, len_k, len_v = q.size(0), q.size(2), k.size(2), v.size(2)
+            q, k, v = q.reshape(-1, len_q, self.d_model), k.reshape(-1, len_k, self.d_model), v.reshape(-1, len_v, self.d_model)
+            
+            q = self.w_qs(q).view(sz_b, n_head, len_q, d_k)
+            k = self.w_ks(k).view(sz_b, n_head, len_k, d_k)
+            v = self.w_vs(v).view(sz_b, n_head, len_v, d_v)
+
+            q = q.permute(0, 2, 1, 3)
+            k = k.permute(0, 2, 1, 3)
+            v = v.permute(0, 2, 1, 3)
+        else:
+            sz_b, len_q, len_k, len_v = q.size(0), q.size(1), k.size(1), v.size(1)
+            q = self.w_qs(q).view(sz_b, len_q, n_head, d_k)
+            k = self.w_ks(k).view(sz_b, len_k, n_head, d_k)
+            v = self.w_vs(v).view(sz_b, len_v, n_head, d_v)
 
         # Transpose for attention dot product: b x n x lq x dv
         q, k, v = q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2)
@@ -97,7 +116,7 @@ class PositionWiseFeedForward(nn.Module):
 
 class EncoderLayer(nn.Module):
     def __init__(self, d_time, d_feature, d_model, d_inner, n_head, d_k, d_v, dropout=0.1, attn_dropout=0.1,
-                 diagonal_attention_mask=False):
+                 diagonal_attention_mask=False, choice='linear', is_ffn=True):
         super().__init__()
 
         self.diagonal_attention_mask = diagonal_attention_mask
@@ -105,16 +124,18 @@ class EncoderLayer(nn.Module):
         self.d_feature = d_feature
 
         self.layer_norm = nn.LayerNorm(d_model)
-        self.slf_attn = MultiHeadAttention(n_head, d_model, d_k, d_v, attn_dropout)
+        self.slf_attn = MultiHeadAttention(n_head, d_model, d_k, d_v, attn_dropout, choice=choice, d_channel=d_time)
         self.dropout = nn.Dropout(dropout)
-        self.pos_ffn = PositionWiseFeedForward(d_model, d_inner, dropout)
+        self.is_ffn = is_ffn
+        if self.is_ffn:
+            self.pos_ffn = PositionWiseFeedForward(d_model, d_inner, dropout)
+        else:
+            self.pos_ffn = None
 
     def forward(self, enc_input, mask_time=None):
         if self.diagonal_attention_mask:
             mask_time = torch.eye(self.d_time).to(enc_input.device)
-        # else:
-        #     mask_time = None
-
+ 
         residual = enc_input
         # here we apply LN before attention cal, namely Pre-LN, refer paper https://arxiv.org/abs/2002.04745
         enc_input = self.layer_norm(enc_input)
@@ -122,7 +143,8 @@ class EncoderLayer(nn.Module):
         enc_output = self.dropout(enc_output)
         enc_output += residual
 
-        enc_output = self.pos_ffn(enc_output)
+        if self.is_ffn:
+            enc_output = self.pos_ffn(enc_output)
         return enc_output, attn_weights
 
 

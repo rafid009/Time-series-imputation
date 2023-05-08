@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from diff_models import diff_CSDI, diff_SAITS
+from diff_models import diff_CSDI, diff_SAITS, diff_SAITS_new
 from datasets.process_data import features
 
 class CSDI_base(nn.Module):
@@ -16,6 +16,9 @@ class CSDI_base(nn.Module):
         self.target_strategy = config["model"]["target_strategy"]
         self.model_type = config["model"]["type"]
         self.is_simple = is_simple
+        self.is_fast = config["diffusion"]['is_fast']
+        if config['model']['type'] == 'SAITS':
+            ablation_config = config['ablation']
 
         self.emb_total_dim = self.emb_time_dim + self.emb_feature_dim
         if self.is_unconditional == False:
@@ -28,9 +31,9 @@ class CSDI_base(nn.Module):
         config_diff["side_dim"] = self.emb_total_dim
 
         input_dim = 1 if self.is_unconditional == True else 2
-        if config['model']['type'] == 'SAITS':
+        if self.model_type == 'SAITS':
             self.is_saits = True
-            self.diffmodel = diff_SAITS(
+            self.diffmodel = diff_SAITS_new(
                 diff_steps=config['diffusion']['num_steps'],
                 n_layers=config['model']['n_layers'],
                 d_time=config['model']['d_time'],
@@ -43,7 +46,8 @@ class CSDI_base(nn.Module):
                 dropout=config['model']['dropout'],
                 diff_emb_dim=config['diffusion']['diffusion_embedding_dim'],
                 diagonal_attention_mask=config['model']['diagonal_attention_mask'],
-                is_simple=self.is_simple
+                is_simple=self.is_simple,
+                ablation_config=ablation_config
             )
         else:
             self.is_saits = False
