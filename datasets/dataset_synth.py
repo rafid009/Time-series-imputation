@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
-from datasets.synthetic_data import create_synthetic_data, create_synthetic_data_v2, create_synthetic_data_v3
+from datasets.synthetic_data import create_synthetic_data, create_synthetic_data_v2, create_synthetic_data_v3, create_synthetic_data_v4, create_synthetic_data_v5, create_synthetic_data_v6
 
 def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=None, forward_trial=-1, lte_idx=None, random_trial=False):
     """Get mask of random points (missing at random) across channels based on k,
@@ -76,6 +76,12 @@ class Synth_Dataset(Dataset):
             X, mean, std = create_synthetic_data(n_steps, num_seasons, seed=seed)
         elif v2 == 'v2':
             X, mean, std = create_synthetic_data_v2(n_steps, num_seasons, seed=seed, noise=noise)
+        elif v2 == 'v4':
+            X, mean, std = create_synthetic_data_v4(n_steps, num_seasons, seed=seed, noise=noise)
+        elif v2 == 'v5':
+            X, mean, std = create_synthetic_data_v5(n_steps, num_seasons, seed=seed, noise=noise)
+        elif v2 == 'v6':
+            X, mean, std = create_synthetic_data_v6(n_steps, num_seasons, seed=seed, noise=noise)
         else:
             X, mean, std = create_synthetic_data_v3(n_steps, num_seasons, seed=seed, noise=noise)
         self.mean = mean
