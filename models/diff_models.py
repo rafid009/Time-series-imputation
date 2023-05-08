@@ -458,6 +458,8 @@ class diff_SAITS_new(nn.Module):
         self.d_feature = d_feature
         channels = d_model #int(d_model / 2)
         self.ablation_config = ablation_config
+        self.d_time = d_time
+        self.n_head = n_head
         
         self.layer_stack_for_first_block = nn.ModuleList([
             ResidualEncoderLayer(channels=channels, d_time=d_time, actual_d_feature=actual_d_feature, 
@@ -533,10 +535,13 @@ class diff_SAITS_new(nn.Module):
             cond_X = torch.stack([cond_X, masks[:,1,:,:]], dim=1) # (B, 2, L, K)
             # cond_X = torch.transpose(cond_X, 2, 3)
             cond_X = cond_X.permute(0, 3, 1, 2) # (B, K, 2, L)
+            cond_X = cond_X.reshape(-1, 2, self.d_time) # (B*K, 2, L)
             if self.ablation_config['fde-choice'] == 'fde-conv-single':
-                cond_X = self.mask_conv(cond_X).squeeze(dim=2) # (B, K, L)
+                cond_X = self.mask_conv(cond_X).squeeze(dim=1) # (B*K, L)
+                cond_X = cond_X.reshape(-1, self.d_feature, self.d_time) # (B, K, L)
             else:
-                cond_X = self.mask_conv(cond_X).permute(0, 2, 1, 3) # (B, n_head, K, L)
+                cond_X = self.mask_conv(cond_X) # (B*K, n_head, L)
+                cond_X = cond_X.reshape(-1, self.d_feature, self.n_head, self.d_time).permute(0, 2, 1, 3) # (B, n_head, K, L)
         
             for feat_enc_layer in self.layer_stack_for_feature_weights:
                 cond_X, attn_weights_f = feat_enc_layer(cond_X)
