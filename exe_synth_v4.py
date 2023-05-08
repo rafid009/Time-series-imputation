@@ -315,7 +315,8 @@ config_dict_diffsaits = {
     'ablation': {
         'fde-choice': 'fde-conv-single',
         'fde-layers': 3,
-        'is_fde': True
+        'is_fde': True,
+        'weight_combine': True
     }
 }
 print(f"config: {config_dict_diffsaits}")
