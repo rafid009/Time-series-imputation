@@ -150,10 +150,12 @@ class EncoderLayer(nn.Module):
             shp = residual.shape
             residual = residual.transpose(1, 2).contiguous().view(shp[0], shp[2], -1)
             residual = self.residual_fc(residual)
+            print(f"res: {residual.shape}")
         enc_output += residual
 
         if self.is_ffn:
             enc_output = self.pos_ffn(enc_output)
+        print(f"enc: {enc_output.shape}")
         return enc_output, attn_weights
 
 
