@@ -82,6 +82,7 @@ class MultiHeadAttention(nn.Module):
             v = self.w_vs(v).view(sz_b, len_v, n_head, d_v)
 
         # Transpose for attention dot product: b x n x lq x dv
+        print(f"q: {q.shape}, k: {k.shape}, v: {v.shape}")
         q, k, v = q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2)
 
         if attn_mask is not None:
