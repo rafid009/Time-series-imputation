@@ -90,11 +90,12 @@ class MultiHeadAttention(nn.Module):
             attn_mask = attn_mask.unsqueeze(0).unsqueeze(1)  # For batch and head axis broadcasting.
 
         v, attn_weights = self.attention(q, k, v, attn_mask)
-
+        print(f"v after attn: {v.shape}")
         # Transpose to move the head dimension back: b x lq x n x dv
         # Combine the last two dimensions to concatenate all the heads together: b x lq x (n*dv)
         v = v.transpose(1, 2).contiguous().view(sz_b, len_q, -1)
         v = self.fc(v)
+        print(f"v after attn+fc: {v.shape}")
         return v, attn_weights
 
 
@@ -142,6 +143,7 @@ class EncoderLayer(nn.Module):
         enc_input = self.layer_norm(enc_input)
         enc_output, attn_weights = self.slf_attn(enc_input, enc_input, enc_input, attn_mask=mask_time)
         enc_output = self.dropout(enc_output)
+        print(f"enc_output: {enc_input.shape}")
         enc_output += residual
 
         if self.is_ffn:
