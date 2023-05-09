@@ -82,7 +82,7 @@ class MultiHeadAttention(nn.Module):
             v = self.w_vs(v).view(sz_b, len_v, n_head, d_v)
 
         # Transpose for attention dot product: b x n x lq x dv
-        print(f"q: {q.shape}, k: {k.shape}, v: {v.shape}")
+        # print(f"q: {q.shape}, k: {k.shape}, v: {v.shape}")
         q, k, v = q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2)
 
         if attn_mask is not None:
@@ -90,12 +90,12 @@ class MultiHeadAttention(nn.Module):
             attn_mask = attn_mask.unsqueeze(0).unsqueeze(1)  # For batch and head axis broadcasting.
 
         v, attn_weights = self.attention(q, k, v, attn_mask)
-        print(f"v after attn: {v.shape}")
+        # print(f"v after attn: {v.shape}")
         # Transpose to move the head dimension back: b x lq x n x dv
         # Combine the last two dimensions to concatenate all the heads together: b x lq x (n*dv)
         v = v.transpose(1, 2).contiguous().view(sz_b, len_q, -1)
         v = self.fc(v)
-        print(f"v after attn+fc: {v.shape}")
+        # print(f"v after attn+fc: {v.shape}")
         return v, attn_weights
 
 
@@ -133,6 +133,8 @@ class EncoderLayer(nn.Module):
             self.pos_ffn = PositionWiseFeedForward(d_model, d_inner, dropout)
         else:
             self.pos_ffn = None
+        if choice == 'fde-conv-multi':
+            self.residual_fc = nn.Linear(n_head * d_v, d_model, bias=False)
 
     def forward(self, enc_input, mask_time=None):
         if self.diagonal_attention_mask:
@@ -143,7 +145,11 @@ class EncoderLayer(nn.Module):
         enc_input = self.layer_norm(enc_input)
         enc_output, attn_weights = self.slf_attn(enc_input, enc_input, enc_input, attn_mask=mask_time)
         enc_output = self.dropout(enc_output)
-        print(f"enc_output: {enc_input.shape}")
+        # print(f"enc_output: {enc_input.shape}")
+        if len(residual.shape) > 3:
+            shp = residual.shape
+            residual = residual.transpose(1, 2).contiguous().view(shp[0], shp[2], -1)
+            residual = self.residual_fc(residual)
         enc_output += residual
 
         if self.is_ffn:

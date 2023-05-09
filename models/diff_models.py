@@ -542,7 +542,7 @@ class diff_SAITS_new(nn.Module):
             else:
                 cond_X = self.mask_conv(cond_X) # (B*K, n_head, L)
                 cond_X = cond_X.reshape(-1, self.d_feature, self.n_head, self.d_time).permute(0, 2, 1, 3) # (B, n_head, K, L)
-            print(f"condX: {cond_X.shape}")
+            # print(f"condX: {cond_X.shape}")
             for feat_enc_layer in self.layer_stack_for_feature_weights:
                 cond_X, attn_weights_f = feat_enc_layer(cond_X)
             cond_X = torch.transpose(cond_X, 1, 2)
