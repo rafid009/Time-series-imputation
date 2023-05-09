@@ -531,8 +531,9 @@ class diff_SAITS_new(nn.Module):
 
     
         if self.ablation_config['is_fde']:
-            shp = cond_X.shape
+            
             cond_X = X[:,0,:,:] + X[:,1,:,:] # (B, L, K)
+            shp = cond_X.shape
             # Add mask with it
             cond_X = torch.stack([cond_X, masks[:,1,:,:]], dim=1) # (B, 2, L, K)
             # cond_X = torch.transpose(cond_X, 2, 3)
