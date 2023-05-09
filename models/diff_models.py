@@ -507,6 +507,7 @@ class diff_SAITS_new(nn.Module):
                             True, choice='fde-conv-multi')
                 for _ in range(self.ablation_config['fde-layers'])
             ])
+            self.squeeze_head = nn.Linear(n_head * d_time, d_time, bias=False)
         else:
             self.layer_stack_for_feature_weights = nn.ModuleList([
                 EncoderLayer(d_feature, d_time, d_time, d_inner, n_head, d_k, d_v, dropout, 0,
@@ -530,7 +531,8 @@ class diff_SAITS_new(nn.Module):
 
     
         if self.ablation_config['is_fde']:
-            cond_X = X[:,0,:,:] + X[:,1,:,:]
+            shp = cond_X.shape
+            cond_X = X[:,0,:,:] + X[:,1,:,:] # (B, L, K)
             # Add mask with it
             cond_X = torch.stack([cond_X, masks[:,1,:,:]], dim=1) # (B, 2, L, K)
             # cond_X = torch.transpose(cond_X, 2, 3)
@@ -545,6 +547,9 @@ class diff_SAITS_new(nn.Module):
             # print(f"condX: {cond_X.shape}")
             for feat_enc_layer in self.layer_stack_for_feature_weights:
                 cond_X, attn_weights_f = feat_enc_layer(cond_X)
+            if self.ablation_config['fde-choice'] == 'fde-conv-multi':
+                cond_X = cond_X.transpose(1, 2).contiguous().view(shp[0], shp[2], -1)
+                cond_X = self.squeeze_head(cond_X)
             cond_X = torch.transpose(cond_X, 1, 2)
         else:
             cond_X = X[:,1,:,:]

@@ -54,9 +54,10 @@ class MultiHeadAttention(nn.Module):
             self.w_qs = nn.Linear(d_model, n_head * d_k, bias=False)
             self.w_ks = nn.Linear(d_model, n_head * d_k, bias=False)
             self.w_vs = nn.Linear(d_model, n_head * d_v, bias=False)
+            self.fc = nn.Linear(n_head * d_v, d_model, bias=False)
 
         self.attention = ScaledDotProductAttention(d_k ** 0.5, attn_dropout)
-        self.fc = nn.Linear(n_head * d_v, d_model, bias=False)
+        
 
     def forward(self, q, k, v, attn_mask=None):
         d_k, d_v, n_head = self.d_k, self.d_v, self.n_head
@@ -93,8 +94,9 @@ class MultiHeadAttention(nn.Module):
         # print(f"v after attn: {v.shape}")
         # Transpose to move the head dimension back: b x lq x n x dv
         # Combine the last two dimensions to concatenate all the heads together: b x lq x (n*dv)
-        v = v.transpose(1, 2).contiguous().view(sz_b, len_q, -1)
-        v = self.fc(v)
+        if self.choice != 'fde-conv-multi':
+            v = v.transpose(1, 2).contiguous().view(sz_b, len_q, -1)
+            v = self.fc(v)
         # print(f"v after attn+fc: {v.shape}")
         return v, attn_weights
 
@@ -133,8 +135,6 @@ class EncoderLayer(nn.Module):
             self.pos_ffn = PositionWiseFeedForward(d_model, d_inner, dropout)
         else:
             self.pos_ffn = None
-        if choice == 'fde-conv-multi':
-            self.residual_fc = nn.Linear(n_head * d_v, d_model, bias=False)
 
     def forward(self, enc_input, mask_time=None):
         if self.diagonal_attention_mask:
@@ -146,16 +146,10 @@ class EncoderLayer(nn.Module):
         enc_output, attn_weights = self.slf_attn(enc_input, enc_input, enc_input, attn_mask=mask_time)
         enc_output = self.dropout(enc_output)
         # print(f"enc_output: {enc_input.shape}")
-        if len(residual.shape) > 3:
-            shp = residual.shape
-            residual = residual.transpose(1, 2).contiguous().view(shp[0], shp[2], -1)
-            residual = self.residual_fc(residual)
-            print(f"res: {residual.shape}")
         enc_output += residual
 
         if self.is_ffn:
             enc_output = self.pos_ffn(enc_output)
-        print(f"enc: {enc_output.shape}")
         return enc_output, attn_weights
 
 
