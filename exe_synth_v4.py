@@ -248,7 +248,7 @@ noise = False
 train_loader, valid_loader = get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=10, is_test=False, v2='v4', noise=noise)
 
 model_csdi = CSDI_Synth(config_dict_csdi, device, target_dim=len(given_features)).to(device)
-model_folder = "./saved_model_synth"
+model_folder = "./saved_model_synth_v4"
 filename = f"model_csdi_synth_v4{'_noise' if noise else ''}.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
@@ -344,8 +344,8 @@ models = {
     'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }
-mse_folder = f"results_synth_v4_{name}{'_noise' if noise else ''}"
-data_folder = f"results_synth_v4_{name}{'_noise' if noise else ''}"
+mse_folder = f"results_synth_v4_{name}{'_noise' if noise else ''}/metric"
+data_folder = f"results_synth_v4_{name}{'_noise' if noise else ''}/data"
 lengths = [10, 50, 90]
 for l in lengths:
     print(f"\nlength = {l}")
