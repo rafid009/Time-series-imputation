@@ -87,9 +87,9 @@ class MultiHeadAttention(nn.Module):
             k = self.w_ks(k).view(sz_b * len_k, 1, d_k)
             v = self.w_vs(v).view(sz_b * len_v, 1, d_v)
 
-            q = self.w_q_head(q).view(sz_b, n_head, len_q, d_k)
-            k = self.w_k_head(k).view(sz_b, n_head, len_q, d_k)
-            v = self.w_v_head(v).view(sz_b, n_head, len_q, d_k)
+            q = self.w_q_head(q).view(sz_b, len_q, n_head, d_k)
+            k = self.w_k_head(k).view(sz_b, len_k, n_head, d_k)
+            v = self.w_v_head(v).view(sz_b, len_v, n_head, d_v)
 
             q = q.permute(0, 2, 1, 3)
             k = k.permute(0, 2, 1, 3)
