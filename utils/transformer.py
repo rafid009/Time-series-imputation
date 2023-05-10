@@ -35,6 +35,13 @@ class ScaledDotProductAttention(nn.Module):
         output = torch.matmul(attn, v)
         return output, attn
 
+def Conv1d_with_init(in_channels, out_channels, kernel_size=1, bias=True, init_zero=False):
+    layer = nn.Conv1d(in_channels, out_channels, kernel_size, bias=bias)
+    if init_zero:
+        nn.init.zeros_(layer.weight)
+    else:
+        nn.init.kaiming_normal_(layer.weight)
+    return layer
 
 class MultiHeadAttention(nn.Module):
     """original Transformer multi-head attention"""
@@ -47,9 +54,13 @@ class MultiHeadAttention(nn.Module):
         self.choice = choice
         self.d_model = d_model
         if self.choice == 'fde-conv-single' or self.choice == 'fde-conv-multi':
-            self.w_qs = nn.Conv1d(d_channel, d_channel, kernel_size=1, bias=False)
-            self.w_ks = nn.Conv1d(d_channel, d_channel, kernel_size=1, bias=False)
-            self.w_vs = nn.Conv1d(d_channel, d_channel, kernel_size=1, bias=False)
+            self.w_qs = Conv1d_with_init(d_channel, d_channel, kernel_size=1, bias=False)
+            self.w_ks = Conv1d_with_init(d_channel, d_channel, kernel_size=1, bias=False)
+            self.w_vs = Conv1d_with_init(d_channel, d_channel, kernel_size=1, bias=False)
+            if self.choice == 'fde-conv-multi':
+                self.w_q_head = Conv1d_with_init(1, self.n_head, kernel_size=1, bias=False)
+                self.w_k_head = Conv1d_with_init(1, self.n_head, kernel_size=1, bias=False)
+                self.w_v_head = Conv1d_with_init(1, self.n_head, kernel_size=1, bias=False)
         else:
             self.w_qs = nn.Linear(d_model, n_head * d_k, bias=False)
             self.w_ks = nn.Linear(d_model, n_head * d_k, bias=False)
@@ -66,12 +77,19 @@ class MultiHeadAttention(nn.Module):
         # Pass through the pre-attention projection: b x lq x (n*dv)
         # Separate different heads: b x lq x n x dv
         if self.choice == 'fde-conv-multi':
-            sz_b, len_q, len_k, len_v = q.size(0), q.size(2), k.size(2), v.size(2)
-            q, k, v = q.reshape(-1, len_q, self.d_model), k.reshape(-1, len_k, self.d_model), v.reshape(-1, len_v, self.d_model)
+            sz_b, len_q, len_k, len_v = q.size(0), q.size(1), k.size(1), v.size(1)
+            # q, k, v = q.reshape(-1, len_q, self.d_model), k.reshape(-1, len_k, self.d_model), v.reshape(-1, len_v, self.d_model)
             
-            q = self.w_qs(q).view(sz_b, n_head, len_q, d_k)
-            k = self.w_ks(k).view(sz_b, n_head, len_k, d_k)
-            v = self.w_vs(v).view(sz_b, n_head, len_v, d_v)
+            # q = self.w_qs(q).view(sz_b, n_head, len_q, d_k)
+            # k = self.w_ks(k).view(sz_b, n_head, len_k, d_k)
+            # v = self.w_vs(v).view(sz_b, n_head, len_v, d_v)
+            q = self.w_qs(q).view(sz_b * len_q, 1, d_k)
+            k = self.w_ks(k).view(sz_b * len_k, 1, d_k)
+            v = self.w_vs(v).view(sz_b * len_v, 1, d_v)
+
+            q = self.w_q_head(q).view(sz_b, n_head, len_q, d_k)
+            k = self.w_k_head(k).view(sz_b, n_head, len_q, d_k)
+            v = self.w_v_head(v).view(sz_b, n_head, len_q, d_k)
 
             q = q.permute(0, 2, 1, 3)
             k = k.permute(0, 2, 1, 3)
@@ -94,9 +112,8 @@ class MultiHeadAttention(nn.Module):
         # print(f"v after attn: {v.shape}")
         # Transpose to move the head dimension back: b x lq x n x dv
         # Combine the last two dimensions to concatenate all the heads together: b x lq x (n*dv)
-        if self.choice != 'fde-conv-multi':
-            v = v.transpose(1, 2).contiguous().view(sz_b, len_q, -1)
-            v = self.fc(v)
+        v = v.transpose(1, 2).contiguous().view(sz_b, len_q, -1)
+        v = self.fc(v)
         # print(f"v after attn+fc: {v.shape}")
         return v, attn_weights
 
