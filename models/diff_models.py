@@ -533,33 +533,26 @@ class diff_SAITS_new(nn.Module):
         if self.ablation_config['is_fde']:
             cond_X = X[:,0,:,:] + X[:,1,:,:] # (B, L, K)
             shp = cond_X.shape
-            # Add mask with it
-            cond_X = torch.stack([cond_X, masks[:,1,:,:]], dim=1) # (B, 2, L, K)
-            # cond_X = torch.transpose(cond_X, 2, 3)
-            cond_X = cond_X.permute(0, 3, 1, 2) # (B, K, 2, L)
-            cond_X = cond_X.reshape(-1, 2, self.d_time) # (B*K, 2, L)
-            if self.ablation_config['fde-choice'] == 'fde-conv-single':
-                cond_X = self.mask_conv(cond_X).squeeze(dim=1) # (B*K, L)
-                cond_X = cond_X.reshape(-1, self.d_feature, self.d_time) # (B, K, L)
+            if self.ablation_config['no-mask']:
+                # Add mask with it
+                cond_X = torch.stack([cond_X, masks[:,1,:,:]], dim=1) # (B, 2, L, K)
+                # cond_X = torch.transpose(cond_X, 2, 3)
+                cond_X = cond_X.permute(0, 3, 1, 2) # (B, K, 2, L)
+                cond_X = cond_X.reshape(-1, 2, self.d_time) # (B*K, 2, L)
+                if self.ablation_config['fde-choice'] == 'fde-conv-single':
+                    cond_X = self.mask_conv(cond_X).squeeze(dim=1) # (B*K, L)
+                    cond_X = cond_X.reshape(-1, self.d_feature, self.d_time) # (B, K, L)
 
-            elif self.ablation_config['fde-choice'] == 'fde-conv-multi':
-                cond_X = self.mask_conv(cond_X).squeeze(dim=1) # (B*K, L)
-                cond_X = cond_X.reshape(-1, self.d_feature, self.d_time) # (B, K, L)
-            
+                elif self.ablation_config['fde-choice'] == 'fde-conv-multi':
+                    cond_X = self.mask_conv(cond_X).squeeze(dim=1) # (B*K, L)
+                    cond_X = cond_X.reshape(-1, self.d_feature, self.d_time) # (B, K, L)
+                else:
+                    cond_X = self.mask_conv(cond_X).squeeze(dim=1) # (B*K, L)
+                    cond_X = cond_X.reshape(-1, self.d_feature, self.d_time) # (B, K, L)
             else:
-                cond_X = self.mask_conv(cond_X).squeeze(dim=1) # (B*K, L)
-                cond_X = cond_X.reshape(-1, self.d_feature, self.d_time) # (B, K, L)
-
+                cond_X = torch.transpose(cond_X, 1, 2)
             # print(f"condX: {cond_X.shape}")
             for feat_enc_layer in self.layer_stack_for_feature_weights:
-
-                # if self.ablation_config['fde-choice'] == 'fde-conv-multi' and len(cond_X.shape) == 3:
-                #     cond_X = cond_X.unsqueeze(dim=2) # (B, K, 1, L)
-                #     cond_X = cond_X.reshape(-1, 1, self.d_time) # (B*K, 1, L)
-                #     cond_X = self.expand_head(cond_X) # (B*K, n_head, L)
-                #     cond_X = cond_X.reshape(-1, self.d_feature, self.n_head, self.d_time) # (B, K, n_head, L)
-                #     cond_X = cond_X.permute(0, 2, 1, 3)
-
                 cond_X, attn_weights_f = feat_enc_layer(cond_X) # (B, K, L), (B, K, K)
 
             cond_X = torch.transpose(cond_X, 1, 2)
@@ -602,7 +595,7 @@ class diff_SAITS_new(nn.Module):
                 attn_weights_f = torch.softmax(attn_weights_f, dim=-1)
             # Feature encode for second block
             # cond_X = (cond_X + X[:, 1, :, :])
-            X_tilde_1 = X_tilde_1 @ attn_weights_f + cond_X #((cond_X + X[:, 1, :, :]) * (1 - masks[:, 1, :, :])) / 2 #cond_X #+ X_tilde_1
+            X_tilde_1 = X_tilde_1 @ attn_weights_f + X[:, 1, :, :] #((cond_X + X[:, 1, :, :]) * (1 - masks[:, 1, :, :])) / 2 #cond_X #+ X_tilde_1
         else:
             # Old stable better
             X_tilde_1 = X_tilde_1 + X[:, 1, :, :] 
