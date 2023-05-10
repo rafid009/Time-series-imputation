@@ -103,7 +103,7 @@ class MultiHeadAttention(nn.Module):
         # Transpose for attention dot product: b x n x lq x dv
         # print(f"q: {q.shape}, k: {k.shape}, v: {v.shape}")
         q, k, v = q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2)
-        print(f"q: {q.shape}, k: {k.shape}, v: {v.shape}")
+
         if attn_mask is not None:
             # this mask is imputation mask, which is not generated from each batch, so needs broadcasting on batch dim
             attn_mask = attn_mask.unsqueeze(0).unsqueeze(1)  # For batch and head axis broadcasting.
