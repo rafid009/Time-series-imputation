@@ -595,7 +595,7 @@ class diff_SAITS_new(nn.Module):
                 attn_weights_f = torch.softmax(attn_weights_f, dim=-1)
             # Feature encode for second block
             # cond_X = (cond_X + X[:, 1, :, :])
-            X_tilde_1 = X_tilde_1 @ attn_weights_f + X[:, 1, :, :] #((cond_X + X[:, 1, :, :]) * (1 - masks[:, 1, :, :])) / 2 #cond_X #+ X_tilde_1
+            X_tilde_1 = X_tilde_1 @ attn_weights_f + X[:, 1, :, :] + X[:, 0, :, :]#((cond_X + X[:, 1, :, :]) * (1 - masks[:, 1, :, :])) / 2 #cond_X #+ X_tilde_1
         else:
             # Old stable better
             X_tilde_1 = X_tilde_1 + X[:, 1, :, :] 
