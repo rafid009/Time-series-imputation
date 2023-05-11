@@ -300,7 +300,7 @@ config_dict_diffsaits = {
         'target_strategy': "mix", # noise mix
         'type': 'SAITS',
         'n_layers': 3,
-        'loss_weight_p': 1,
+        'loss_weight_p': 0.5,
         'loss_weight_f': 1,
         'd_time': n_steps,
         'n_feature': len(given_features),
