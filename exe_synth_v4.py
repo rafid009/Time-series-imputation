@@ -297,7 +297,7 @@ config_dict_diffsaits = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "mix", # noise mix
+        'target_strategy': "random", # noise mix
         'type': 'SAITS',
         'n_layers': 3,
         'loss_weight_p': 0.5,
