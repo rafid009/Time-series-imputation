@@ -61,15 +61,11 @@ class MultiHeadAttention(nn.Module):
                 self.w_q_head = Conv1d_with_init(1, self.n_head, kernel_size=1, bias=False)
                 self.w_k_head = Conv1d_with_init(1, self.n_head, kernel_size=1, bias=False)
                 self.w_v_head = Conv1d_with_init(1, self.n_head, kernel_size=1, bias=False)
-                # self.w_q_head = nn.Linear(d_model, n_head * d_k, bias=False)
-                # self.w_k_head = nn.Linear(d_model, n_head * d_k, bias=False)
-                # self.w_v_head = nn.Linear(d_model, n_head * d_v, bias=False)
         else:
             self.w_qs = nn.Linear(d_model, n_head * d_k, bias=False)
             self.w_ks = nn.Linear(d_model, n_head * d_k, bias=False)
             self.w_vs = nn.Linear(d_model, n_head * d_v, bias=False)
         self.fc = nn.Linear(n_head * d_v, d_model, bias=False)
-
         self.attention = ScaledDotProductAttention(d_k ** 0.5, attn_dropout)
         
 
@@ -83,9 +79,6 @@ class MultiHeadAttention(nn.Module):
             sz_b, len_q, len_k, len_v = q.size(0), q.size(1), k.size(1), v.size(1)
             # q, k, v = q.reshape(-1, len_q, self.d_model), k.reshape(-1, len_k, self.d_model), v.reshape(-1, len_v, self.d_model)
             
-            # q = self.w_qs(q).view(sz_b, n_head, len_q, d_k)
-            # k = self.w_ks(k).view(sz_b, n_head, len_k, d_k)
-            # v = self.w_vs(v).view(sz_b, n_head, len_v, d_v)
             q = self.w_qs(q).view(sz_b * len_q, 1, d_k)
             k = self.w_ks(k).view(sz_b * len_k, 1, d_k)
             v = self.w_vs(v).view(sz_b * len_v, 1, d_v)
