@@ -297,7 +297,7 @@ config_dict_diffsaits = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "random", # noise mix
+        'target_strategy': "mix", # noise mix
         'type': 'SAITS',
         'n_layers': 3,
         'loss_weight_p': 0.5,
@@ -345,8 +345,8 @@ models = {
     'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }
-mse_folder = f"results_synth_v4_{name}{'_noise' if noise else ''}/metric"
-data_folder = f"results_synth_v4_{name}{'_noise' if noise else ''}/data"
+mse_folder = f"results_synth_v4_{name}{'_noise' if noise else ''}_mix/metric"
+data_folder = f"results_synth_v4_{name}{'_noise' if noise else ''}_mix/data"
 lengths = [10, 50, 90]
 for l in lengths:
     print(f"\nlength = {l}")
