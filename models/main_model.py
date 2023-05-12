@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from models.diff_models import diff_CSDI, diff_SAITS, diff_SAITS_new
+from models.diff_models import diff_CSDI, diff_SAITS_new, diff_SAITS_new_2
 from datasets.process_data import features
 
 class CSDI_base(nn.Module):
@@ -33,7 +33,7 @@ class CSDI_base(nn.Module):
         input_dim = 1 if self.is_unconditional == True else 2
         if self.model_type == 'SAITS':
             self.is_saits = True
-            self.diffmodel = diff_SAITS_new(
+            self.diffmodel = diff_SAITS_new_2(
                 diff_steps=config['diffusion']['num_steps'],
                 n_layers=config['model']['n_layers'],
                 d_time=config['model']['d_time'],
@@ -164,13 +164,10 @@ class CSDI_base(nn.Module):
                     'missing_mask': total_mask
                 }
             predicted_1, predicted_2, predicted_3 = self.diffmodel(inputs, t)
-            # residual_1 = (noise - predicted_1) * target_mask
-            # residual_2 = (noise - predicted_2) * target_mask
             residual_3 = (noise - predicted_3) * target_mask
-            # loss = ((residual_1 ** 2).sum() * 0.5 + (residual_2 ** 2).sum() * 0.5 + (residual_3 ** 2).sum()) / (3 * (num_eval if num_eval > 0 else 1))
             loss = (residual_3 ** 2).sum() / (num_eval if num_eval > 0 else 1)
+            
             if is_train != 0 and (predicted_1 is not None) and (predicted_2 is not None):
-
                 pred_loss_1 = (noise - predicted_1) * target_mask
                 pred_loss_2 = (noise - predicted_2) * target_mask
                 pred_loss = ((pred_loss_1 ** 2).sum() + (pred_loss_2 ** 2).sum()) / (2 * (num_eval if num_eval > 0 else 1))
@@ -236,15 +233,7 @@ class CSDI_base(nn.Module):
                     }
                     pred1, pred2, pred3 = self.diffmodel(inputs, torch.tensor([t]).to(self.device))
                     # preds = torch.concat([pred1, pred2, pred3], dim=0)
-                    predicted = pred3 #(pred1+pred2+pred3)/3
-                    # preds = preds.permute(0,2,1)
-                    # print(f"preds: {preds.shape}")
-                    # predicted = preds.mean(dim=0)
-                    # predicted = predicted.unsqueeze(dim=0)
-                    # print(f"predicted mean: {predicted.shape}")
-                    # predicted = predicted.permute(0,2,1)
-                    # print(f"predicted permute mean: {predicted.shape}")
-                    
+                    predicted = pred3 #(pred1+pred2+pred3)/3                    
                 else:
                     predicted = self.diffmodel(diff_input, side_info, torch.tensor([t]).to(self.device))
                 # print(f"{'SAITS' if self.is_saits else 'CSDI'} predicted: {predicted}")
