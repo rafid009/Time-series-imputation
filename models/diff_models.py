@@ -493,14 +493,14 @@ class diff_SAITS_new(nn.Module):
         
         
         if self.ablation_config['fde-choice'] == 'fde-conv-single':
-            self.mask_conv = Conv1d_with_init_saits_new(2, 1, 1)
+            self.mask_conv = Conv1d_with_init_saits_new(2 * self.d_feature, self.d_feature, 1)
             self.layer_stack_for_feature_weights = nn.ModuleList([
                 EncoderLayer(d_feature, d_time, d_time, d_inner, 1, d_k, d_v, dropout, 0,
                             True, choice='fde-conv-single')
                 for _ in range(self.ablation_config['fde-layers'])
             ])
         elif self.ablation_config['fde-choice'] == 'fde-conv-multi':
-            self.mask_conv = Conv1d_with_init_saits_new(2, 1, 1)
+            self.mask_conv = Conv1d_with_init_saits_new(2 * self.d_feature, self.d_feature, 1)
             self.layer_stack_for_feature_weights = nn.ModuleList([
                 EncoderLayer(d_feature, d_time, d_time, d_inner, n_head, d_k, d_v, dropout, 0,
                             True, choice='fde-conv-multi')
@@ -536,22 +536,12 @@ class diff_SAITS_new(nn.Module):
             if not self.ablation_config['no-mask']:
                 # Add mask with it
                 cond_X = torch.stack([cond_X, masks[:,1,:,:]], dim=1) # (B, 2, L, K)
-                # cond_X = torch.transpose(cond_X, 2, 3)
                 cond_X = cond_X.permute(0, 3, 1, 2) # (B, K, 2, L)
-                cond_X = cond_X.reshape(-1, 2, self.d_time) # (B*K, 2, L)
-                if self.ablation_config['fde-choice'] == 'fde-conv-single':
-                    cond_X = self.mask_conv(cond_X).squeeze(dim=1) # (B*K, L)
-                    cond_X = cond_X.reshape(-1, self.d_feature, self.d_time) # (B, K, L)
-
-                elif self.ablation_config['fde-choice'] == 'fde-conv-multi':
-                    cond_X = self.mask_conv(cond_X).squeeze(dim=1) # (B*K, L)
-                    cond_X = cond_X.reshape(-1, self.d_feature, self.d_time) # (B, K, L)
-                else:
-                    cond_X = self.mask_conv(cond_X).squeeze(dim=1) # (B*K, L)
-                    cond_X = cond_X.reshape(-1, self.d_feature, self.d_time) # (B, K, L)
+                cond_X = cond_X.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
+                cond_X = self.mask_conv(cond_X) # (B, K, L)
             else:
-                cond_X = torch.transpose(cond_X, 1, 2)
-            # print(f"condX: {cond_X.shape}")
+                cond_X = torch.transpose(cond_X, 1, 2) # (B, K, L)
+
             for feat_enc_layer in self.layer_stack_for_feature_weights:
                 cond_X, attn_weights_f = feat_enc_layer(cond_X) # (B, K, L), (B, K, K)
 
@@ -675,6 +665,7 @@ class diff_SAITS_new_2(nn.Module):
         # for operation on time dim
         self.embedding_1 = nn.Linear(actual_d_feature, d_model)
         self.embedding_cond = nn.Linear(actual_d_feature, d_model)
+        
         self.reduce_dim_z = nn.Linear(d_model, d_feature)
         # for operation on measurement dim
         self.embedding_2 = nn.Linear(actual_d_feature, d_model)
@@ -723,16 +714,21 @@ class diff_SAITS_new_2(nn.Module):
         X = torch.transpose(X, 2, 3)
         masks = torch.transpose(masks, 2, 3)
 
-    
+        # Feature Dependency Encoder (FDE): We are trying to get a global feature time-series cross-sorrelation
+        # between features. Each feature's time-series will get global aggregated information from other features'
+        # time-series. We also get a feature attention/dependency matrix (feature attention weights) from it.
         if self.ablation_config['is_fde']:
             cond_X = X[:,0,:,:] + X[:,1,:,:] # (B, L, K)
-
-            if self.ablation_config['no-mask']:
-                # Add mask with it
+            # In one branch, we do not apply the missing mask to the inputs of FDE
+            # and in the other we stack the mask with the input time-series for each feature
+            # and embed them together to get a masked informed time-series data for each feature.
+            if not self.ablation_config['no-mask']:
+                # Add mask with it and make it proper shape
                 cond_X = torch.stack([cond_X, masks[:,1,:,:]], dim=1) # (B, 2, L, K)
-                # cond_X = torch.transpose(cond_X, 2, 3)
                 cond_X = cond_X.permute(0, 3, 1, 2) # (B, K, 2, L)
                 cond_X = cond_X.reshape(-1, 2, self.d_time) # (B*K, 2, L)
+
+                # embed the mask into the time-series 
                 if self.ablation_config['fde-choice'] == 'fde-conv-single':
                     cond_X = self.mask_conv(cond_X).squeeze(dim=1) # (B*K, L)
                     cond_X = cond_X.reshape(-1, self.d_feature, self.d_time) # (B, K, L)
