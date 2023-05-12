@@ -278,7 +278,7 @@ saits = pickle.load(open(saits_model_file, 'rb'))
 
 config_dict_diffsaits = {
     'train': {
-        'epochs':4000, # 3000 -> ds3
+        'epochs':3000, # 3000 -> ds3
         'batch_size': 16 ,
         'lr': 1.0e-3
     },      
@@ -324,7 +324,7 @@ print(f"config: {config_dict_diffsaits}")
 name = 'fde-conv-multi'
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
-filename = f"model_diffsaits_synth_v4_{name}{'_noise' if noise else ''}.pth"
+filename = f"model_diffsaits_synth_v4_{name}{'_noise' if noise else ''}-mix.pth"
 print(f"\n\DiffSAITS training starts.....\n")
 
 train(
