@@ -174,7 +174,7 @@ class Conv(nn.Module):
         super(Conv, self).__init__()
         self.padding = dilation * (kernel_size - 1) // 2
         self.conv = nn.Conv1d(in_channels, out_channels, kernel_size, dilation=dilation, padding=self.padding)
-        # self.conv = nn.utils.weight_norm(self.conv)
+        self.conv = nn.utils.weight_norm(self.conv)
         nn.init.kaiming_normal_(self.conv.weight)
 
     def forward(self, x):
@@ -611,7 +611,7 @@ class diff_SAITS_new_2(nn.Module):
         # self.layer_stack_for_second_block = nn.ModuleList([
         #     ResidualEncoderLayer_new_2(channels=channels, d_time=d_time, actual_d_feature=actual_d_feature, 
         #                 d_model=d_model, d_inner=d_inner, n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout,
-        #                 diffusion_embedding_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask)
+        #                 diffusion_embedding_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask, ablation_config=ablation_config)
         #     for _ in range(n_layers)
         # ])
         self.diffusion_embedding = DiffusionEmbedding(diff_steps, diff_emb_dim)
@@ -629,10 +629,9 @@ class diff_SAITS_new_2(nn.Module):
         self.reduce_dim_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         self.reduce_skip_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         # for operation on measurement dim
-        # self.embedding_2 = nn.Linear(actual_d_feature, d_model)
-        # self.reduce_skip_z = nn.Linear(d_model, d_feature)
-        # self.reduce_dim_beta = nn.Linear(d_model, d_feature)
-        # self.reduce_dim_gamma = nn.Linear(d_feature, d_feature)
+        self.embedding_2 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+        self.reduce_dim_beta = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+        self.reduce_dim_gamma = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         # for delta decay factor
         # self.weight_combine = nn.Linear(d_feature + d_time, d_feature)
         # combi 2 more layers
@@ -659,11 +658,23 @@ class diff_SAITS_new_2(nn.Module):
         diffusion_embed = self.diffusion_embedding(diffusion_step)
 
         skips_tilde_1 = torch.zeros_like(noise)
+        skips_tilde_2 = torch.zeros_like(noise)
         enc_output = noise
+        i = 0
         for encoder in self.layer_stack_for_first_block:
+            i += 1
             enc_output, skip = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, K, L)
-            skips_tilde_1 += skip
-        skips_tilde_1 /= math.sqrt(len(self.layer_stack_for_first_block))
+            if i <= 4:
+                skips_tilde_1 += skip
+            else:
+                skips_tilde_2 += skip
+            if i == 4:
+                enc_output = self.embedding_2(self.reduce_dim_z(enc_output))
+                skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
+            if i == len(self.layer_stack_for_first_block):
+                skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
+        skips_tilde_1 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
+        skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
         # skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
 
         # X_tilde = self.reduce_dim_z(enc_output)
@@ -671,7 +682,8 @@ class diff_SAITS_new_2(nn.Module):
 
 
 
-        skips_tilde_1 = F.relu(self.output_proj_1(skips_tilde_1))
-        skips = self.output_proj_2(skips_tilde_1)
-        return None, None, skips
+        # skips_tilde_1 = F.relu(self.output_proj_1(skips_tilde_1))
+        # skips = self.output_proj_2(skips_tilde_1)
+        skips_tilde_3 = (skips_tilde_1 + skips_tilde_2) / 2
+        return skips_tilde_1, skips_tilde_2, skips_tilde_3
     
