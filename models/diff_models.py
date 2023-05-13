@@ -545,7 +545,7 @@ class ResidualEncoderLayer_new_2(nn.Module):
         # channels = K
         B, K, L = x.shape
 
-        x_proj = self.init_proj(x_proj) # (B, K, L)
+        x_proj = self.init_proj(x) # (B, K, L)
  
         cond = self.cond_proj(cond) # (B, K, L)
         
@@ -564,7 +564,7 @@ class ResidualEncoderLayer_new_2(nn.Module):
         y = torch.transpose(y, 1, 2)
         y = self.position_enc_noise(y)
         y = torch.transpose(y, 1, 2)
-        
+
         y = self.conv_layer(y)
         c_y = self.conv_cond(cond)
         y = y + c_y
