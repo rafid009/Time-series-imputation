@@ -307,8 +307,8 @@ config_dict_diffsaits = {
         'd_model': 128,
         'd_inner': 128,
         'n_head': 8,
-        'd_k': n_steps,
-        'd_v': n_steps,
+        'd_k': len(given_features),
+        'd_v': len(given_features),
         'dropout': 0.1,
         'diagonal_attention_mask': False
     },
