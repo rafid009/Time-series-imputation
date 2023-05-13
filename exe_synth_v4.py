@@ -346,8 +346,8 @@ models = {
     'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }
-mse_folder = f"results_synth_v4_{name}{'_noise' if noise else ''}_mix/metric"
-data_folder = f"results_synth_v4_{name}{'_noise' if noise else ''}_mix/data"
+mse_folder = f"results_synth_v4_{name}{'_noise' if noise else ''}_new_2/metric"
+data_folder = f"results_synth_v4_{name}{'_noise' if noise else ''}_new_2/data"
 lengths = [10, 50, 90]
 for l in lengths:
     print(f"\nlength = {l}")
