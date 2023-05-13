@@ -626,7 +626,8 @@ class diff_SAITS_new_2(nn.Module):
         
         self.output_proj_1 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         self.output_proj_2 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-        # self.reduce_dim_z = nn.Linear(d_model, d_feature)
+        self.reduce_dim_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+        self.reduce_skip_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         # for operation on measurement dim
         # self.embedding_2 = nn.Linear(actual_d_feature, d_model)
         # self.reduce_skip_z = nn.Linear(d_model, d_feature)
@@ -636,12 +637,7 @@ class diff_SAITS_new_2(nn.Module):
         # self.weight_combine = nn.Linear(d_feature + d_time, d_feature)
         # combi 2 more layers
         
-        
-        
 
-        
-
-    # ds3
     def forward(self, inputs, diffusion_step):
         # print(f"Entered forward")
         X, masks = inputs['X'], inputs['missing_mask'] # (B, K, L)
@@ -662,13 +658,20 @@ class diff_SAITS_new_2(nn.Module):
 
         diffusion_embed = self.diffusion_embedding(diffusion_step)
 
-        skips = torch.zeros_like(noise)
+        skips_tilde_1 = torch.zeros_like(noise)
         enc_output = noise
         for encoder in self.layer_stack_for_first_block:
             enc_output, skip = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, K, L)
-            skips += skip
-        skips /= math.sqrt(len(self.layer_stack_for_first_block))
-        skips = F.relu(self.output_proj_1(skips))
-        skips = self.output_proj_2(skips)
+            skips_tilde_1 += skip
+        skips_tilde_1 /= math.sqrt(len(self.layer_stack_for_first_block))
+        # skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
+
+        # X_tilde = self.reduce_dim_z(enc_output)
+        # X_tilde = X_tilde + skips_tilde_1
+
+
+
+        skips_tilde_1 = F.relu(self.output_proj_1(skips_tilde_1))
+        skips = self.output_proj_2(skips_tilde_1)
         return None, None, skips
     
