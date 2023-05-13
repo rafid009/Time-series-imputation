@@ -561,7 +561,10 @@ class ResidualEncoderLayer_new_2(nn.Module):
         y = y + cond
         y, attn_weights_feature = self.feature_encoder(y) # (B, K, L), (B, K, K)
 
+        y = torch.transpose(y, 1, 2)
         y = self.position_enc_noise(y)
+        y = torch.transpose(y, 1, 2)
+        
         y = self.conv_layer(y)
         c_y = self.conv_cond(cond)
         y = y + c_y
@@ -653,7 +656,9 @@ class diff_SAITS_new_2(nn.Module):
         cond = cond.permute(0, 2, 1, 3) # (B, K, 2, L)
         cond = cond.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
         cond = self.embedding_cond(cond) # (B, K, L)
+        cond = torch.transpose(cond, 1, 2)
         cond = self.position_enc_cond(cond) # (B, K, L)
+        cond = torch.transpose(cond, 1, 2)
 
         diffusion_embed = self.diffusion_embedding(diffusion_step)
 
