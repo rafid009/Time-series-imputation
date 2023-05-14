@@ -182,8 +182,9 @@ class Conv(nn.Module):
         return out
     
 
-def Conv1d_with_init_saits_new(in_channels, out_channels, kernel_size, init_zero=False):
-    layer = nn.Conv1d(in_channels, out_channels, kernel_size)
+def Conv1d_with_init_saits_new(in_channels, out_channels, kernel_size, init_zero=False, dialation=1):
+    padding = dialation * ((kernel_size - 1)//2)
+    layer = nn.Conv1d(in_channels, out_channels, kernel_size, dialation=dialation, padding=padding)
     # layer = nn.utils.weight_norm(layer)
     if init_zero:
         nn.init.zeros_(layer.weight)
@@ -486,7 +487,7 @@ class diff_SAITS_new(nn.Module):
 
 class ResidualEncoderLayer_new_2(nn.Module):
     def __init__(self, channels, d_time, actual_d_feature, d_model, d_inner, n_head, d_k, d_v, dropout,
-            diffusion_embedding_dim=128, diagonal_attention_mask=True, ablation_config=None) -> None:
+            diffusion_embedding_dim=128, diagonal_attention_mask=True, ablation_config=None, dial=1) -> None:
         super().__init__()
 
         self.time_enc_layer = EncoderLayer(d_time, actual_d_feature, 2 * channels, d_inner, n_head, d_k, d_v, dropout, 0,
@@ -495,9 +496,9 @@ class ResidualEncoderLayer_new_2(nn.Module):
 
         self.diffusion_projection = nn.Linear(diffusion_embedding_dim, channels)
         self.init_proj = Conv1d_with_init_saits_new(d_model, channels, 1)
-        self.conv_layer = Conv1d_with_init_saits_new(2 * channels, 2 * channels, kernel_size=1)
+        self.conv_layer = Conv1d_with_init_saits_new(2 * channels, 2 * channels, kernel_size=3, dialation=dial)
 
-        self.cond_proj = Conv1d_with_init_saits_new(2 * d_model, 2 * channels, 1)
+        self.cond_proj = Conv1d_with_init_saits_new(d_model, 2 * channels, 1)
         self.conv_cond = Conv1d_with_init_saits_new(2 * channels, 2 * channels, kernel_size=1)
 
 
@@ -606,8 +607,8 @@ class diff_SAITS_new_2(nn.Module):
         self.layer_stack_for_first_block = nn.ModuleList([
             ResidualEncoderLayer_new_2(channels=channels, d_time=d_time, actual_d_feature=d_feature, 
                         d_model=d_feature, d_inner=d_inner, n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout,
-                        diffusion_embedding_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask, ablation_config=self.ablation_config)
-            for _ in range(n_layers)
+                        diffusion_embedding_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask, ablation_config=self.ablation_config, dial=(2 ** (i % (n_layers//2))))
+            for i in range(n_layers)
         ])
         # self.layer_stack_for_second_block = nn.ModuleList([
         #     ResidualEncoderLayer_new_2(channels=channels, d_time=d_time, actual_d_feature=actual_d_feature, 
@@ -623,7 +624,7 @@ class diff_SAITS_new_2(nn.Module):
 
         # for operation on time dim
         self.embedding_1 = Conv1d_with_init_saits_new(d_feature, d_feature, 1) # nn.Linear(actual_d_feature, d_model)
-        self.embedding_cond = Conv1d_with_init_saits_new(2 * d_feature, 2*d_feature, 1) # nn.Linear(actual_d_feature, d_model)
+        self.embedding_cond = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1) # nn.Linear(actual_d_feature, d_model)
         
         # self.output_proj_1 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         # self.output_proj_2 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
@@ -666,7 +667,7 @@ class diff_SAITS_new_2(nn.Module):
         for encoder in self.layer_stack_for_first_block:
             i += 1
             enc_output, skip = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, K, L)
-            if i <= layers / 2:
+            if i <= layers/2:
                 skips_tilde_1 += skip
             else:
                 skips_tilde_2 += skip
@@ -684,10 +685,7 @@ class diff_SAITS_new_2(nn.Module):
         # X_tilde = self.reduce_dim_z(enc_output)
         # X_tilde = X_tilde + skips_tilde_1
 
-
-
         # skips_tilde_1 = F.relu(self.output_proj_1(skips_tilde_1))
         # skips = self.output_proj_2(skips_tilde_1)
         skips_tilde_3 = (skips_tilde_1 + skips_tilde_2) / 2
         return skips_tilde_1, skips_tilde_2, skips_tilde_3
-    
