@@ -495,17 +495,17 @@ class ResidualEncoderLayer_new_2(nn.Module):
 
         self.diffusion_projection = nn.Linear(diffusion_embedding_dim, channels)
         self.init_proj = Conv1d_with_init_saits_new(d_model, channels, 1)
-        self.conv_layer = Conv1d_with_init_saits_new(channels, 2 * channels, kernel_size=1)
+        self.conv_layer = Conv1d_with_init_saits_new(2 * channels, 2 * channels, kernel_size=1)
 
-        self.cond_proj = Conv1d_with_init_saits_new(d_model, channels, 1)
-        self.conv_cond = Conv1d_with_init_saits_new(channels, 2 * channels, kernel_size=1)
+        self.cond_proj = Conv1d_with_init_saits_new(2 * d_model, 2 * channels, 1)
+        self.conv_cond = Conv1d_with_init_saits_new(2 * channels, 2 * channels, kernel_size=1)
 
 
         self.res_proj = Conv1d_with_init_saits_new(channels, d_model, 1)
         self.skip_proj = Conv1d_with_init_saits_new(channels, d_model, 1)
 
-        self.position_enc_noise = PositionalEncoding(actual_d_feature, n_position=d_time)
-        self.mask_conv = Conv1d_with_init_saits_new(2 * actual_d_feature, actual_d_feature, 1)
+        self.position_enc_noise = PositionalEncoding(d_model, n_position=d_time)
+        self.mask_conv = Conv1d_with_init_saits_new(2 * channels, 2 * channels, 1)
 
         # if self.ablation_config['fde-choice'] == 'fde-conv-single':
         #     self.mask_conv = Conv1d_with_init_saits_new(2 * actual_d_feature, actual_d_feature, 1)
@@ -548,7 +548,7 @@ class ResidualEncoderLayer_new_2(nn.Module):
 
         x_proj = self.init_proj(x) # (B, K, L)
  
-        cond = self.cond_proj(cond) # (B, K, L)
+        cond = self.cond_proj(cond) # (B, 2*K, L)
         
 
         diff_proj = self.diffusion_projection(diffusion_emb).unsqueeze(-1) # (B, K, 1)
@@ -618,15 +618,15 @@ class diff_SAITS_new_2(nn.Module):
         self.diffusion_embedding = DiffusionEmbedding(diff_steps, diff_emb_dim)
         self.dropout = nn.Dropout(p=dropout)
 
-        self.position_enc_cond = PositionalEncoding(d_feature, n_position=d_time)
+        self.position_enc_cond = PositionalEncoding(2 * d_feature, n_position=d_time)
         
 
         # for operation on time dim
         self.embedding_1 = Conv1d_with_init_saits_new(d_feature, d_feature, 1) # nn.Linear(actual_d_feature, d_model)
-        self.embedding_cond = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1) # nn.Linear(actual_d_feature, d_model)
+        self.embedding_cond = Conv1d_with_init_saits_new(2 * d_feature, 2*d_feature, 1) # nn.Linear(actual_d_feature, d_model)
         
-        self.output_proj_1 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-        self.output_proj_2 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+        # self.output_proj_1 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+        # self.output_proj_2 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         self.reduce_dim_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         self.reduce_skip_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         # for operation on measurement dim
@@ -651,9 +651,9 @@ class diff_SAITS_new_2(nn.Module):
         cond = torch.stack([cond, masks[:, 1, :, :]], dim=1) # (B, 2, K, L)
         cond = cond.permute(0, 2, 1, 3) # (B, K, 2, L)
         cond = cond.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
-        cond = self.embedding_cond(cond) # (B, K, L)
+        cond = self.embedding_cond(cond) # (B,2*K, L)
         cond = torch.transpose(cond, 1, 2)
-        cond = self.position_enc_cond(cond) # (B, K, L)
+        cond = self.position_enc_cond(cond) # (B, 2*K, L)
         cond = torch.transpose(cond, 1, 2)
 
         diffusion_embed = self.diffusion_embedding(diffusion_step)
