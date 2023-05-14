@@ -496,7 +496,7 @@ class ResidualEncoderLayer_new_2(nn.Module):
 
         self.diffusion_projection = nn.Linear(diffusion_embedding_dim, channels)
         self.init_proj = Conv1d_with_init_saits_new(d_model, channels, 1)
-        self.conv_layer = Conv1d_with_init_saits_new(2 * channels, 2 * channels, kernel_size=3, dilation=dilation)
+        self.conv_layer = Conv1d_with_init_saits_new(2 * channels, 2 * channels, kernel_size=1)
 
         self.cond_proj = Conv1d_with_init_saits_new(d_model, 2 * channels, 1)
         self.conv_cond = Conv1d_with_init_saits_new(2 * channels, 2 * channels, kernel_size=1)
@@ -607,7 +607,7 @@ class diff_SAITS_new_2(nn.Module):
         self.layer_stack_for_first_block = nn.ModuleList([
             ResidualEncoderLayer_new_2(channels=channels, d_time=d_time, actual_d_feature=d_feature, 
                         d_model=d_feature, d_inner=d_inner, n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout,
-                        diffusion_embedding_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask, ablation_config=self.ablation_config, dilation=(2 ** (i % (n_layers//2))))
+                        diffusion_embedding_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask, ablation_config=self.ablation_config)
             for i in range(n_layers)
         ])
         # self.layer_stack_for_second_block = nn.ModuleList([
