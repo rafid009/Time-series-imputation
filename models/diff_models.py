@@ -498,7 +498,7 @@ class ResidualEncoderLayer_new_2(nn.Module):
         self.conv_layer = Conv1d_with_init_saits_new(channels, 2 * channels, kernel_size=1)
 
         self.cond_proj = Conv1d_with_init_saits_new(d_model, channels, 1)
-        # self.conv_cond = Conv1d_with_init_saits_new(channels, 2 * channels, kernel_size=1)
+        self.conv_cond = Conv1d_with_init_saits_new(channels, 2 * channels, kernel_size=1)
 
 
         self.res_proj = Conv1d_with_init_saits_new(channels, d_model, 1)
