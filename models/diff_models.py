@@ -662,18 +662,20 @@ class diff_SAITS_new_2(nn.Module):
         skips_tilde_2 = torch.zeros_like(noise)
         enc_output = noise
         i = 0
+        layers = len(self.layer_stack_for_first_block)
         for encoder in self.layer_stack_for_first_block:
             i += 1
             enc_output, skip = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, K, L)
-            if i <= 4:
+            if i <= layers / 2:
                 skips_tilde_1 += skip
             else:
                 skips_tilde_2 += skip
-            if i == 4:
-                enc_output = self.embedding_2(self.reduce_dim_z(enc_output))
+            if i == layers/2:
+                enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :]
+                enc_output = self.embedding_2(enc_output)
                 skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
 
-            if i == len(self.layer_stack_for_first_block):
+            if i == layers:
                 skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
         skips_tilde_1 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
         skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
