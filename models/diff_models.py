@@ -504,7 +504,7 @@ class ResidualEncoderLayer_new_2(nn.Module):
         self.res_proj = Conv1d_with_init_saits_new(channels, d_model, 1)
         self.skip_proj = Conv1d_with_init_saits_new(channels, d_model, 1)
 
-        self.position_enc_noise = PositionalEncoding(d_model, n_position=d_time)
+        self.position_enc_noise = PositionalEncoding(2 * channels, n_position=d_time)
         self.mask_conv = Conv1d_with_init_saits_new(2 * channels, 2 * channels, 1)
 
         # if self.ablation_config['fde-choice'] == 'fde-conv-single':
@@ -557,13 +557,13 @@ class ResidualEncoderLayer_new_2(nn.Module):
         y = torch.stack([y, mask], dim=1) # (B, 2, K, L)
         y = y.permute(0, 2, 1, 3) # (B, K, 2, L)
         y = y.reshape(-1, 2*K, L) # (B, 2*K, L)
-        y = self.mask_conv(y) # (B, K, L)
+        y = self.mask_conv(y) # (B, 2*K, L)
         
         # y = y + cond
         # y, attn_weights_feature = self.feature_encoder(y) # (B, K, L), (B, K, K)
 
         y = torch.transpose(y, 1, 2)
-        y = self.position_enc_noise(y)
+        y = self.position_enc_noise(y) # (B, 2*K, L)
         y = torch.transpose(y, 1, 2)
 
         y = self.conv_layer(y)
