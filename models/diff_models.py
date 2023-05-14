@@ -498,41 +498,42 @@ class ResidualEncoderLayer_new_2(nn.Module):
         self.conv_layer = Conv1d_with_init_saits_new(channels, 2 * channels, kernel_size=1)
 
         self.cond_proj = Conv1d_with_init_saits_new(d_model, channels, 1)
-        self.conv_cond = Conv1d_with_init_saits_new(channels, 2 * channels, kernel_size=1)
+        # self.conv_cond = Conv1d_with_init_saits_new(channels, 2 * channels, kernel_size=1)
 
 
         self.res_proj = Conv1d_with_init_saits_new(channels, d_model, 1)
         self.skip_proj = Conv1d_with_init_saits_new(channels, d_model, 1)
 
         self.position_enc_noise = PositionalEncoding(actual_d_feature, n_position=d_time)
+        self.mask_conv = Conv1d_with_init_saits_new(2 * actual_d_feature, actual_d_feature, 1)
 
-        if self.ablation_config['fde-choice'] == 'fde-conv-single':
-            self.mask_conv = Conv1d_with_init_saits_new(2 * actual_d_feature, actual_d_feature, 1)
-            # self.layer_stack_for_feature_weights = nn.ModuleList([
-            #     EncoderLayer(actual_d_feature, d_time, d_time, d_inner, 1, d_k, d_v, dropout, 0,
-            #                 True, choice='fde-conv-single')
-            #     for _ in range(self.ablation_config['fde-layers'])
-            # ])
-            self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, 1, d_time, d_time, dropout, 0,
-                            True, choice='fde-conv-single')
-        elif self.ablation_config['fde-choice'] == 'fde-conv-multi':
-            self.mask_conv = Conv1d_with_init_saits_new(2 * actual_d_feature, actual_d_feature, 1)
-            # self.layer_stack_for_feature_weights = nn.ModuleList([
-            #     EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_k, d_v, dropout, 0,
-            #                 True, choice='fde-conv-multi')
-            #     for _ in range(self.ablation_config['fde-layers'])
-            # ])
-            self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
-                            True, choice='fde-conv-multi')
-        else:
-            self.mask_conv = Conv1d_with_init_saits_new(2 * actual_d_feature, actual_d_feature, 1)
-            # self.layer_stack_for_feature_weights = nn.ModuleList([
-            #     EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_k, d_v, dropout, 0,
-            #                 True)
-            #     for _ in range(self.ablation_config['fde-layers'])
-            # ])
-            self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
-                            True)
+        # if self.ablation_config['fde-choice'] == 'fde-conv-single':
+        #     self.mask_conv = Conv1d_with_init_saits_new(2 * actual_d_feature, actual_d_feature, 1)
+        #     # self.layer_stack_for_feature_weights = nn.ModuleList([
+        #     #     EncoderLayer(actual_d_feature, d_time, d_time, d_inner, 1, d_k, d_v, dropout, 0,
+        #     #                 True, choice='fde-conv-single')
+        #     #     for _ in range(self.ablation_config['fde-layers'])
+        #     # ])
+        #     self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, 1, d_time, d_time, dropout, 0,
+        #                     True, choice='fde-conv-single')
+        # elif self.ablation_config['fde-choice'] == 'fde-conv-multi':
+        #     self.mask_conv = Conv1d_with_init_saits_new(2 * actual_d_feature, actual_d_feature, 1)
+        #     # self.layer_stack_for_feature_weights = nn.ModuleList([
+        #     #     EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_k, d_v, dropout, 0,
+        #     #                 True, choice='fde-conv-multi')
+        #     #     for _ in range(self.ablation_config['fde-layers'])
+        #     # ])
+        #     self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
+        #                     True, choice='fde-conv-multi')
+        # else:
+        #     self.mask_conv = Conv1d_with_init_saits_new(2 * actual_d_feature, actual_d_feature, 1)
+        #     # self.layer_stack_for_feature_weights = nn.ModuleList([
+        #     #     EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_k, d_v, dropout, 0,
+        #     #                 True)
+        #     #     for _ in range(self.ablation_config['fde-layers'])
+        #     # ])
+        #     self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
+        #                     True)
 
 
 
@@ -558,8 +559,8 @@ class ResidualEncoderLayer_new_2(nn.Module):
         y = y.reshape(-1, 2*K, L) # (B, 2*K, L)
         y = self.mask_conv(y) # (B, K, L)
         
-        y = y + cond
-        y, attn_weights_feature = self.feature_encoder(y) # (B, K, L), (B, K, K)
+        # y = y + cond
+        # y, attn_weights_feature = self.feature_encoder(y) # (B, K, L), (B, K, K)
 
         y = torch.transpose(y, 1, 2)
         y = self.position_enc_noise(y)
@@ -671,6 +672,7 @@ class diff_SAITS_new_2(nn.Module):
             if i == 4:
                 enc_output = self.embedding_2(self.reduce_dim_z(enc_output))
                 skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
+
             if i == len(self.layer_stack_for_first_block):
                 skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
         skips_tilde_1 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
