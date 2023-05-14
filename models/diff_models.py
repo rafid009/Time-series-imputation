@@ -619,7 +619,7 @@ class diff_SAITS_new_2(nn.Module):
         self.diffusion_embedding = DiffusionEmbedding(diff_steps, diff_emb_dim)
         self.dropout = nn.Dropout(p=dropout)
 
-        self.position_enc_cond = PositionalEncoding(2 * d_feature, n_position=d_time)
+        self.position_enc_cond = PositionalEncoding(d_feature, n_position=d_time)
         
 
         # for operation on time dim
@@ -654,7 +654,7 @@ class diff_SAITS_new_2(nn.Module):
         cond = cond.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
         cond = self.embedding_cond(cond) # (B,2*K, L)
         cond = torch.transpose(cond, 1, 2)
-        cond = self.position_enc_cond(cond) # (B, 2*K, L)
+        cond = self.position_enc_cond(cond) # (B, K, L)
         cond = torch.transpose(cond, 1, 2)
 
         diffusion_embed = self.diffusion_embedding(diffusion_step)
