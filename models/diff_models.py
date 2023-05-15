@@ -756,7 +756,7 @@ class diff_SAITS_new_2(nn.Module):
                 attn_weights = torch.transpose(attn_weights, 1, 2)
 
             combining_weights = torch.sigmoid(
-                self.weight_combine(torch.cat([masks[:, 0, :, :], attn_weights], dim=2))
+                self.weight_combine(torch.cat([torch.transpose(masks[:, 0, :, :], 1, 2), attn_weights], dim=2))
             )  # namely term eta
 
             skips_tilde_3 = (1 - combining_weights) * skips_tilde_1 + combining_weights * skips_tilde_2
