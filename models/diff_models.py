@@ -647,7 +647,7 @@ class diff_SAITS_new_2(nn.Module):
         noise = X[:, 1, :, :] # (B, K, L)
         cond = X[:, 0, :, :] # (B, K, L)
 
-        noise = F.relu(self.embedding_1(noise)) # (B, K, L)
+        noise = self.embedding_1(noise) # (B, K, L)
 
         cond = torch.stack([cond, masks[:, 1, :, :]], dim=1) # (B, 2, K, L)
         cond = cond.permute(0, 2, 1, 3) # (B, K, 2, L)
