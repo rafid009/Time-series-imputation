@@ -587,7 +587,7 @@ class ResidualEncoderLayer_new_2(nn.Module):
 
         # attn_weights = (attn_weights_1 + attn_weights_2) / 2 #torch.softmax(attn_weights_1 + attn_weights_2, dim=-1)
 
-        return (x + residual) * math.sqrt(0.5), skip # , attn_weights
+        return (x + residual) * math.sqrt(0.5), skip, attn_weights_time
 
 
 
@@ -635,7 +635,7 @@ class diff_SAITS_new_2(nn.Module):
         self.reduce_dim_beta = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         self.reduce_dim_gamma = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         # for delta decay factor
-        # self.weight_combine = nn.Linear(d_feature + d_time, d_feature)
+        self.weight_combine = nn.Linear(d_feature + d_time, d_feature)
         # combi 2 more layers
 
         if self.ablation_config['fde-choice'] == 'fde-conv-single':
@@ -714,24 +714,24 @@ class diff_SAITS_new_2(nn.Module):
         layers = len(self.layer_stack_for_first_block)
         for encoder in self.layer_stack_for_first_block:
             i += 1
-            enc_output, skip = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, K, L)
+            enc_output, skip, attn_weights = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, K, L)
             if i <= layers/2:
                 skips_tilde_1 += skip
             else:
                 skips_tilde_2 += skip
             if i == layers/2:
-                if self.ablation_config['is_fde']:
-                # Feature attention added
-                    attn_weights_f = attn_weights_f.squeeze(dim=1)  # namely term A_hat in Eq.
-                    if len(attn_weights_f.shape) == 4:
-                        # if having more than 1 head, then average attention weights from all heads
-                        attn_weights_f = torch.transpose(attn_weights_f, 1, 3)
-                        attn_weights_f = attn_weights_f.mean(dim=3)
-                        attn_weights_f = torch.transpose(attn_weights_f, 1, 2)
-                        attn_weights_f = torch.softmax(attn_weights_f, dim=-1)
-                    enc_output = self.reduce_dim_z(enc_output) @ attn_weights_f + X[:, 1, :, :]
-                else:
-                    enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :]
+                # if self.ablation_config['is_fde']:
+                # # Feature attention added
+                #     attn_weights_f = attn_weights_f.squeeze(dim=1)  # namely term A_hat in Eq.
+                #     if len(attn_weights_f.shape) == 4:
+                #         # if having more than 1 head, then average attention weights from all heads
+                #         attn_weights_f = torch.transpose(attn_weights_f, 1, 3)
+                #         attn_weights_f = attn_weights_f.mean(dim=3)
+                #         attn_weights_f = torch.transpose(attn_weights_f, 1, 2)
+                #         attn_weights_f = torch.softmax(attn_weights_f, dim=-1)
+                #     enc_output = self.reduce_dim_z(enc_output) @ attn_weights_f + X[:, 1, :, :]
+                # else:
+                enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :]
                 enc_output = self.embedding_2(enc_output)
                 skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
 
@@ -746,5 +746,21 @@ class diff_SAITS_new_2(nn.Module):
 
         # skips_tilde_1 = F.relu(self.output_proj_1(skips_tilde_1))
         # skips = self.output_proj_2(skips_tilde_1)
-        skips_tilde_3 = (skips_tilde_1 + skips_tilde_2) / 2
+        if self.ablation_config['weight_combine']:
+            # attention-weighted combine
+            attn_weights = attn_weights.squeeze(dim=1)  # namely term A_hat in Eq.
+            if len(attn_weights.shape) == 4:
+                # if having more than 1 head, then average attention weights from all heads
+                attn_weights = torch.transpose(attn_weights, 1, 3)
+                attn_weights = attn_weights.mean(dim=3)
+                attn_weights = torch.transpose(attn_weights, 1, 2)
+
+            combining_weights = torch.sigmoid(
+                self.weight_combine(torch.cat([masks[:, 0, :, :], attn_weights], dim=2))
+            )  # namely term eta
+
+            skips_tilde_3 = (1 - combining_weights) * skips_tilde_1 + combining_weights * skips_tilde_2
+        else:
+            skips_tilde_3 = (skips_tilde_1 + skips_tilde_2) / 2
+        # skips_tilde_3 = (skips_tilde_1 + skips_tilde_2) / 2
         return skips_tilde_1, skips_tilde_2, skips_tilde_3
