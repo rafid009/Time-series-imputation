@@ -315,7 +315,7 @@ config_dict_diffsaits = {
     'ablation': {
         'fde-choice': 'linear',#'fde-conv-multi', #'fde-conv-multi',
         'fde-layers': 3,
-        'is_fde': True,
+        'is_fde': False,
         'weight_combine': False,
         'no-mask': False,
         'fde-diagonal': True
