@@ -502,8 +502,10 @@ class ResidualEncoderLayer_new_2(nn.Module):
         self.conv_cond = Conv1d_with_init_saits_new(2 * channels, 2 * channels, kernel_size=1)
 
 
-        self.res_proj = Conv1d_with_init_saits_new(channels, d_model, 1)
-        self.skip_proj = Conv1d_with_init_saits_new(channels, d_model, 1)
+        # self.res_proj = Conv1d_with_init_saits_new(channels, d_model, 1)
+        # self.skip_proj = Conv1d_with_init_saits_new(channels, d_model, 1)
+
+        self.output_proj = Conv1d_with_init_saits_new(channels, 2 * d_model, 1)
 
         self.position_enc_noise = PositionalEncoding(2 * channels, n_position=d_time)
         self.mask_conv = Conv1d_with_init_saits_new(2 * channels, 2 * channels, 1)
@@ -577,14 +579,14 @@ class ResidualEncoderLayer_new_2(nn.Module):
         y = torch.transpose(y, 1, 2) # (B, 2*channels, L)
 
 
-        y1, y2 = torch.chunk(y, 2, dim=1)
-        out = torch.sigmoid(y1) * torch.tanh(y2) # (B, channels, L)
+        gate, filter = torch.chunk(y, 2, dim=1)
+        out = torch.sigmoid(gate) * torch.tanh(filter) # (B, channels, L)
 
-        residual = self.res_proj(out) # (B, K, L)
+        # residual = self.res_proj(out) # (B, K, L)
 
-        skip = self.skip_proj(out) # (B, K, L)
-
-
+        # skip = self.skip_proj(out) # (B, K, L)
+        out = self.output_proj(out)
+        residual, skip = torch.chunk(y, 2, dim=1)
         # attn_weights = (attn_weights_1 + attn_weights_2) / 2 #torch.softmax(attn_weights_1 + attn_weights_2, dim=-1)
 
         return (x + residual) * math.sqrt(0.5), skip, attn_weights_time
