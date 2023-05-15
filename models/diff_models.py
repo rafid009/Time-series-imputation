@@ -637,6 +637,34 @@ class diff_SAITS_new_2(nn.Module):
         # for delta decay factor
         # self.weight_combine = nn.Linear(d_feature + d_time, d_feature)
         # combi 2 more layers
+
+        if self.ablation_config['fde-choice'] == 'fde-conv-single':
+            self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
+            self.layer_stack_for_feature_weights = nn.ModuleList([
+                EncoderLayer(d_feature, d_time, d_time, d_inner, 1, d_time, d_time, dropout, 0,
+                            True, choice='fde-conv-single')
+                for _ in range(self.ablation_config['fde-layers'])
+            ])
+            # self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, 1, d_time, d_time, dropout, 0,
+            #                 True, choice='fde-conv-single')
+        elif self.ablation_config['fde-choice'] == 'fde-conv-multi':
+            self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
+            self.layer_stack_for_feature_weights = nn.ModuleList([
+                EncoderLayer(d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
+                            True, choice='fde-conv-multi')
+                for _ in range(self.ablation_config['fde-layers'])
+            ])
+            # self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
+            #                 True, choice='fde-conv-multi')
+        else:
+            self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
+            self.layer_stack_for_feature_weights = nn.ModuleList([
+                EncoderLayer(d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
+                            True)
+                for _ in range(self.ablation_config['fde-layers'])
+            ])
+            # self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
+            #                 True)
         
 
     def forward(self, inputs, diffusion_step):
@@ -644,10 +672,30 @@ class diff_SAITS_new_2(nn.Module):
         X, masks = inputs['X'], inputs['missing_mask'] # (B, K, L)
         masks[:,1,:,:] = masks[:,0,:,:]
         
-        noise = X[:, 1, :, :] # (B, K, L)
         cond = X[:, 0, :, :] # (B, K, L)
 
-        noise = self.embedding_1(noise) # (B, K, L)
+        
+        # Feature Dependency Encoder (FDE): We are trying to get a global feature time-series cross-sorrelation
+        # between features. Each feature's time-series will get global aggregated information from other features'
+        # time-series. We also get a feature attention/dependency matrix (feature attention weights) from it.
+        if self.ablation_config['is_fde']:
+            noise = X[:,0,:,:] + X[:,1,:,:] # (B, K, L)
+            # shp = noise.shape
+            if not self.ablation_config['no-mask']:
+                # In one branch, we do not apply the missing mask to the inputs of FDE
+                # and in the other we stack the mask with the input time-series for each feature
+                # and embed them together to get a masked informed time-series data for each feature.
+                noise = torch.stack([noise, masks[:,1,:,:]], dim=1) # (B, 2, K, L)
+                noise = noise.permute(0, 2, 1, 3) # (B, K, 2, L)
+                noise = noise.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
+                noise = self.mask_conv(noise) # (B, K, L)
+
+            for feat_enc_layer in self.layer_stack_for_feature_weights:
+                noise, attn_weights_f = feat_enc_layer(noise) # (B, K, L), (B, K, K)
+        else:
+            noise = X[:, 1, :, :] # (B, K, L)
+
+        noise = F.relu(self.embedding_1(noise)) # (B, K, L)
 
         cond = torch.stack([cond, masks[:, 1, :, :]], dim=1) # (B, 2, K, L)
         cond = cond.permute(0, 2, 1, 3) # (B, K, 2, L)
