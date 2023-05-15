@@ -659,7 +659,7 @@ class diff_SAITS_new_2(nn.Module):
         else:
             self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
             self.layer_stack_for_feature_weights = nn.ModuleList([
-                EncoderLayer(d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
+                EncoderLayer(d_feature, d_time, d_time, d_inner, n_head, 64, 64, dropout, 0,
                             True)
                 for _ in range(self.ablation_config['fde-layers'])
             ])
