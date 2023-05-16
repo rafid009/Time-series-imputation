@@ -499,7 +499,7 @@ class ResidualEncoderLayer_new_2(nn.Module):
         self.conv_layer = Conv1d_with_init_saits_new(2 * channels, 2 * channels, kernel_size=1)
 
         self.cond_proj = Conv1d_with_init_saits_new(d_model, 2 * channels, 1)
-        # self.conv_cond = Conv1d_with_init_saits_new(2 * channels, 2 * channels, kernel_size=1)
+        self.conv_cond = Conv1d_with_init_saits_new(2 * channels, 2 * channels, kernel_size=1)
 
 
         self.res_proj = Conv1d_with_init_saits_new(channels, d_model, 1)
@@ -569,9 +569,9 @@ class ResidualEncoderLayer_new_2(nn.Module):
         y = self.position_enc_noise(y) # (B, 2*K, L)
         y = torch.transpose(y, 1, 2)
 
-        y = y + cond
-        # c_y = self.conv_cond(cond)
-        # y = y + c_y
+        # y = y + cond
+        c_y = self.conv_cond(cond)
+        y = y + c_y
 
 
         y = torch.transpose(y, 1, 2) # (B, L, 2*channels)
