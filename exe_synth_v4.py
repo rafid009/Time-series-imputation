@@ -299,7 +299,7 @@ config_dict_diffsaits = {
         'featureemb': 16,
         'target_strategy': "mix", # noise mix
         'type': 'SAITS',
-        'n_layers': 12,
+        'n_layers': 10,
         'loss_weight_p': 1,
         'loss_weight_f': 1,
         'd_time': n_steps,
