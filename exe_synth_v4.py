@@ -316,7 +316,7 @@ config_dict_diffsaits = {
         'fde-choice': 'fde-conv-multi',#'fde-conv-multi', #'fde-conv-multi',
         'fde-layers': 3,
         'is_fde': True,
-        'weight_combine': False,
+        'weight_combine': True,
         'no-mask': False,
         'fde-diagonal': True
     }
