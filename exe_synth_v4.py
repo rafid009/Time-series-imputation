@@ -278,7 +278,7 @@ saits = pickle.load(open(saits_model_file, 'rb'))
 
 config_dict_diffsaits = {
     'train': {
-        'epochs':3000, # 3000 -> ds3
+        'epochs':5000, # 3000 -> ds3
         'batch_size': 16 ,
         'lr': 1.0e-3
     },      
@@ -299,8 +299,8 @@ config_dict_diffsaits = {
         'featureemb': 16,
         'target_strategy': "mix", # noise mix
         'type': 'SAITS',
-        'n_layers': 8,
-        'loss_weight_p': 0.5,
+        'n_layers': 12,
+        'loss_weight_p': 1,
         'loss_weight_f': 1,
         'd_time': n_steps,
         'n_feature': len(given_features),
@@ -328,7 +328,7 @@ model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(give
 filename = f"model_diffsaits_synth_v4_{name}{'_noise' if noise else ''}-mix.pth"
 print(f"\n\DiffSAITS training starts.....\n")
 
-model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 
 train(
     model_diff_saits,
