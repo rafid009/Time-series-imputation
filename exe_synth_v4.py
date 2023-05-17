@@ -313,7 +313,7 @@ config_dict_diffsaits = {
         'diagonal_attention_mask': False
     },
     'ablation': {
-        'fde-choice': 'linear',#'fde-conv-multi', #'fde-conv-multi',
+        'fde-choice': 'fde-conv-multi',#'fde-conv-multi', #'fde-conv-multi',
         'fde-layers': 3,
         'is_fde': True,
         'weight_combine': False,
