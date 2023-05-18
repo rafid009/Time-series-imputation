@@ -313,14 +313,14 @@ config_dict_diffsaits = {
         'diagonal_attention_mask': False
     },
     'ablation': {
-        'fde-choice': 'fde-conv-multi',#'fde-conv-multi', #'fde-conv-multi',
-        'fde-layers': 3,
+        'fde-choice': 'fde-conv-multi',
+        'fde-layers': 4,
         'is_fde': True,
-        'weight_combine': False,
+        'weight_combine': True,
         'no-mask': False,
         'fde-diagonal': True,
         'is_fde_2nd': False,
-        'reduce-type': 'linear'
+        'reduce-type': 'non-linear'
     }
 }
 print(f"config: {config_dict_diffsaits}")
