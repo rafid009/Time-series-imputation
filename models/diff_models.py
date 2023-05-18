@@ -730,8 +730,9 @@ class diff_SAITS_new_2(nn.Module):
                         attn_weights_f = attn_weights_f.mean(dim=3)
                         attn_weights_f = torch.transpose(attn_weights_f, 1, 2)
                         attn_weights_f = torch.softmax(attn_weights_f, dim=-1)
+                    enc_output = self.reduce_dim_z(enc_output)
                     enc_output = torch.transpose(enc_output, 1, 2)
-                    enc_output = self.reduce_dim_z(enc_output) @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
+                    enc_output = enc_output @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
                     enc_output = torch.transpose(enc_output, 1, 2)
                 else:
                     enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :]
