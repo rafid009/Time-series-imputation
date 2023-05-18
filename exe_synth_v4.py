@@ -318,7 +318,8 @@ config_dict_diffsaits = {
         'is_fde': True,
         'weight_combine': True,
         'no-mask': False,
-        'fde-diagonal': True
+        'fde-diagonal': True,
+        'is_fde_2nd': True
     }
 }
 print(f"config: {config_dict_diffsaits}")

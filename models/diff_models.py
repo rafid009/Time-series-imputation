@@ -721,18 +721,18 @@ class diff_SAITS_new_2(nn.Module):
             else:
                 skips_tilde_2 += skip
             if i == layers/2:
-                # if self.ablation_config['is_fde']:
-                # # Feature attention added
-                #     attn_weights_f = attn_weights_f.squeeze(dim=1)  # namely term A_hat in Eq.
-                #     if len(attn_weights_f.shape) == 4:
-                #         # if having more than 1 head, then average attention weights from all heads
-                #         attn_weights_f = torch.transpose(attn_weights_f, 1, 3)
-                #         attn_weights_f = attn_weights_f.mean(dim=3)
-                #         attn_weights_f = torch.transpose(attn_weights_f, 1, 2)
-                #         attn_weights_f = torch.softmax(attn_weights_f, dim=-1)
-                #     enc_output = self.reduce_dim_z(enc_output) @ attn_weights_f + X[:, 1, :, :]
-                # else:
-                enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :]
+                if self.ablation_config['is_fde'] and self.ablation_config['is_fde_2nd']:
+                # Feature attention added
+                    attn_weights_f = attn_weights_f.squeeze(dim=1)  # namely term A_hat in Eq.
+                    if len(attn_weights_f.shape) == 4:
+                        # if having more than 1 head, then average attention weights from all heads
+                        attn_weights_f = torch.transpose(attn_weights_f, 1, 3)
+                        attn_weights_f = attn_weights_f.mean(dim=3)
+                        attn_weights_f = torch.transpose(attn_weights_f, 1, 2)
+                        attn_weights_f = torch.softmax(attn_weights_f, dim=-1)
+                    enc_output = self.reduce_dim_z(enc_output) @ attn_weights_f + X[:, 1, :, :]
+                else:
+                    enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :]
                 enc_output = self.embedding_2(enc_output)
                 skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
 
