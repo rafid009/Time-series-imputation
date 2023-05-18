@@ -626,15 +626,22 @@ class diff_SAITS_new_2(nn.Module):
         # for operation on time dim
         self.embedding_1 = Conv1d_with_init_saits_new(d_feature, d_feature, 1) # nn.Linear(actual_d_feature, d_model)
         self.embedding_cond = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1) # nn.Linear(actual_d_feature, d_model)
-        
+        self.embedding_2 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+
         # self.output_proj_1 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         # self.output_proj_2 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-        self.reduce_dim_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-        self.reduce_skip_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-        # for operation on measurement dim
-        self.embedding_2 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-        self.reduce_dim_beta = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-        self.reduce_dim_gamma = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+        if self.ablation_config['reduce-type'] == 'linear':
+            self.reduce_dim_z = nn.Linear(d_feature, d_feature)
+            self.reduce_dim_z = nn.Linear(d_feature, d_feature)
+            self.reduce_skip_z = nn.Linear(d_feature, d_feature)
+            self.reduce_dim_beta = nn.Linear(d_feature, d_feature)
+            self.reduce_dim_gamma = nn.Linear(d_feature, d_feature)
+        else:
+            self.reduce_skip_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+            self.reduce_dim_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+            self.reduce_skip_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+            self.reduce_dim_beta = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+            self.reduce_dim_gamma = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         # for delta decay factor
         self.weight_combine = nn.Linear(d_feature + d_time, d_feature)
         # combi 2 more layers
@@ -730,26 +737,44 @@ class diff_SAITS_new_2(nn.Module):
                         attn_weights_f = attn_weights_f.mean(dim=3)
                         attn_weights_f = torch.transpose(attn_weights_f, 1, 2)
                         attn_weights_f = torch.softmax(attn_weights_f, dim=-1)
-                    enc_output = self.reduce_dim_z(enc_output)
-                    enc_output = torch.transpose(enc_output, 1, 2)
-                    enc_output = enc_output @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
-                    enc_output = torch.transpose(enc_output, 1, 2)
+                    if self.ablation_config['reduce-type'] == 'linear':
+                        enc_output = torch.transpose(enc_output, 1, 2)
+                        enc_output = self.reduce_dim_z(enc_output)
+                        enc_output = enc_output @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
+                        enc_output = torch.transpose(enc_output, 1, 2)
+                    else:
+                        enc_output = self.reduce_dim_z(enc_output)
+                        enc_output = torch.transpose(enc_output, 1, 2)
+                        enc_output = enc_output @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
+                        enc_output = torch.transpose(enc_output, 1, 2)
                 else:
-                    enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :]
+                    if self.ablation_config['reduce-type'] == 'linear':
+                        enc_output = torch.transpose(enc_output, 1, 2)
+                        enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :]
+                        enc_output = torch.transpose(enc_output, 1, 2)
+                    else:
+                        enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :]
+
                 enc_output = self.embedding_2(enc_output)
-                skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
+                
+                if self.ablation_config['reduce-type'] == 'linear':
+                    skips_tilde_1 = torch.transpose(skips_tilde_1, 1, 2)
+                    skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
+                    skips_tilde_1 = torch.transpose(skips_tilde_1, 1, 2)
+                else:
+                    skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
 
             if i == layers:
-                skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
+                if self.ablation_config['reduce-type'] == 'linear':
+                    skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
+                    skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
+                    skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
+                else:
+                    skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
+
         skips_tilde_1 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
         skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
-        # skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
 
-        # X_tilde = self.reduce_dim_z(enc_output)
-        # X_tilde = X_tilde + skips_tilde_1
-
-        # skips_tilde_1 = F.relu(self.output_proj_1(skips_tilde_1))
-        # skips = self.output_proj_2(skips_tilde_1)
         if self.ablation_config['weight_combine']:
             # attention-weighted combine
             attn_weights = attn_weights.squeeze(dim=1)  # namely term A_hat in Eq.
@@ -766,5 +791,5 @@ class diff_SAITS_new_2(nn.Module):
             skips_tilde_3 = (1 - combining_weights) * skips_tilde_1 + combining_weights * skips_tilde_2
         else:
             skips_tilde_3 = (skips_tilde_1 + skips_tilde_2) / 2
-        # skips_tilde_3 = (skips_tilde_1 + skips_tilde_2) / 2
+
         return skips_tilde_1, skips_tilde_2, skips_tilde_3
