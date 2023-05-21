@@ -666,13 +666,13 @@ class diff_SAITS_new_2(nn.Module):
             noise = X[:, 1, :, :] # (B, K, L)
 
         noise = torch.transpose(noise, 1, 2) # (B, L, K)
-        noise = torch.cat([noise, masks[:, 1, :, :]], dim=-1) # (B, L, 2K)
+        noise = torch.cat([noise, torch.transpose(masks[:, 1, :, :], 1, 2)], dim=-1) # (B, L, 2K)
         noise = F.relu(self.position_enc_noise(self.embedding_1(noise))) # (B, L, D)
         noise = torch.transpose(noise, 1, 2) # (B, D, L)
 
         if self.ablation_config['reduce-type'] == 'linear':
             cond = torch.transpose(cond, 1, 2) # (B, L, K)
-            cond = torch.cat([cond, masks[:, 0, :, :]], dim=-1) # (B, L, 2K)
+            cond = torch.cat([cond, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
             cond = self.position_enc_cond(self.embedding_cond(cond)) # (B, L, D)
             cond = torch.transpose(cond, 1, 2) # (B, D, L)
         else:
