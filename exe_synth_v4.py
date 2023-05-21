@@ -316,11 +316,12 @@ config_dict_diffsaits = {
         'fde-choice': 'fde-conv-multi',
         'fde-layers': 4,
         'is_fde': True,
-        'weight_combine': True,
+        'weight_combine': False,
         'no-mask': False,
         'fde-diagonal': True,
         'is_fde_2nd': False,
-        'reduce-type': 'non-linear'
+        'reduce-type': 'linear',
+        'is_2nd_block': False
     }
 }
 print(f"config: {config_dict_diffsaits}")

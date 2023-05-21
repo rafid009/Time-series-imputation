@@ -185,7 +185,7 @@ class Conv(nn.Module):
 def Conv1d_with_init_saits_new(in_channels, out_channels, kernel_size, init_zero=False, dilation=1):
     padding = dilation * ((kernel_size - 1)//2)
     layer = nn.Conv1d(in_channels, out_channels, kernel_size, dilation=dilation, padding=padding)
-    layer = nn.utils.weight_norm(layer)
+    # layer = nn.utils.weight_norm(layer)
     if init_zero:
         nn.init.zeros_(layer.weight)
     else:
@@ -496,7 +496,7 @@ class ResidualEncoderLayer_new_2(nn.Module):
 
         self.diffusion_projection = nn.Linear(diffusion_embedding_dim, channels)
         self.init_proj = Conv1d_with_init_saits_new(d_model, channels, 1)
-        self.conv_layer = Conv1d_with_init_saits_new(2 * channels, 2 * channels, kernel_size=1)
+        self.conv_layer = Conv1d_with_init_saits_new(channels, 2 * channels, kernel_size=1)
 
         self.cond_proj = Conv1d_with_init_saits_new(d_model, 2 * channels, 1)
         self.conv_cond = Conv1d_with_init_saits_new(2 * channels, 2 * channels, kernel_size=1)
@@ -507,70 +507,30 @@ class ResidualEncoderLayer_new_2(nn.Module):
 
         # self.output_proj = Conv1d_with_init_saits_new(channels, 2 * d_model, 1)
 
-        self.position_enc_noise = PositionalEncoding(2 * channels, n_position=d_time)
         self.mask_conv = Conv1d_with_init_saits_new(2 * channels, 2 * channels, 1)
-
-        # if self.ablation_config['fde-choice'] == 'fde-conv-single':
-        #     self.mask_conv = Conv1d_with_init_saits_new(2 * actual_d_feature, actual_d_feature, 1)
-        #     # self.layer_stack_for_feature_weights = nn.ModuleList([
-        #     #     EncoderLayer(actual_d_feature, d_time, d_time, d_inner, 1, d_k, d_v, dropout, 0,
-        #     #                 True, choice='fde-conv-single')
-        #     #     for _ in range(self.ablation_config['fde-layers'])
-        #     # ])
-        #     self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, 1, d_time, d_time, dropout, 0,
-        #                     True, choice='fde-conv-single')
-        # elif self.ablation_config['fde-choice'] == 'fde-conv-multi':
-        #     self.mask_conv = Conv1d_with_init_saits_new(2 * actual_d_feature, actual_d_feature, 1)
-        #     # self.layer_stack_for_feature_weights = nn.ModuleList([
-        #     #     EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_k, d_v, dropout, 0,
-        #     #                 True, choice='fde-conv-multi')
-        #     #     for _ in range(self.ablation_config['fde-layers'])
-        #     # ])
-        #     self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
-        #                     True, choice='fde-conv-multi')
-        # else:
-        #     self.mask_conv = Conv1d_with_init_saits_new(2 * actual_d_feature, actual_d_feature, 1)
-        #     # self.layer_stack_for_feature_weights = nn.ModuleList([
-        #     #     EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_k, d_v, dropout, 0,
-        #     #                 True)
-        #     #     for _ in range(self.ablation_config['fde-layers'])
-        #     # ])
-        #     self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
-        #                     True)
-
-
-
 
     # new_design
     def forward(self, x, cond, diffusion_emb, mask):
         # x Noise
         # L -> time
-        # K -> feature
-        # channels = K
-        B, K, L = x.shape
+        # D -> feature
+        # channels = D
+        B, D, L = x.shape
 
-        x_proj = self.init_proj(x) # (B, K, L)
+        x_proj = self.init_proj(x) # (B, D, L)
  
-        cond = self.cond_proj(cond) # (B, 2*K, L)
+        cond = self.cond_proj(cond) # (B, 2*D, L)
         
 
-        diff_proj = self.diffusion_projection(diffusion_emb).unsqueeze(-1) # (B, K, 1)
-        y = x_proj + diff_proj # (B, K, L)
+        diff_proj = self.diffusion_projection(diffusion_emb).unsqueeze(-1) # (B, D, 1)
+        y = x_proj + diff_proj # (B, D, L)
 
-        y = torch.stack([y, mask], dim=1) # (B, 2, K, L)
-        y = y.permute(0, 2, 1, 3) # (B, K, 2, L)
-        y = y.reshape(-1, 2*K, L) # (B, 2*K, L)
-        y = self.mask_conv(y) # (B, 2*K, L)
-        y = self.conv_layer(y)
+        y = self.conv_layer(y) # (B, 2D, L)
         # y = y + cond
         # y, attn_weights_feature = self.feature_encoder(y) # (B, K, L), (B, K, K)
 
-        y = torch.transpose(y, 1, 2)
-        y = self.position_enc_noise(y) # (B, 2*K, L)
-        y = torch.transpose(y, 1, 2)
-
         # y = y + cond
-        c_y = self.conv_cond(cond)
+        c_y = self.conv_cond(cond) # (B, 2D, L)
         y = y + c_y
 
 
@@ -584,8 +544,7 @@ class ResidualEncoderLayer_new_2(nn.Module):
 
         residual = self.res_proj(out) # (B, K, L)
         skip = self.skip_proj(out) # (B, K, L)
-        # out = self.output_proj(out)
-        # residual, skip = torch.chunk(y, 2, dim=1)
+
         # attn_weights = (attn_weights_1 + attn_weights_2) / 2 #torch.softmax(attn_weights_1 + attn_weights_2, dim=-1)
 
         return (x + residual) * math.sqrt(0.5), skip, attn_weights_time
@@ -597,82 +556,87 @@ class diff_SAITS_new_2(nn.Module):
             dropout, diagonal_attention_mask=True, is_simple=False, ablation_config=None):
         super().__init__()
         self.n_layers = n_layers
-        actual_d_feature = d_feature * 2
+        # actual_d_feature = d_feature * 2
         self.is_simple = is_simple
         self.d_feature = d_feature
-        channels = d_feature #int(d_model / 2)
         self.ablation_config = ablation_config
         self.d_time = d_time
         self.n_head = n_head
+
+        if self.ablation_config['reduce-type'] != 'linear':
+            d_model = d_feature
+        channels = d_model
         
         self.layer_stack_for_first_block = nn.ModuleList([
             ResidualEncoderLayer_new_2(channels=channels, d_time=d_time, actual_d_feature=d_feature, 
-                        d_model=d_feature, d_inner=d_inner, n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout,
+                        d_model=d_model, d_inner=d_inner, n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout,
                         diffusion_embedding_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask, ablation_config=self.ablation_config)
             for i in range(n_layers)
         ])
-        # self.layer_stack_for_second_block = nn.ModuleList([
-        #     ResidualEncoderLayer_new_2(channels=channels, d_time=d_time, actual_d_feature=actual_d_feature, 
-        #                 d_model=d_model, d_inner=d_inner, n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout,
-        #                 diffusion_embedding_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask, ablation_config=ablation_config)
-        #     for _ in range(n_layers)
-        # ])
+
         self.diffusion_embedding = DiffusionEmbedding(diff_steps, diff_emb_dim)
         self.dropout = nn.Dropout(p=dropout)
 
-        self.position_enc_cond = PositionalEncoding(d_feature, n_position=d_time)
         
 
-        # for operation on time dim
-        self.embedding_1 = Conv1d_with_init_saits_new(d_feature, d_feature, 1) # nn.Linear(actual_d_feature, d_model)
-        self.embedding_cond = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1) # nn.Linear(actual_d_feature, d_model)
-        self.embedding_2 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-
-        # self.output_proj_1 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-        # self.output_proj_2 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         if self.ablation_config['reduce-type'] == 'linear':
-            self.reduce_dim_z = nn.Linear(d_feature, d_feature)
-            self.reduce_dim_z = nn.Linear(d_feature, d_feature)
-            self.reduce_skip_z = nn.Linear(d_feature, d_feature)
-            self.reduce_dim_beta = nn.Linear(d_feature, d_feature)
+            self.embedding_1 = nn.Linear(2 * d_feature, d_model) # nn.Linear(actual_d_feature, d_model)
+            self.embedding_cond = nn.Linear(2 * d_feature, d_model) # nn.Linear(actual_d_feature, d_model)
+            self.position_enc_cond = PositionalEncoding(d_model, n_position=d_time)
+            self.position_enc_noise = PositionalEncoding(d_model, n_position=d_time)
+            
+            if self.ablation_config['is_2nd_block']:
+                self.reduce_dim_z = nn.Linear(d_model, d_feature)
+                self.reduce_skip_z = nn.Linear(d_model, d_feature)
+                self.embedding_2 = nn.Linear(2 * d_feature, d_model)
+            
+            self.reduce_dim_beta = nn.Linear(d_model, d_feature)
             self.reduce_dim_gamma = nn.Linear(d_feature, d_feature)
         else:
-            self.reduce_skip_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-            self.reduce_dim_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-            self.reduce_skip_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+            self.position_enc_cond = PositionalEncoding(d_feature, n_position=d_time)
+            self.embedding_1 = Conv1d_with_init_saits_new(d_feature, d_feature, 1) # nn.Linear(actual_d_feature, d_model)
+            self.embedding_cond = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1) # nn.Linear(actual_d_feature, d_model)
+            
+            if self.ablation_config['is_2nd_block']:
+                self.reduce_dim_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+                self.reduce_skip_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+                self.embedding_2 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+            
             self.reduce_dim_beta = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
             self.reduce_dim_gamma = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         # for delta decay factor
-        self.weight_combine = nn.Linear(d_feature + d_time, d_feature)
+        if self.ablation_config['weight_combine']:
+            self.weight_combine = nn.Linear(d_feature + d_time, d_feature)
         # combi 2 more layers
 
-        if self.ablation_config['fde-choice'] == 'fde-conv-single':
-            self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
-            self.layer_stack_for_feature_weights = nn.ModuleList([
-                EncoderLayer(d_feature, d_time, d_time, d_inner, 1, d_time, d_time, dropout, 0,
-                            True, choice='fde-conv-single')
-                for _ in range(self.ablation_config['fde-layers'])
-            ])
-            # self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, 1, d_time, d_time, dropout, 0,
-            #                 True, choice='fde-conv-single')
-        elif self.ablation_config['fde-choice'] == 'fde-conv-multi':
-            self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
-            self.layer_stack_for_feature_weights = nn.ModuleList([
-                EncoderLayer(d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
-                            True, choice='fde-conv-multi')
-                for _ in range(self.ablation_config['fde-layers'])
-            ])
-            # self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
-            #                 True, choice='fde-conv-multi')
-        else:
-            self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
-            self.layer_stack_for_feature_weights = nn.ModuleList([
-                EncoderLayer(d_feature, d_time, d_time, d_inner, n_head, 64, 64, dropout, 0,
-                            True)
-                for _ in range(self.ablation_config['fde-layers'])
-            ])
-            # self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
-            #                 True)
+        if self.ablation_config['is_fde']:
+            if self.ablation_config['fde-choice'] == 'fde-conv-single':
+                self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
+                self.layer_stack_for_feature_weights = nn.ModuleList([
+                    EncoderLayer(d_feature, d_time, d_time, d_inner, 1, d_time, d_time, dropout, 0,
+                                True, choice='fde-conv-single')
+                    for _ in range(self.ablation_config['fde-layers'])
+                ])
+                # self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, 1, d_time, d_time, dropout, 0,
+                #                 True, choice='fde-conv-single')
+            elif self.ablation_config['fde-choice'] == 'fde-conv-multi':
+                self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
+                self.layer_stack_for_feature_weights = nn.ModuleList([
+                    EncoderLayer(d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
+                                True, choice='fde-conv-multi')
+                    for _ in range(self.ablation_config['fde-layers'])
+                ])
+                # self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
+                #                 True, choice='fde-conv-multi')
+            else:
+                self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
+                self.layer_stack_for_feature_weights = nn.ModuleList([
+                    EncoderLayer(d_feature, d_time, d_time, d_inner, n_head, 64, 64, dropout, 0,
+                                True)
+                    for _ in range(self.ablation_config['fde-layers'])
+                ])
+                # self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
+                #                 True)
         
 
     def forward(self, inputs, diffusion_step):
@@ -705,6 +669,7 @@ class diff_SAITS_new_2(nn.Module):
 
         noise = F.relu(self.embedding_1(noise)) # (B, K, L)
 
+        
         cond = torch.stack([cond, masks[:, 1, :, :]], dim=1) # (B, 2, K, L)
         cond = cond.permute(0, 2, 1, 3) # (B, K, 2, L)
         cond = cond.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
