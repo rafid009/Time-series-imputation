@@ -696,7 +696,6 @@ class diff_SAITS_new_2(nn.Module):
             i += 1
             enc_output, skip, attn_weights = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, K, L)
 
-
             if self.ablation_config['is_2nd_block']:
                 if i <= layers/2:
                     skips_tilde_1 += skip
