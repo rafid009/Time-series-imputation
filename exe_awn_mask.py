@@ -30,7 +30,7 @@ class NumpyArrayEncoder(JSONEncoder):
 seed = 10
 config_dict_csdi = {
     'train': {
-        'epochs': 2500,
+        'epochs': 10,
         'batch_size': 16 ,
         'lr': 1.0e-3
     },      
