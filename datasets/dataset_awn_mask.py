@@ -25,7 +25,7 @@ def get_dataloader(filename='data/Daily/miss_data_yy.npy', batch_size=16, val_ra
     data = np.load(filename)
     length = 366 if is_year else 31
     indices = [i for i in range(len(data))]
-    train_indices = np.random.choice(data, size=int((1 - val_ratio) * len(data)), replace=False)
+    train_indices = np.random.choice(indices, size=int((1 - val_ratio) * len(data)), replace=False)
     train_indices
     test_indices = []
     for i in indices:
