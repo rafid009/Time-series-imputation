@@ -71,7 +71,7 @@ n_features = len(features)
 num_seasons = 32
 noise = False
 filename = './data/Daily/miss_data_yy.npy'
-train_loader, valid_loader = get_dataloader(filename, 16, 0.2, is_year=True, type='Daily')
+train_loader, valid_loader = get_dataloader(filename, 8, 0.2, is_year=True, type='Daily')
 
 model_csdi = Mask_AWN(config_dict_csdi, device, target_dim=len(features)).to(device)
 model_folder = "./saved_model_mask_awn"
