@@ -11,6 +11,7 @@ m_dict = {
 m = m_dict[awn_folder_name]
 data_folder = './data'
 awn_folder = f'{data_folder}/{awn_folder_name}'
+awn_list = ['AWN_DAILY_330127.csv']
 is_year = True
 features = [
         # ' LATITUDE_DEGREE',
@@ -75,7 +76,7 @@ feats_hour = [
 data = []
 if is_year:
     length = 366
-    for filename in os.listdir(awn_folder):
+    for filename in awn_list: # os.listdir(awn_folder):
         if filename.endswith('.csv'):
             df = pd.read_csv(f'{awn_folder}/{filename}')
             X = []
@@ -94,7 +95,11 @@ if is_year:
                     X.append(np.array(x))
                     x = []
             X = np.array(X)
-            data.extend(X)
+            if len(X.shape) == 3:
+                data.extend(X.copy())
+                total = X.shape[0] * X.shape[1] * X.shape[2]
+                miss = np.isnan(X).sum()
+                print(f"filename: {filename}: X = {X.shape}\ntotal: {total}, miss: {miss}, ratio: {total / miss if miss != 0 else -1}")
 
 else:
     for filename in os.listdir(awn_folder):
@@ -139,6 +144,7 @@ miss_data = []
 total_nan = 0
 for i in range(len(data)):
     miss = np.isnan(data[i]).sum()
+    # print(f"miss = {miss}")
     total_nan += miss
     if miss > 0:
         miss_data.append(data[i])
@@ -147,4 +153,5 @@ np.save(f'{awn_folder}/data_yy.npy', data)
 
 miss_data = np.array(miss_data)
 print(f"Miss data: {miss_data.shape}")
+print(f"Total number: {miss_data.shape[0] * miss_data.shape[1] * miss_data.shape[2]}")
 np.save(f'{awn_folder}/miss_data_yy.npy', miss_data)
