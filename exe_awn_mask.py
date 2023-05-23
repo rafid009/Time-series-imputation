@@ -46,7 +46,7 @@ config_dict_csdi = {
          'is_fast': False,
     },
     'model': {
-        'is_unconditional': 0,
+        'is_unconditional': True,
         'timeemb': 128,
         'featureemb': 16,
         'target_strategy': "random",
