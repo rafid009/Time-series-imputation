@@ -31,7 +31,7 @@ seed = 10
 config_dict_csdi = {
     'train': {
         'epochs': 100,
-        'batch_size': 16 ,
+        'batch_size': 8,
         'lr': 1.0e-3
     },      
     'diffusion': {
