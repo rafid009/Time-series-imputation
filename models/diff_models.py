@@ -729,14 +729,17 @@ class diff_SAITS_new_2(nn.Module):
                         else:
                             enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :]
 
-                    enc_output = self.embedding_2(enc_output)
-
+                    
                     if self.ablation_config['reduce-type'] == 'linear':
                         skips_tilde_1 = torch.transpose(skips_tilde_1, 1, 2)
                         skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
                         skips_tilde_1 = torch.transpose(skips_tilde_1, 1, 2)
+                        enc_output = torch.transpose(enc_output, 1, 2)
+                        enc_output = self.embedding_2(enc_output)
+                        enc_output = torch.transpose(enc_output, 1, 2)
                     else:
                         skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
+                        enc_output = self.embedding_2(enc_output)
             else:
                 skips_tilde_2 += skip
 
@@ -770,6 +773,8 @@ class diff_SAITS_new_2(nn.Module):
             else:
                 # skips_tilde_3 = (skips_tilde_1 + skips_tilde_2) / 2
                 skips_tilde_3 = skips_tilde_2
+                skips_tilde_2 = None
+                skips_tilde_1 = None
         else:
             skips_tilde_3 = skips_tilde_2
             skips_tilde_2 = None
