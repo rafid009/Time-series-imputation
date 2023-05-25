@@ -129,7 +129,7 @@ class Mask_base(nn.Module):
         imputed_samples = torch.zeros(B, n_samples, K, L).to(self.device)
 
         for i in range(n_samples):
-            current_sample = torch.randn(shape)
+            current_sample = torch.randn(shape).to(self.device)
             ti = 0
             for t in range(self.num_steps - 1, -1, -1):
                 diff_input = current_sample
