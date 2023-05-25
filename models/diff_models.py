@@ -584,12 +584,12 @@ class diff_SAITS_new_2(nn.Module):
             self.position_enc_noise = PositionalEncoding(d_model, n_position=d_time)
             
             if self.ablation_config['is_2nd_block']:
-                self.reduce_dim_z = nn.Linear(d_model, d_feature)
-                self.reduce_skip_z = nn.Linear(d_model, d_feature)
+                self.reduce_dim_z = Conv1d_with_init_saits_new(d_model, d_feature, 1)
+                self.reduce_skip_z = Conv1d_with_init_saits_new(d_model, d_feature, 1)
                 self.embedding_2 = nn.Linear(2 * d_feature, d_model)
             
-            self.reduce_dim_beta = nn.Linear(d_model, d_feature)
-            self.reduce_dim_gamma = nn.Linear(d_feature, d_feature)
+            self.reduce_dim_beta = Conv1d_with_init_saits_new(d_model, d_feature, 1)
+            self.reduce_dim_gamma = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         else:
             self.position_enc_cond = PositionalEncoding(d_feature, n_position=d_time)
             self.embedding_1 = Conv1d_with_init_saits_new(d_feature, d_feature, 1) # nn.Linear(actual_d_feature, d_model)
@@ -694,7 +694,7 @@ class diff_SAITS_new_2(nn.Module):
         layers = len(self.layer_stack_for_first_block)
         for encoder in self.layer_stack_for_first_block:
             i += 1
-            enc_output, skip, attn_weights = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, K, L)
+            enc_output, skip, attn_weights = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, D, L)
 
             if self.ablation_config['is_2nd_block']:
                 if i <= layers/2:
@@ -723,8 +723,9 @@ class diff_SAITS_new_2(nn.Module):
                             enc_output = torch.transpose(enc_output, 1, 2)
                     else:
                         if self.ablation_config['reduce-type'] == 'linear':
+                            
+                            enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :] # (B, K, L)
                             enc_output = torch.transpose(enc_output, 1, 2) # (B, L, K)
-                            enc_output = self.reduce_dim_z(enc_output) + torch.transpose(X[:, 1, :, :], 1, 2) # (B, L, K)
                             enc_output = torch.cat([enc_output, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
                             enc_output = self.embedding_2(enc_output) # (B, L, D)
                             enc_output = torch.transpose(enc_output, 1, 2) # (B, D, L)
@@ -734,20 +735,16 @@ class diff_SAITS_new_2(nn.Module):
 
                     
                     if self.ablation_config['reduce-type'] == 'linear':
-                        skips_tilde_1 = torch.transpose(skips_tilde_1, 1, 2)
-                        skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
-                        skips_tilde_1 = torch.transpose(skips_tilde_1, 1, 2)
+                        skips_tilde_1 = self.reduce_skip_z(skips_tilde_1) # (B, K, L)
                     else:
                         skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
                         
             else:
-                skips_tilde_2 += skip
+                skips_tilde_2 += skip # (B, D, L)
 
             if i == layers:
                 if self.ablation_config['reduce-type'] == 'linear':
-                    skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
-                    skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
-                    skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
+                    skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2))) # (B, K, L)
                 else:
                     skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
 
