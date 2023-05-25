@@ -104,7 +104,7 @@ for i, val in enumerate(valid_loader):
 
 with torch.no_grad():
     output = model_csdi.evaluate(nsample, (1, n_features, d_time))
-    samples, observed_time = output
+    samples = output
 
     samples = samples.permute(1, 0, 3, 2).squeeze(0)  # (nsample,B,L,K)
     samples = samples.reshape(samples.shape[0], samples.shape[1], -1)
