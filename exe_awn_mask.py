@@ -99,7 +99,7 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 ground = 0
 for i, val in enumerate(valid_loader):
     ground = val['observed_data'].permute(0, 2, 1)
-    ground = ground.reshape(ground.shape[0], -1)
+    ground = ground.reshape(ground.shape[0], -1).cpu().numpy()
 
 
 with torch.no_grad():
@@ -107,7 +107,7 @@ with torch.no_grad():
     samples = output
 
     samples = samples.permute(1, 0, 3, 2).squeeze(0)  # (nsample,B,L,K)
-    samples = samples.reshape(samples.shape[0], samples.shape[1], -1)
+    samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
 
     observations = xr.DataArray(ground, coords=[('b', np.arange(ground.shape[0])), ('x', np.arange(n_features * d_time))])
 
