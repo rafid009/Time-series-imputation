@@ -299,7 +299,7 @@ config_dict_diffsaits = {
         'featureemb': 16,
         'target_strategy': "mix", # noise mix
         'type': 'SAITS',
-        'n_layers': 6,
+        'n_layers': 8,
         'loss_weight_p': 1,
         'loss_weight_f': 1,
         'd_time': n_steps,
@@ -314,7 +314,7 @@ config_dict_diffsaits = {
     },
     'ablation': {
         'fde-choice': 'fde-conv-multi',
-        'fde-layers': 3,
+        'fde-layers': 4,
         'is_fde': True,
         'weight_combine': False,
         'no-mask': False,

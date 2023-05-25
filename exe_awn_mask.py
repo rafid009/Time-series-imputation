@@ -16,6 +16,7 @@ import math
 from tqdm import tqdm
 import xskillscore as xs
 import xarray as xr
+import scipy.stats as st
 matplotlib.rc('xtick', labelsize=20) 
 matplotlib.rc('ytick', labelsize=20) 
 # torch.manual_seed(42)
@@ -109,14 +110,26 @@ with torch.no_grad():
     samples = samples.permute(1, 0, 3, 2).squeeze(0)  # (nsample,B,L,K)
     samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
 
-    observations = xr.DataArray(ground, coords=[('b', np.arange(ground.shape[0])), ('x', np.arange(n_features * d_time))])
+    mean = np.mean(ground, axis=0)
+    std = np.std(ground, axis=0)
+    ground_norm = (ground - mean) / std
+    observations = xr.DataArray(ground_norm, coords=[('b', np.arange(ground.shape[0])), ('x', np.arange(n_features * d_time))])
 
-    forecasts = xr.DataArray(samples, coords=[('member', np.arange(samples.shape[0])), ('b', np.arange(1)), ('x', np.arange(n_features * d_time))])
-    
-    brier = xs.brier_score(observations, (forecasts).mean('member'), dim="b")
-    crps = xs.crps_ensemble(observations, forecasts,member_dim='member', dim='b')
+    quantiles = np.arange(0.05, 1.0, 0.05)
 
-    print(f"brier: {brier}\ncrps: {crps}")
+    quant_min = 0.05
+    quant_max = 1.0
+    tol = 0.05
+
+    # forecasts = xr.DataArray(samples, coords=[('member', np.arange(samples.shape[0])), ('b', np.arange(1)), ('x', np.arange(n_features * d_time))])
+    forecast_mean = np.mean(samples, axis=0)
+    forcast_std = np.std(samples, axis=0)
+    forecasts = st.norm.cdf(samples, ground.shape[0], ground.shape[1], )
+    # brier = xs.brier_score(observations, (forecasts).mean('member'), dim="b")
+    crps = xs.crps_ensemble(observations, forecasts, member_dim='member', dim='b')
+
+    # print(f"brier: {brier}\ncrps: {crps}")
+    print(f"CRPS: {crps}")
 
 
     
