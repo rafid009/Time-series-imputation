@@ -169,7 +169,7 @@ class Mask_base(nn.Module):
 
     def evaluate(self, n_samples, shape):
         B, K, L = shape
-        observed_tp = np.arange(L)
+        observed_tp = np.expand_dims(np.arange(L), axis=0)
         observed_tp = np.repeat(observed_tp, B, axis=0)
         with torch.no_grad():
             if self.is_saits:
