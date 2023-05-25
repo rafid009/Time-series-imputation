@@ -13,6 +13,9 @@ import pickle
 import json
 from json import JSONEncoder
 import math
+from tqdm import tqdm
+import xskillscore as xs
+import xarray as xr
 matplotlib.rc('xtick', labelsize=20) 
 matplotlib.rc('ytick', labelsize=20) 
 # torch.manual_seed(42)
@@ -28,6 +31,9 @@ class NumpyArrayEncoder(JSONEncoder):
    
 
 seed = 10
+n_features = len(features)
+n_sample = 100
+d_time = 366
 config_dict_csdi = {
     'train': {
         'epochs': 100,
@@ -52,7 +58,7 @@ config_dict_csdi = {
         'target_strategy': "random",
         'type': 'CSDI',
         'n_layers': 3, 
-        'd_time': 100,
+        'd_time': d_time,
         'n_feature': len(features),
         'd_model': 128,
         'd_inner': 128,
@@ -66,10 +72,8 @@ config_dict_csdi = {
 
 nsample = 50
 
-n_steps = 100
-n_features = len(features)
-num_seasons = 32
-noise = False
+n_steps = d_time
+
 filename = './data/Daily/miss_data_yy.npy'
 train_loader, valid_loader = get_dataloader(filename, 4, 0.06, is_year=True, type='Daily')
 
@@ -83,10 +87,42 @@ train(
     model_csdi,
     config_dict_csdi["train"],
     train_loader,
-    valid_loader=valid_loader,
+    valid_loader=None,
     foldername=model_folder,
     filename=f"{filename}",
     is_saits=False
 )
 # model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
+
+
+ground = 0
+for i, val in enumerate(valid_loader):
+    ground = val.permute(0, 2, 1)
+    ground = ground.reshape(ground.shape[0], -1)
+
+
+with torch.no_grad():
+    crps = 0
+    brier = 0
+
+
+    output = model_csdi.evaluate(nsample, (1, n_features, d_time))
+    samples, observed_time = output
+
+    samples = samples.permute(1, 0, 3, 2).squeeze(0)  # (nsample,B,L,K)
+    samples = samples.reshape(samples.shape[0], samples.shape[1], -1)
+
+    observations = xr.DataArray(ground, coords=[('b', np.arange(ground.shape[0])), ('x', np.arange(n_features * d_time))])
+
+    forecasts = xr.DataArray(samples, coords=[('member', np.arange(samples.shape[0])), ('b', np.arange(1)), ('x', np.arange(n_features * d_time))])
+    
+    brier = xs.brier_score(observations, (forecasts).mean('member'), dim="b")
+    crps = xs.crps_ensemble(observations, forecasts,member_dim='member', dim='b')
+
+    print(f"brier: {brier}\ncrps: {crps}")
+
+
+    
+
+

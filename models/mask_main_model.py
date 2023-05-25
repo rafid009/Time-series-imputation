@@ -134,12 +134,12 @@ class Mask_base(nn.Module):
             
     #     return total_input
 
-    def impute(self, observed_data, side_info, n_samples):
-        B, K, L = observed_data.shape
+    def impute(self, shape, side_info, n_samples):
+        B, K, L = shape
         imputed_samples = torch.zeros(B, n_samples, K, L).to(self.device)
 
         for i in range(n_samples):
-            current_sample = torch.randn_like(observed_data)
+            current_sample = torch.randn(shape)
             ti = 0
             for t in range(self.num_steps - 1, -1, -1):
                 diff_input = current_sample
@@ -176,21 +176,17 @@ class Mask_base(nn.Module):
         loss_func = self.calc_loss if is_train == 1 else self.calc_loss_valid
         return loss_func(observed_data, side_info, is_train)
 
-    def evaluate(self, batch, n_samples):
-        (
-            observed_data,
-            observed_tp,
-            cut_length,
-        ) = self.process_data(batch)
-
+    def evaluate(self, n_samples, shape):
+        B, K, L = shape
+        observed_tp = np.arange(L)
         with torch.no_grad():
             if self.is_saits:
                 side_info = None
             else:
-                side_info = self.get_side_info(observed_tp, observed_data.shape)
-            samples = self.impute(observed_data, side_info, n_samples)
+                side_info = self.get_side_info(observed_tp, shape)
+            samples = self.impute(shape, side_info, n_samples)
 
-        return samples, observed_data, observed_tp
+        return samples
 
 
 class CSDI_PM25(Mask_base):
