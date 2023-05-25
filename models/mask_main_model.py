@@ -86,7 +86,7 @@ class Mask_base(nn.Module):
         B, K, L = obs_shp
         # print(f"observed tp: {observed_tp.shape}")
         if not isinstance(observed_tp, torch.Tensor):
-            observed_tp = torch.tensor(observed_tp, dtype=torch.float32)
+            observed_tp = torch.tensor(observed_tp, dtype=torch.float32, device=self.device)
         time_embed = self.time_embedding(observed_tp, self.emb_time_dim)  # (B,L,emb)
         time_embed = time_embed.unsqueeze(2).expand(-1, -1, K, -1)
         feature_embed = self.embed_layer(
