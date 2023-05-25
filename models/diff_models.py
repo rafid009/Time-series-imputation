@@ -725,8 +725,9 @@ class diff_SAITS_new_2(nn.Module):
                         if self.ablation_config['reduce-type'] == 'linear':
                             enc_output = torch.transpose(enc_output, 1, 2) # (B, L, K)
                             enc_output = self.reduce_dim_z(enc_output) + torch.transpose(X[:, 1, :, :], 1, 2) # (B, L, K)
-                            enc_output = self.embedding_2(enc_output) # (B, L, K)
-                            enc_output = torch.transpose(enc_output, 1, 2) # (B, K, L)
+                            enc_output = torch.cat([enc_output, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
+                            enc_output = self.embedding_2(enc_output) # (B, L, D)
+                            enc_output = torch.transpose(enc_output, 1, 2) # (B, D, L)
                         else:
                             enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :]
                             enc_output = self.embedding_2(enc_output)
