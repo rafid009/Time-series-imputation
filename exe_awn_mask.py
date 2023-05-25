@@ -36,7 +36,7 @@ n_sample = 100
 d_time = 366
 config_dict_csdi = {
     'train': {
-        'epochs': 100,
+        'epochs': 200,
         'batch_size': 4,
         'lr': 1.0e-3
     },      
@@ -98,15 +98,11 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 
 ground = 0
 for i, val in enumerate(valid_loader):
-    ground = val.permute(0, 2, 1)
+    ground = val['observed_data'].permute(0, 2, 1)
     ground = ground.reshape(ground.shape[0], -1)
 
 
 with torch.no_grad():
-    crps = 0
-    brier = 0
-
-
     output = model_csdi.evaluate(nsample, (1, n_features, d_time))
     samples, observed_time = output
 
