@@ -84,7 +84,7 @@ class Mask_base(nn.Module):
 
     def get_side_info(self, observed_tp, obs_shp):
         B, K, L = obs_shp
-        print(f"observed tp: {observed_tp.shape}")
+        # print(f"observed tp: {observed_tp.shape}")
         time_embed = self.time_embedding(observed_tp, self.emb_time_dim)  # (B,L,emb)
         time_embed = time_embed.unsqueeze(2).expand(-1, -1, K, -1)
         feature_embed = self.embed_layer(
