@@ -124,15 +124,6 @@ class Mask_base(nn.Module):
         loss = (residual ** 2).mean()
         return loss
 
-    # def set_input_to_diffmodel(self, noisy_data, observed_data, cond_mask):
-    #     if self.is_unconditional == True:
-    #         total_input = noisy_data.unsqueeze(1)  # (B,1,K,L)
-    #     else:
-    #         cond_obs = (cond_mask * observed_data).unsqueeze(1)
-    #         noisy_target = ((1 - cond_mask) * noisy_data).unsqueeze(1)
-    #         total_input = torch.cat([cond_obs, noisy_target], dim=1)  # (B,2,K,L)
-            
-    #     return total_input
 
     def impute(self, shape, side_info, n_samples):
         B, K, L = shape
@@ -179,6 +170,7 @@ class Mask_base(nn.Module):
     def evaluate(self, n_samples, shape):
         B, K, L = shape
         observed_tp = np.arange(L)
+        observed_tp = np.repeat(observed_tp, B, axis=0)
         with torch.no_grad():
             if self.is_saits:
                 side_info = None
