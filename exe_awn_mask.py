@@ -84,16 +84,16 @@ filename = f"model_csdi_mask_awn.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI Masked training starts.....\n")
-train(
-    model_csdi,
-    config_dict_csdi["train"],
-    train_loader,
-    valid_loader=None,
-    foldername=model_folder,
-    filename=f"{filename}",
-    is_saits=False
-)
-# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# train(
+#     model_csdi,
+#     config_dict_csdi["train"],
+#     train_loader,
+#     valid_loader=None,
+#     foldername=model_folder,
+#     filename=f"{filename}",
+#     is_saits=False
+# )
+model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
 
@@ -124,7 +124,7 @@ def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
     return CRPS.item() / len(quantiles)
 
 
-nsample = 3000 * 4 * 8
+nsample = 5000 # 3000 * 4 * 8
 ground = 0
 for i, val in enumerate(valid_loader):
     ground = val['observed_data'].permute(0, 2, 1)
@@ -143,7 +143,7 @@ with torch.no_grad():
     # samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
     for i in range(len(samples)):
         np.save(f"{sample_folder}/pattern_{i}.npy", samples[i].cpu().numpy())
-        
+
     crps_avg = 0
     for i in range(len(ground)):
         crps = calc_quantile_CRPS(ground[i], samples, 0, 1)
