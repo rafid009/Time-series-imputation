@@ -672,7 +672,7 @@ def evaluate_imputation(models, mse_folder, exclude_key='', exclude_features=Non
         out_file.close()
 
 
-def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, trials=10, length=-1, random_trial=False, forecasting=False, missing_ratio=0.1, test_indices=None, data=False, noise=False):  
+def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, trials=10, length=-1, random_trial=False, forecasting=False, missing_ratio=0.1, test_indices=None, data=False, noise=False, filename='data/Daily/data_yy.npy', is_yearly=True, n_steps=366):  
     nsample = 50
     if 'CSDI' in models.keys():
         models['CSDI'].eval()
@@ -712,7 +712,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
         elif dataset_name == 'synth_v6':
             test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(10 + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v6', noise=noise)
         elif dataset_name == 'awn':
-
+            test_loader = get_testloader_awn(filename, is_year=is_yearly, n_steps=n_steps, batch_size=batch_size, missing_ratio=missing_ratio, seed=(10 + trial), test_index=test_indices, length=length, forecasting=forecasting, random_trial=random_trial)
         elif dataset_name == 'physio':
             test_loader = get_testloader_physio(test_indices=test_indices, seed=(10+trial), batch_size=batch_size, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, length=length)
         elif dataset_name == 'pm25':
