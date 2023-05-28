@@ -198,3 +198,5 @@ for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, missing_ratio=ratio, random_trial=True, noise=noise)
     # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, noise=noise)
+
+print(f"new, not new_2")
