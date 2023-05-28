@@ -70,6 +70,11 @@ class CSDI_base(nn.Module):
         if self.is_saits:
             self.loss_weight_p = config['model']['loss_weight_p']
             self.loss_weight_f = config['model']['loss_weight_f']
+        self.is_miss_pattern = config['model']['is_pattern']
+        if self.is_miss_pattern:
+            self.pattern_i = 0
+            self.pattern_folder = config['model']['pattern_dir']
+            self.num_patterns = config['model']['num_patterns']
 
     def time_embedding(self, pos, d_model=128):
         pe = torch.zeros(pos.shape[0], pos.shape[1], d_model).to(self.device)
@@ -106,6 +111,21 @@ class CSDI_base(nn.Module):
             else:
                 cond_mask[i] = cond_mask[i] * for_pattern_mask[i - 1] 
         return cond_mask
+    
+    def get_pattern_mask(self, observed_mask):
+        pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
+        self.pattern_i = (self.pattern_i + 1) % self.num_patterns
+        cond_mask = ((pattern - observed_mask) > 0).float()
+        if np.count_nonzero(cond_mask) == 0:
+            if self.target_strategy != "random":
+                cond_mask = self.get_hist_mask(
+                    observed_mask, for_pattern_mask=observed_mask
+                )
+            else:
+                cond_mask = self.get_randmask(observed_mask)
+        return cond_mask
+
+
 
     def get_side_info(self, observed_tp, cond_mask):
         B, K, L = cond_mask.shape

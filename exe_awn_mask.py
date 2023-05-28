@@ -141,12 +141,12 @@ with torch.no_grad():
 
     samples = samples.permute(0, 1, 3, 2).squeeze(0)  # (B,nsample,L,K)
     # samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
-    for i in range(len(samples)):
-        np.save(f"{sample_folder}/pattern_{i}.npy", samples[i].cpu().numpy())
+    # for i in range(len(samples)):
+    #     np.save(f"{sample_folder}/pattern_{i}.npy", samples[i].cpu().numpy())
 
     crps_avg = 0
     for i in range(len(ground)):
-        crps = calc_quantile_CRPS(ground[i], samples, 0, 1)
+        crps = calc_quantile_CRPS(ground[i].unsqueeze(0), samples, 0, 1)
         print(f"CRPS for {i} : {crps}")
         crps_avg += crps
     print(f"final CRPS: {crps/len(ground)}")
