@@ -97,39 +97,72 @@ train(
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
 
+def quantile_loss(target, forecast, q: float) -> float:
+    return 2 * torch.sum(
+        torch.abs((forecast - target) * ((target <= forecast) * 1.0 - q))
+    )
+
+
+def calc_denominator(target):
+    return torch.sum(torch.abs(target))
+
+
+def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
+    target = target * scaler + mean_scaler
+    forecast = forecast * scaler + mean_scaler
+
+    quantiles = np.arange(0.05, 1.0, 0.05)
+    denom = calc_denominator(target)
+    CRPS = 0
+    for i in range(len(quantiles)):
+        q_pred = []
+        for j in range(len(forecast)):
+            q_pred.append(torch.quantile(forecast[j : j + 1], quantiles[i], dim=1))
+        q_pred = torch.cat(q_pred, 0)
+        q_loss = quantile_loss(target, q_pred, quantiles[i])
+        CRPS += q_loss / denom
+    return CRPS.item() / len(quantiles)
+
+
+nsample = 3000 * 4 * 8
 ground = 0
 for i, val in enumerate(valid_loader):
     ground = val['observed_data'].permute(0, 2, 1)
-    ground = ground.reshape(ground.shape[0], -1).cpu().numpy()
+    # ground = ground.reshape(ground.shape[0], -1).cpu().numpy()
 
+sample_folder = './data/Daily/miss_pattern'
+
+if not os.path.isdir(sample_folder):
+    os.makedirs(sample_folder)
 
 with torch.no_grad():
     output = model_csdi.evaluate(nsample, (1, n_features, d_time))
     samples = output
 
-    samples = samples.permute(1, 0, 3, 2).squeeze(0)  # (nsample,B,L,K)
-    samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
-
-    mean = np.mean(ground, axis=0)
-    std = np.std(ground, axis=0)
-    ground_norm = (ground - mean) / std
-    observations = xr.DataArray(ground_norm, coords=[('b', np.arange(ground.shape[0])), ('x', np.arange(n_features * d_time))])
-
-    quantiles = np.arange(0.05, 1.0, 0.05)
-
-    quant_min = 0.05
-    quant_max = 1.0
-    tol = 0.05
+    samples = samples.permute(0, 1, 3, 2).squeeze(0)  # (B,nsample,L,K)
+    # samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
+    for i in range(len(samples)):
+        np.save(f"{sample_folder}/pattern_{i}.npy", samples[i].cpu().numpy())
+        
+    crps_avg = 0
+    for i in range(len(ground)):
+        crps = calc_quantile_CRPS(ground[i], samples, 0, 1)
+        print(f"CRPS for {i} : {crps}")
+        crps_avg += crps
+    print(f"final CRPS: {crps/len(ground)}")
+    
 
     # forecasts = xr.DataArray(samples, coords=[('member', np.arange(samples.shape[0])), ('b', np.arange(1)), ('x', np.arange(n_features * d_time))])
-    forecast_mean = np.mean(samples, axis=0)
-    forcast_std = np.std(samples, axis=0)
-    forecasts = st.norm.cdf(samples, ground.shape[0], ground.shape[1], )
+    # forecast_mean = np.mean(samples, axis=0)
+    # forcast_std = np.std(samples, axis=0)
+    # forecasts = st.norm.cdf(samples, ground.shape[0], ground.shape[1], )
     # brier = xs.brier_score(observations, (forecasts).mean('member'), dim="b")
-    crps = xs.crps_ensemble(observations, forecasts, member_dim='member', dim='b')
+    # crps = xs.crps_ensemble(observations, forecasts, member_dim='member', dim='b')
 
     # print(f"brier: {brier}\ncrps: {crps}")
-    print(f"CRPS: {crps}")
+    # print(f"CRPS: {crps}")
+
+
 
 
     
