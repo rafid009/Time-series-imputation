@@ -132,7 +132,7 @@ class AWN_Dataset(Dataset):
 
 def get_dataloader(filename, batch_size=16, missing_ratio=0.1, is_test=False, test_index=32, is_year=True):
     # np.random.seed(seed=seed)
-    train_dataset = AWN_Dataset(filename, test_index=test_index, is_year=True, rate=missing_ratio, test_index=test_index)
+    train_dataset = AWN_Dataset(filename, test_index=test_index, is_year=True, rate=missing_ratio)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_dataset = AWN_Dataset(filename, test_index=test_index, rate=missing_ratio, is_year=is_year, is_test=is_test)
     if is_test:
