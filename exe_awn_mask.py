@@ -124,10 +124,10 @@ def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
     return CRPS.item() / len(quantiles)
 
 
-nsample = 5000 # 3000 * 4 * 8
+nsample = 10000 # 3000 * 4 * 8
 ground = 0
 for i, val in enumerate(valid_loader):
-    ground = val['observed_data'].permute(0, 2, 1)
+    ground = val['observed_data'] # (B, L, K)
     # ground = ground.reshape(ground.shape[0], -1).cpu().numpy()
 
 sample_folder = './data/Daily/miss_pattern'

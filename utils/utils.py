@@ -815,26 +815,24 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
                 results_trials_mse['csdi'][trial] = csdi_rmse_avg / batch_size
                 results_mse['csdi'] += csdi_rmse_avg / batch_size
                 results_trials_mae['csdi'][trial] = csdi_mae_avg / batch_size
-            results_mae['csdi'] += csdi_mae_avg / batch_size
+                results_mae['csdi'] += csdi_mae_avg / batch_size
+                results_crps['csdi_trials'][trial] = csdi_crps_avg / batch_size
+                results_crps['csdi'] += csdi_crps_avg / batch_size
 
-            results_trials_mse['diffsaits'][trial] = diffsaits_rmse_avg / batch_size
-            results_mse['diffsaits'] += diffsaits_rmse_avg / batch_size
+            if 'DiffSAITS' in models.keys():
+                results_trials_mse['diffsaits'][trial] = diffsaits_rmse_avg / batch_size
+                results_mse['diffsaits'] += diffsaits_rmse_avg / batch_size
+                results_trials_mae['diffsaits'][trial] = diffsaits_mae_avg / batch_size
+                results_mae['diffsaits'] += diffsaits_mae_avg / batch_size
+                results_crps['diffsaits_trials'][trial] = diffsaits_crps_avg / batch_size
+                results_crps['diffsaits'] += diffsaits_crps_avg / batch_size
 
-            results_trials_mse['saits'][trial] = saits_rmse_avg / batch_size
-            results_mse['saits'] += saits_rmse_avg / batch_size
-            
-
-            results_trials_mae['diffsaits'][trial] = diffsaits_mae_avg / batch_size
-            results_mae['diffsaits'] += diffsaits_mae_avg / batch_size
-
-            results_trials_mae['saits'][trial] = saits_mae_avg / batch_size
-            results_mae['saits'] += saits_mae_avg / batch_size
-
-            results_crps['csdi_trials'][trial] = csdi_crps_avg / batch_size
-            results_crps['csdi'] += csdi_crps_avg / batch_size
-
-            results_crps['diffsaits_trials'][trial] = diffsaits_crps_avg / batch_size
-            results_crps['diffsaits'] += diffsaits_crps_avg / batch_size
+            if 'SAITS' in models.keys():
+                results_trials_mse['saits'][trial] = saits_rmse_avg / batch_size
+                results_mse['saits'] += saits_rmse_avg / batch_size
+                results_trials_mae['saits'][trial] = saits_mae_avg / batch_size
+                results_mae['saits'] += saits_mae_avg / batch_size
+     
     
     if not os.path.isdir(mse_folder):
         os.makedirs(mse_folder)
