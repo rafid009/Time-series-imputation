@@ -91,7 +91,7 @@ class AWN_Dataset(Dataset):
         self.std = np.nanstd(X, axis=1)
         include_features = []
 
-        for i in range(data.shape[0]):
+        for i in range(X.shape[0]):
             obs_val, obs_mask, mask, sample, obs_intact = parse_data(X[i], rate, is_test, length, include_features=include_features, \
                                                                      forward_trial=forward_trial, random_trial=random_trial)
             self.observed_values.append(obs_val)
