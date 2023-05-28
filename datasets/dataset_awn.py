@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
+from datasets.preprocess_awn import features
 
 def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=None, forward_trial=-1, lte_idx=None, random_trial=False):
     """Get mask of random points (missing at random) across channels based on k,
@@ -87,8 +88,10 @@ class AWN_Dataset(Dataset):
             X = data[train_indices]
         else:
             X = np.expand_dims(data[test_indices], axis=0)
-        self.mean = np.nanmean(X, axis=1)
-        self.std = np.nanstd(X, axis=1)
+
+        X_real = X.reshape(-1, len(features))
+        self.mean = np.nanmean(X_real, axis=0)
+        self.std = np.nanstd(X_real, axis=0)
         include_features = []
 
         for i in range(X.shape[0]):
