@@ -1,4 +1,4 @@
-from models.main_model import CSDI_Synth
+from models.main_model import CSDI_AWN
 from datasets.dataset_awn import get_dataloader
 from utils.utils import train, get_num_params, evaluate_imputation_all
 import numpy as np
@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import pickle
 from datasets.dataset_awn import get_dataloader
+from datasets.preprocess_awn import features
 import json
 from json import JSONEncoder
 import math
@@ -26,7 +27,7 @@ class NumpyArrayEncoder(JSONEncoder):
             return obj.tolist()
         return JSONEncoder.default(self, obj)
 
-given_features = feats_v4 #['sin', 'cos2', 'harmonic', 'weight', 'lin_comb', 'non_lin_comb', 'mixed_history']
+given_features = features #['sin', 'cos2', 'harmonic', 'weight', 'lin_comb', 'non_lin_comb', 'mixed_history']
 
 seed = 10
 config_dict_csdi = {
@@ -65,18 +66,21 @@ config_dict_csdi = {
     },
 }
 
+# filename: Any, is_year: bool = True, n_steps: int = 366
+
 dataset_name = 'awn_daily_year'
+data_file = './data/Daily/data_yy.npy'
 nsample = 50
 
-n_steps = 100
+n_steps = 366
 n_features = len(given_features)
-num_seasons = 32
-noise = False
-train_loader, valid_loader = get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=10, is_test=False, v2='v4', noise=noise)
+test_season = 32
+is_year = True
+train_loader, valid_loader = get_dataloader(data_file, is_year=is_year, batch_size=4, test_index=test_season, missing_ratio=0.1, is_test=False)
 
-model_csdi = CSDI_Synth(config_dict_csdi, device, target_dim=len(given_features)).to(device)
-model_folder = "./saved_model_synth_v4"
-filename = f"model_csdi_synth_v4{'_noise' if noise else ''}.pth"
+model_csdi = CSDI_AWN(config_dict_csdi, device, target_dim=len(given_features)).to(device)
+model_folder = f"./saved_model_{dataset_name}"
+filename = f"model_csdi_{dataset_name}.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI training starts.....\n")
@@ -103,7 +107,7 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 
 config_dict_diffsaits = {
     'train': {
-        'epochs':5000, # 3000 -> ds3
+        'epochs':4000, # 3000 -> ds3
         'batch_size': 16 ,
         'lr': 1.0e-4
     },      
@@ -124,7 +128,7 @@ config_dict_diffsaits = {
         'featureemb': 16,
         'target_strategy': "mix", # noise mix
         'type': 'SAITS',
-        'n_layers': 8,
+        'n_layers': 4,
         'loss_weight_p': 1,
         'loss_weight_f': 1,
         'd_time': n_steps,
@@ -132,8 +136,8 @@ config_dict_diffsaits = {
         'd_model': 128,
         'd_inner': 128,
         'n_head': 8,
-        'd_k': len(given_features),
-        'd_v': len(given_features),
+        'd_k': 64, #len(given_features),
+        'd_v': 64, #len(given_features),
         'dropout': 0.1,
         'diagonal_attention_mask': False
     },
@@ -151,9 +155,9 @@ config_dict_diffsaits = {
 }
 print(f"config: {config_dict_diffsaits}")
 name = 'fde-conv-multi'
-model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
+model_diff_saits = CSDI_AWN(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
-filename = f"model_diffsaits_synth_v4_{name}{'_noise' if noise else ''}-mix.pth"
+filename = f"model_diffsaits_{dataset_name}_{name}_new.pth"
 print(f"\n\DiffSAITS training starts.....\n")
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
@@ -176,21 +180,21 @@ models = {
     # 'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }
-mse_folder = f"results_awn_{name}{'_noise' if noise else ''}_new_2/metric"
-data_folder = f"results_synth_v4_{name}{'_noise' if noise else ''}_new_2/data"
+mse_folder = f"results_{dataset_name}_{name}_new/metric"
+data_folder = f"results_{dataset_name}_{name}_new/data"
 lengths = [10, 50, 90]
 for l in lengths:
     print(f"\nlength = {l}")
     print(f"\nBlackout:")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v4', batch_size=32, length=l, noise=noise)
+    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=l, noise=noise)
     # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
 print(f"\nForecasting:")
-evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v4', batch_size=32, length=(10, 80), forecasting=True, noise=noise)
+evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=(10, 80), forecasting=True, noise=noise)
 # evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v4', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise)
+    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, missing_ratio=ratio, random_trial=True, noise=noise)
     # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, noise=noise)

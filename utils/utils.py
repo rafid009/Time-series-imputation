@@ -9,6 +9,7 @@ import os
 from datasets.dataset_agaid import get_testloader, get_testloader_agaid
 from datasets.dataset_synth import get_testloader_synth
 from datasets.dataset_physio import get_testloader_physio
+from datasets.dataset_awn import get_testloader_awn
 import matplotlib.pyplot as plt
 import matplotlib
 from models.main_model import CSDI_Agaid
@@ -710,6 +711,8 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
             test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(10 + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v5', noise=noise)
         elif dataset_name == 'synth_v6':
             test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(10 + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v6', noise=noise)
+        elif dataset_name == 'awn':
+
         elif dataset_name == 'physio':
             test_loader = get_testloader_physio(test_indices=test_indices, seed=(10+trial), batch_size=batch_size, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, length=length)
         elif dataset_name == 'pm25':

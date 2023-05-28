@@ -33,7 +33,7 @@ class CSDI_base(nn.Module):
         input_dim = 1 if self.is_unconditional == True else 2
         if self.model_type == 'SAITS':
             self.is_saits = True
-            self.diffmodel = diff_SAITS_new_2(
+            self.diffmodel = diff_SAITS_new(
                 diff_steps=config['diffusion']['num_steps'],
                 n_layers=config['model']['n_layers'],
                 d_time=config['model']['d_time'],
@@ -398,6 +398,37 @@ class CSDI_Agaid(CSDI_base):
 class CSDI_Synth(CSDI_base):
     def __init__(self, config, device, target_dim=6, is_simple=False):
         super(CSDI_Synth, self).__init__(target_dim, config, device, is_simple=is_simple)
+
+    def process_data(self, batch):
+        observed_data = batch["observed_data"].to(self.device).float()
+        observed_mask = batch["observed_mask"].to(self.device).float()
+        observed_tp = batch["timepoints"].to(self.device).float()
+        gt_mask = batch["gt_mask"].to(self.device).float()
+        observed_data_intact = batch["obs_data_intact"].to(self.device).float()
+        gt_intact = batch["gt_intact"]#.to(self.device).float()
+
+        observed_data = observed_data.permute(0, 2, 1)
+        observed_mask = observed_mask.permute(0, 2, 1)
+        gt_mask = gt_mask.permute(0, 2, 1)
+
+        cut_length = torch.zeros(len(observed_data)).long().to(self.device)
+        for_pattern_mask = observed_mask
+
+        return (
+            observed_data,
+            observed_mask,
+            observed_tp,
+            gt_mask,
+            for_pattern_mask,
+            cut_length,
+            observed_data_intact,
+            gt_intact
+        )
+    
+
+class CSDI_AWN(CSDI_base):
+    def __init__(self, config, device, target_dim=17, is_simple=False):
+        super(CSDI_AWN, self).__init__(target_dim, config, device, is_simple=is_simple)
 
     def process_data(self, batch):
         observed_data = batch["observed_data"].to(self.device).float()
