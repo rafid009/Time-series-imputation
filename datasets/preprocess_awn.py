@@ -140,6 +140,9 @@ else:
 
 data = np.array(data)
 print(f'data: {data.shape}')
+
+np.save(f'{awn_folder}/data_yy.npy', data)
+
 miss_data = []
 total_nan = 0
 for i in range(len(data)):
@@ -148,9 +151,8 @@ for i in range(len(data)):
     total_nan += miss
     if miss > 0:
         miss_data.append(data[i])
-print(f"Total missing: {total_nan}")
-np.save(f'{awn_folder}/data_yy.npy', data)
 
+print(f"Total missing: {total_nan}")
 miss_data = np.array(miss_data)
 print(f"Miss data: {miss_data.shape}")
 print(f"Total number: {miss_data.shape[0] * miss_data.shape[1] * miss_data.shape[2]}")
