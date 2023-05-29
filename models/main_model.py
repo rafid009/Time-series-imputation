@@ -115,9 +115,10 @@ class CSDI_base(nn.Module):
     def get_pattern_mask(self, observed_mask):
         pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
         pattern = torch.tensor(pattern, dtype=torch.float32)
-        pattern = pattern.permute(0, 2, 1)
+        
         if self.pattern_i == 0:
-            print(f"pattern: {type(pattern)}\nobserved_mask: {type(observed_mask)}")
+            print(f"pattern: {pattern.shape}\nobserved_mask: {observed_mask.shape}")
+        pattern = pattern.permute(0, 2, 1)
         self.pattern_i = (self.pattern_i + 1) % self.num_patterns
         try:
             cond_mask = ((pattern - observed_mask) > 0).float()
