@@ -121,7 +121,7 @@ class CSDI_base(nn.Module):
             patterns.append(pattern)
             self.pattern_i = (self.pattern_i + 1) % self.num_patterns
         patterns = torch.stack(patterns, dim=0)
-        patterns = patterns.permute(0, 2, 1)
+        patterns = patterns.permute(0, 2, 1).to(self.device)
         cond_mask = ((patterns - observed_mask) > 0).float()
 
         if np.count_nonzero(cond_mask) == 0:
