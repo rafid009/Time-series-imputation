@@ -9,7 +9,7 @@ from pypots.imputation import SAITS
 import matplotlib.pyplot as plt
 import matplotlib
 import pickle
-from datasets.synthetic_data import create_synthetic_data_v3, feats_v3
+from datasets.synthetic_data import feats_v3
 import json
 from json import JSONEncoder
 import math
@@ -26,7 +26,7 @@ class NumpyArrayEncoder(JSONEncoder):
             return obj.tolist()
         return JSONEncoder.default(self, obj)
 
-given_features = feats_v2
+given_features = feats_v3
 
 
 seed = 10
