@@ -114,13 +114,13 @@ class CSDI_base(nn.Module):
     
     def get_pattern_mask(self, observed_mask):
         pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
-        pattern = torch.tensor(pattern, dtype=torch.float32)
+        # pattern = torch.tensor(pattern, dtype=torch.float32)
+        print(f"pattern: {type(pattern)}\nobserved_mask: {type(observed_mask)}")
         self.pattern_i = (self.pattern_i + 1) % self.num_patterns
         cond_mask = ((pattern - observed_mask) > 0).float()
         if np.count_nonzero(cond_mask) == 0:
             cond_mask = self.get_randmask(observed_mask)
         return cond_mask
-
 
     def get_side_info(self, observed_tp, cond_mask):
         B, K, L = cond_mask.shape
