@@ -63,7 +63,7 @@ config_dict_csdi = {
         'd_v': 64,
         'dropout': 0.1,
         'diagonal_attention_mask': True,
-        'num_pattern': 10000,
+        'num_patterns': 10000,
         'pattern_dir': './data/Daily/miss_pattern'
     },
 }
