@@ -45,13 +45,13 @@ config_dict_csdi = {
         'beta_end': 0.5,
         'num_steps': 50,
         'schedule': "quad",
-         'is_fast': False,
+        'is_fast': False,
     },
     'model': {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "random",
+        'target_strategy': "pattern",
         'type': 'CSDI',
         'n_layers': 3, 
         'd_time': 100,
@@ -80,20 +80,20 @@ train_loader, valid_loader = get_dataloader(data_file, is_year=is_year, batch_si
 
 model_csdi = CSDI_AWN(config_dict_csdi, device, target_dim=len(given_features)).to(device)
 model_folder = f"./saved_model_{dataset_name}"
-filename = f"model_csdi_{dataset_name}.pth"
+filename = f"model_csdi_{dataset_name}_pattern.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI training starts.....\n")
-# train(
-#     model_csdi,
-#     config_dict_csdi["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{filename}",
-#     is_saits=False
-# )
-model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+train(
+    model_csdi,
+    config_dict_csdi["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{filename}",
+    is_saits=False
+)
+# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
 
@@ -105,72 +105,72 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 # pickle.dump(saits, open(saits_model_file, 'wb'))
 # saits = pickle.load(open(saits_model_file, 'rb'))
 
-config_dict_diffsaits = {
-    'train': {
-        'epochs':4000, # 3000 -> ds3
-        'batch_size': 16 ,
-        'lr': 1.0e-3
-    },      
-    'diffusion': {
-        'layers': 4, 
-        'channels': 64,
-        'nheads': 8,
-        'diffusion_embedding_dim': 128,
-        'beta_start': 0.0001,
-        'beta_end': 0.5,
-        'num_steps': 50,
-        'schedule': "quad",
-         'is_fast': False,
-    },
-    'model': {
-        'is_unconditional': 0,
-        'timeemb': 128,
-        'featureemb': 16,
-        'target_strategy': "mix", # noise mix
-        'type': 'SAITS',
-        'n_layers': 4,
-        'loss_weight_p': 1,
-        'loss_weight_f': 1,
-        'd_time': n_steps,
-        'n_feature': len(given_features),
-        'd_model': 128,
-        'd_inner': 128,
-        'n_head': 8,
-        'd_k': 64, #len(given_features),
-        'd_v': 64, #len(given_features),
-        'dropout': 0.1,
-        'diagonal_attention_mask': False,
-    },
-    'ablation': {
-        'fde-choice': 'fde-conv-multi',
-        'fde-layers': 4,
-        'is_fde': True,
-        'weight_combine': False,
-        'no-mask': False,
-        'fde-diagonal': True,
-        'is_fde_2nd': False,
-        'reduce-type': 'linear',
-        'is_2nd_block': True
-    }
-}
-print(f"config: {config_dict_diffsaits}")
-name = 'fde-conv-multi'
-model_diff_saits = CSDI_AWN(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
+# config_dict_diffsaits = {
+#     'train': {
+#         'epochs':4000, # 3000 -> ds3
+#         'batch_size': 16 ,
+#         'lr': 1.0e-3
+#     },      
+#     'diffusion': {
+#         'layers': 4, 
+#         'channels': 64,
+#         'nheads': 8,
+#         'diffusion_embedding_dim': 128,
+#         'beta_start': 0.0001,
+#         'beta_end': 0.5,
+#         'num_steps': 50,
+#         'schedule': "quad",
+#          'is_fast': False,
+#     },
+#     'model': {
+#         'is_unconditional': 0,
+#         'timeemb': 128,
+#         'featureemb': 16,
+#         'target_strategy': "mix", # noise mix
+#         'type': 'SAITS',
+#         'n_layers': 4,
+#         'loss_weight_p': 1,
+#         'loss_weight_f': 1,
+#         'd_time': n_steps,
+#         'n_feature': len(given_features),
+#         'd_model': 128,
+#         'd_inner': 128,
+#         'n_head': 8,
+#         'd_k': 64, #len(given_features),
+#         'd_v': 64, #len(given_features),
+#         'dropout': 0.1,
+#         'diagonal_attention_mask': False,
+#     },
+#     'ablation': {
+#         'fde-choice': 'fde-conv-multi',
+#         'fde-layers': 4,
+#         'is_fde': True,
+#         'weight_combine': False,
+#         'no-mask': False,
+#         'fde-diagonal': True,
+#         'is_fde_2nd': False,
+#         'reduce-type': 'linear',
+#         'is_2nd_block': True
+#     }
+# }
+# print(f"config: {config_dict_diffsaits}")
+# name = 'fde-conv-multi'
+# model_diff_saits = CSDI_AWN(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
-filename = f"model_diffsaits_{dataset_name}_{name}_new.pth"
-print(f"\n\DiffSAITS training starts.....\n")
+# filename = f"model_diffsaits_{dataset_name}_{name}_new.pth"
+# print(f"\n\DiffSAITS training starts.....\n")
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 
-train(
-    model_diff_saits,
-    config_dict_diffsaits["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename=f"{filename}",
-    is_saits=True
-)
+# train(
+#     model_diff_saits,
+#     config_dict_diffsaits["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename=f"{filename}",
+#     is_saits=True
+# )
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
@@ -178,7 +178,7 @@ print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 models = {
     'CSDI': model_csdi,
     # 'SAITS': saits,
-    'DiffSAITS': model_diff_saits
+    # 'DiffSAITS': model_diff_saits
 }
 mse_folder = f"results_{dataset_name}_{name}_new/metric"
 data_folder = f"results_{dataset_name}_{name}_new/data"
