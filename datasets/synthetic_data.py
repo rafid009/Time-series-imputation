@@ -4,7 +4,7 @@ feats_v2 = ['sin', 'cos2', 'tan']
 feats_v3 = ['sin', 'cos', 'tan']
 feats_v4 = ['sin', 'cos', 'sin-cos-plus', 'sin-cos-prod']
 feats_v5 = ['sin', '1+sin2', 'cos', '1-cos2', 'tan', '1+tan']
-feats_v6 = ['sin', '1+sin2', 'cos', '1-cos2', 'sin2-cos2']
+feats_v6 = ['sin', '1+sin2', 'cos', '1-cos2', 'cos2-sin2']
 
 
 def add_rn_missing(X, length=-1, rate=-1):
