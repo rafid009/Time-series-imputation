@@ -125,7 +125,7 @@ def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
     return CRPS.item() / len(quantiles)
 
 
-nsample = 10000 # 3000 * 4 * 8
+nsample = 100 #00 # 3000 * 4 * 8
 ground = 0
 for i, val in enumerate(valid_loader):
     ground = val['observed_data'] # (B, L, K)
@@ -140,7 +140,7 @@ with torch.no_grad():
     output = model_csdi.evaluate(nsample, (1, n_features, d_time))
     samples = output
 
-    samples = samples.permute(0, 1, 3, 2).squeeze(0)  # (B,nsample,L,K)
+    samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
     # samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
     # for i in range(len(samples)):
     #     np.save(f"{sample_folder}/pattern_{i}.npy", samples[i].cpu().numpy())
