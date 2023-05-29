@@ -297,7 +297,7 @@ def create_synthetic_data_v6(n_steps, num_seasons, seed=10, rate=0.05, length_ra
         'cos2-sin2': (0)
     }
     num_steps = n_steps # config['n_steps']
-    num_features = len(feats_v5) # config['n_features']
+    num_features = len(feats_v6) # config['n_features']
     data = np.zeros((num_seasons, num_steps, num_features))
     # value_range = [(0.1, 0.4, 0.7, 0.99), (11.0, 17.5, 40.5, 61.2), (100.1, 160.2, 500, 1000)]
     
@@ -322,7 +322,7 @@ def create_synthetic_data_v6(n_steps, num_seasons, seed=10, rate=0.05, length_ra
             elif feature == 'cos2-sin2':
                 f2 = data[i, :, feats_v6.index('1+sin2')]
                 f4 = data[i, :, feats_v6.index('1-cos2')]
-                data[i, :, feats_v5.index(feature)] = f2 / f4
+                data[i, :, feats_v6.index(feature)] = f2 / f4
             
             if feature == 'sin' or feature == 'cos':
                 data[i, :, feats_v6.index(feature)] = add_rn_missing(data[i, :, feats_v6.index(feature)], length=lr)
