@@ -266,7 +266,7 @@ def create_synthetic_data_v5(n_steps, num_seasons, seed=10, rate=0.05, length_ra
                 data[i, :, feats_v5.index(feature)] = (np.cos(np.linspace(low, high, data.shape[1])))
             elif feature == '1-cos2':
                 f3 = data[i, :, feats_v5.index('cos')]
-                data[i, 1:, feats_v5.index(feature)] = 1 - f3 ** 2
+                data[i, :, feats_v5.index(feature)] = 1 - f3 ** 2
             elif feature == 'tan':
                 low = np.random.uniform(args[0], args[0] + args[2])
                 high = np.random.uniform(args[1], args[1] + args[2])
@@ -318,7 +318,7 @@ def create_synthetic_data_v6(n_steps, num_seasons, seed=10, rate=0.05, length_ra
                 data[i, :, feats_v6.index(feature)] = (np.cos(np.linspace(low, high, data.shape[1])))
             elif feature == '1-cos2':
                 f3 = data[i, :, feats_v6.index('cos')]
-                data[i, 1:, feats_v6.index(feature)] = 1 - f3 ** 2
+                data[i, :, feats_v6.index(feature)] = 1 - f3 ** 2
             elif feature == 'cos2-sin2':
                 f2 = data[i, :, feats_v6.index('1+sin2')]
                 f4 = data[i, :, feats_v6.index('1-cos2')]
