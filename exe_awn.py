@@ -51,7 +51,7 @@ config_dict_csdi = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "pattern",
+        'target_strategy': "random",
         'type': 'CSDI',
         'n_layers': 3, 
         'd_time': 100,
