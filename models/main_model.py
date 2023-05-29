@@ -70,8 +70,8 @@ class CSDI_base(nn.Module):
         if self.is_saits:
             self.loss_weight_p = config['model']['loss_weight_p']
             self.loss_weight_f = config['model']['loss_weight_f']
-        self.is_miss_pattern = config['model']['is_pattern']
-        if self.is_miss_pattern:
+
+        if self.target_strategy == 'pattern':
             self.pattern_i = 0
             self.pattern_folder = config['model']['pattern_dir']
             self.num_patterns = config['model']['num_patterns']
@@ -117,14 +117,8 @@ class CSDI_base(nn.Module):
         self.pattern_i = (self.pattern_i + 1) % self.num_patterns
         cond_mask = ((pattern - observed_mask) > 0).float()
         if np.count_nonzero(cond_mask) == 0:
-            if self.target_strategy != "random":
-                cond_mask = self.get_hist_mask(
-                    observed_mask, for_pattern_mask=observed_mask
-                )
-            else:
-                cond_mask = self.get_randmask(observed_mask)
+            cond_mask = self.get_randmask(observed_mask)
         return cond_mask
-
 
 
     def get_side_info(self, observed_tp, cond_mask):
@@ -288,7 +282,9 @@ class CSDI_base(nn.Module):
         ) = self.process_data(batch)
         if is_train == 0:
             cond_mask = gt_mask
-        elif self.target_strategy != "random":
+        elif self.target_strategy == 'pattern':
+            cond_mask = self.get_pattern_mask(observed_data)
+        elif self.target_strategy == "mix":
             cond_mask = self.get_hist_mask(
                 observed_mask, for_pattern_mask=for_pattern_mask
             )

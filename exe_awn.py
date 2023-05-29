@@ -63,7 +63,6 @@ config_dict_csdi = {
         'd_v': 64,
         'dropout': 0.1,
         'diagonal_attention_mask': True,
-        'is_pattern': False
     },
 }
 
@@ -141,7 +140,6 @@ config_dict_diffsaits = {
         'd_v': 64, #len(given_features),
         'dropout': 0.1,
         'diagonal_attention_mask': False,
-        'is_pattern': False
     },
     'ablation': {
         'fde-choice': 'fde-conv-multi',

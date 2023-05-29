@@ -108,6 +108,7 @@ def calc_denominator(target):
 
 
 def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
+    print(f"target: {target.shape}\nforecast: {forecast.shape}")
     target = target * scaler + mean_scaler
     forecast = forecast * scaler + mean_scaler
 
