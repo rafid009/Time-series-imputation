@@ -121,9 +121,9 @@ class CSDI_base(nn.Module):
             patterns.append(pattern)
             self.pattern_i = (self.pattern_i + 1) % self.num_patterns
         patterns = torch.stack(patterns, dim=0)
-        pattern = pattern.permute(0, 2, 1)
-        cond_mask = ((pattern - observed_mask) > 0).float()
-        
+        patterns = patterns.permute(0, 2, 1)
+        cond_mask = ((patterns - observed_mask) > 0).float()
+
         if np.count_nonzero(cond_mask) == 0:
             cond_mask = self.get_randmask(observed_mask)
         return cond_mask
