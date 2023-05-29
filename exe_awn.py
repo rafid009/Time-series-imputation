@@ -173,15 +173,18 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 # )
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
+# print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 models = {
     'CSDI': model_csdi,
     # 'SAITS': saits,
     # 'DiffSAITS': model_diff_saits
 }
-mse_folder = f"results_{dataset_name}_{name}_new/metric"
-data_folder = f"results_{dataset_name}_{name}_new/data"
+# mse_folder = f"results_{dataset_name}_{name}_new/metric"
+# data_folder = f"results_{dataset_name}_{name}_new/data"
+name = 'pattern'
+mse_folder = f"results_{dataset_name}_{name}/metric"
+data_folder = f"results_{dataset_name}_{name}/data"
 lengths = [10, 50, 90]
 for l in lengths:
     print(f"\nlength = {l}")
