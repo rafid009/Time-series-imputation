@@ -114,18 +114,16 @@ class CSDI_base(nn.Module):
     
     def get_pattern_mask(self, observed_mask):
         B, K, L = observed_mask.shape
-        pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
-        pattern = torch.tensor(pattern, dtype=torch.float32)
-        
-        if self.pattern_i == 0:
-            print(f"pattern: {pattern.shape}\nobserved_mask: {observed_mask.shape}")
+        patterns = []
+        for i in range(B):
+            pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
+            pattern = torch.tensor(pattern, dtype=torch.float32)
+            patterns.append(pattern)
+            self.pattern_i = (self.pattern_i + 1) % self.num_patterns
+        patterns = torch.stack(patterns, dim=0)
         pattern = pattern.permute(0, 2, 1)
-        self.pattern_i = (self.pattern_i + 1) % self.num_patterns
-        try:
-            cond_mask = ((pattern - observed_mask) > 0).float()
-        except:
-            print(f"pattern: {type(pattern)}\nobserved_mask: {type(observed_mask)}")
-            cond_mask = ((pattern - observed_mask) > 0).float()
+        cond_mask = ((pattern - observed_mask) > 0).float()
+        
         if np.count_nonzero(cond_mask) == 0:
             cond_mask = self.get_randmask(observed_mask)
         return cond_mask

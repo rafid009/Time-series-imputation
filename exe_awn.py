@@ -29,6 +29,7 @@ class NumpyArrayEncoder(JSONEncoder):
 
 given_features = features #['sin', 'cos2', 'harmonic', 'weight', 'lin_comb', 'non_lin_comb', 'mixed_history']
 
+miss_type = 'pattern'
 seed = 10
 config_dict_csdi = {
     'train': {
@@ -51,7 +52,7 @@ config_dict_csdi = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "random",
+        'target_strategy': miss_type,
         'type': 'CSDI',
         'n_layers': 3, 
         'd_time': 100,
@@ -82,7 +83,7 @@ train_loader, valid_loader = get_dataloader(data_file, is_year=is_year, batch_si
 
 model_csdi = CSDI_AWN(config_dict_csdi, device, target_dim=len(given_features)).to(device)
 model_folder = f"./saved_model_{dataset_name}"
-filename = f"model_csdi_{dataset_name}_random.pth"
+filename = f"model_csdi_{dataset_name}_{miss_type}.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI training starts.....\n")
@@ -184,7 +185,7 @@ models = {
 }
 # mse_folder = f"results_{dataset_name}_{name}_new/metric"
 # data_folder = f"results_{dataset_name}_{name}_new/data"
-name = 'random'
+name = 'pattern'
 mse_folder = f"results_{dataset_name}_{name}/metric"
 data_folder = f"results_{dataset_name}_{name}/data"
 lengths = [10, 50, 90]
