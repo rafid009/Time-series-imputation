@@ -125,7 +125,7 @@ def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
     return CRPS.item() / len(quantiles)
 
 
-nsample = 100 #00 # 3000 * 4 * 8
+nsample = 10000 # 3000 * 4 * 8
 ground = 0
 for i, val in enumerate(valid_loader):
     ground = val['observed_data'].to(device).float() # (B, L, K)
