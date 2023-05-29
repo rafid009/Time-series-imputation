@@ -124,7 +124,7 @@ class CSDI_base(nn.Module):
         patterns = patterns.permute(0, 2, 1).to(self.device)
         cond_mask = ((patterns - observed_mask) > 0).float()
 
-        if np.count_nonzero(cond_mask) == 0:
+        if torch.count_nonzero(cond_mask) == 0:
             cond_mask = self.get_randmask(observed_mask)
         return cond_mask
 
