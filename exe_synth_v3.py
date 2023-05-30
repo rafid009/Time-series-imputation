@@ -126,7 +126,7 @@ config_dict_diffsaits = {
         'featureemb': 16,
         'target_strategy': "mix", # noise mix
         'type': 'SAITS',
-        'n_layers': 4,
+        'n_layers': 6,
         'loss_weight_p': 1,
         'loss_weight_f': 1,
         'd_time': n_steps,
@@ -134,21 +134,21 @@ config_dict_diffsaits = {
         'd_model': 128,
         'd_inner': 128,
         'n_head': 8,
-        'd_k': 64, #len(given_features),
-        'd_v': 64, #len(given_features),
+        'd_k': 128, # 64, #len(given_features),
+        'd_v': 128, # 64, #len(given_features),
         'dropout': 0.1,
         'diagonal_attention_mask': False
     },
     'ablation': {
         'fde-choice': 'fde-conv-multi',
         'fde-layers': 4,
-        'is_fde': True,
-        'weight_combine': True,
+        'is_fde': False,
+        'weight_combine': False,
         'no-mask': False,
-        'fde-diagonal': True,
+        'fde-diagonal': False,
         'is_fde_2nd': False,
         'reduce-type': 'linear',
-        'is_2nd_block': True
+        'is_2nd_block': False
     }
 }
 print(f"config: {config_dict_diffsaits}")
@@ -174,7 +174,7 @@ train(
 print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 models = {
-    'CSDI': model_csdi,
+    # 'CSDI': model_csdi,
     # 'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }
