@@ -31,10 +31,48 @@ given_features = features #['sin', 'cos2', 'harmonic', 'weight', 'lin_comb', 'no
 
 miss_type = 'pattern'
 seed = 10
-config_dict_csdi = {
+config_dict_csdi_pattern = {
     'train': {
-        'epochs': 2500,
-        'batch_size': 8,
+        'epochs': 3000,
+        'batch_size': 4,
+        'lr': 1.0e-4
+    },      
+    'diffusion': {
+        'layers': 4, 
+        'channels': 64,
+        'nheads': 8,
+        'diffusion_embedding_dim': 128,
+        'beta_start': 0.0001,
+        'beta_end': 0.5,
+        'num_steps': 50,
+        'schedule': "quad",
+        'is_fast': False,
+    },
+    'model': {
+        'is_unconditional': 0,
+        'timeemb': 128,
+        'featureemb': 16,
+        'target_strategy': 'random',
+        'type': 'CSDI',
+        'n_layers': 3, 
+        'd_time': 100,
+        'n_feature': len(given_features),
+        'd_model': 128,
+        'd_inner': 128,
+        'n_head': 8,
+        'd_k': 64,
+        'd_v': 64,
+        'dropout': 0.1,
+        'diagonal_attention_mask': True,
+        'num_patterns': 10000,
+        'pattern_dir': './data/Daily/miss_pattern'
+    },
+}
+
+config_dict_csdi_random = {
+    'train': {
+        'epochs': 3000,
+        'batch_size': 4,
         'lr': 1.0e-3
     },      
     'diffusion': {
@@ -52,7 +90,7 @@ config_dict_csdi = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': miss_type,
+        'target_strategy': 'pattern',
         'type': 'CSDI',
         'n_layers': 3, 
         'd_time': 100,
@@ -81,6 +119,7 @@ test_season = 32
 is_year = True
 train_loader, valid_loader = get_dataloader(data_file, is_year=is_year, batch_size=4, test_index=test_season, missing_ratio=0.1, is_test=False)
 
+config_dict_csdi = config_dict_csdi_pattern if miss_type == 'pattern' else config_dict_csdi_random
 model_csdi = CSDI_AWN(config_dict_csdi, device, target_dim=len(given_features)).to(device)
 model_folder = f"./saved_model_{dataset_name}"
 filename = f"model_csdi_{dataset_name}_{miss_type}.pth"
@@ -188,7 +227,7 @@ models = {
 name = 'pattern'
 mse_folder = f"results_{dataset_name}_{name}/metric"
 data_folder = f"results_{dataset_name}_{name}/data"
-lengths = [10, 50, 90]
+lengths = [50, 100, 200]
 for l in lengths:
     print(f"\nlength = {l}")
     print(f"\nBlackout:")

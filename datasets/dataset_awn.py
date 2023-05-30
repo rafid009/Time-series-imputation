@@ -45,6 +45,7 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
     else:
         shp = sample.shape
         evals = sample.reshape(-1).copy()
+        print(f"sample: {sample.shape}, length: {length}")
         a = np.arange(sample.shape[0] - length)
         # print(f"a: {a}\nsample: {sample.shape}")
         start_idx = np.random.choice(a)
@@ -78,20 +79,22 @@ class AWN_Dataset(Dataset):
         self.eval_length = length
         indices = [i for i in range(len(data))]
 
-        test_indices = [test_index]
-        if not is_test:
-            train_indices = []
-            for i in indices:
-                if i not in test_indices:
-                    train_indices.append(i)
-            train_indices = np.array(train_indices)
-            X = data[train_indices]
-        else:
-            X = np.expand_dims(data[test_indices], axis=0)
-
-        X_real = X.reshape(-1, len(features))
+        test_indices = np.array([test_index])
+        train_indices = []
+        for i in indices:
+            if i not in test_indices:
+                train_indices.append(i)
+        train_indices = np.array(train_indices)
+        train_X = data[train_indices]
+        X_real = train_X.reshape(-1, len(features))
         self.mean = np.nanmean(X_real, axis=0)
         self.std = np.nanstd(X_real, axis=0)
+
+        if is_test:
+            X = np.expand_dims(data[test_indices], axis=0)
+        else:
+            X = train_X
+
         include_features = []
 
         for i in range(X.shape[0]):
