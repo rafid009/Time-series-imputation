@@ -75,8 +75,8 @@ class AWN_Dataset(Dataset):
         self.gt_intact = []
         
         data = np.load(filename)
-        length = 366 if is_year else 31
-        self.eval_length = length
+        
+        self.eval_length = 366 if is_year else 31
         indices = [i for i in range(len(data))]
 
         test_indices = np.array([test_index])

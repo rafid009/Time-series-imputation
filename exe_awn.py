@@ -235,7 +235,7 @@ for l in lengths:
     # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True)
 
 print(f"\nForecasting:")
-evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=(10, 80), forecasting=True, test_indices=test_season)
+evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=(50, 200), forecasting=True, test_indices=test_season)
 # evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True)
 
 miss_ratios = [0.1, 0.5, 0.9]
