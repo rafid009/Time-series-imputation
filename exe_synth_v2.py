@@ -89,7 +89,7 @@ print(f"\n\nCSDI training starts.....\n")
 #     filename=f"{filename}",
 #     is_saits=False
 # )
-model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
 
@@ -105,7 +105,7 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 
 config_dict_diffsaits = {
     'train': {
-        'epochs':5000, # 3000 -> ds3
+        'epochs':4000, # 3000 -> ds3
         'batch_size': 16 ,
         'lr': 1.0e-4
     },      
@@ -134,8 +134,8 @@ config_dict_diffsaits = {
         'd_model': 128,
         'd_inner': 128,
         'n_head': 8,
-        'd_k': 64, #len(given_features),
-        'd_v': 64, #len(given_features),
+        'd_k': 128, # 64, #len(given_features),
+        'd_v': 128, #64, #len(given_features),
         'dropout': 0.1,
         'diagonal_attention_mask': False
     },
@@ -145,17 +145,17 @@ config_dict_diffsaits = {
         'is_fde': False,
         'weight_combine': False,
         'no-mask': False,
-        'fde-diagonal': True,
+        'fde-diagonal': False,
         'is_fde_2nd': False,
         'reduce-type': 'linear',
-        'is_2nd_block': True
+        'is_2nd_block': False
     }
 }
 print(f"config: {config_dict_diffsaits}")
 name = 'fde-conv-multi'
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
-filename = f"model_diffsaits_synth_v2_{name}_new.pth"
+filename = f"model_diffsaits_synth_v2_{name}_new_2.pth"
 print(f"\n\DiffSAITS training starts.....\n")
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
@@ -174,12 +174,12 @@ train(
 print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 models = {
-    'CSDI': model_csdi,
+    # 'CSDI': model_csdi,
     # 'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }
-mse_folder = f"results_synth_v2_{name}_new/metric"
-data_folder = f"results_synth_v2_{name}_new/data"
+mse_folder = f"results_synth_v2_{name}_new_2/metric"
+data_folder = f"results_synth_v2_{name}_new_2/data"
 lengths = [10, 50, 90]
 for l in lengths:
     print(f"\nlength = {l}")
