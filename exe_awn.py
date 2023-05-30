@@ -35,7 +35,7 @@ config_dict_csdi_pattern = {
     'train': {
         'epochs': 3000,
         'batch_size': 4,
-        'lr': 1.0e-3
+        'lr': 5.0e-4
     },      
     'diffusion': {
         'layers': 4, 
@@ -52,7 +52,7 @@ config_dict_csdi_pattern = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': 'random',
+        'target_strategy': 'pattern',
         'type': 'CSDI',
         'n_layers': 3, 
         'd_time': 100,
@@ -90,7 +90,7 @@ config_dict_csdi_random = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': 'pattern',
+        'target_strategy': 'random',
         'type': 'CSDI',
         'n_layers': 3, 
         'd_time': 100,
