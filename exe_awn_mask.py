@@ -152,7 +152,7 @@ with torch.no_grad():
         print(f"CRPS for {i} : {crps}")
         crps_avg += crps
         num += 1
-    print(f"final CRPS: {crps / num}")
+    print(f"final CRPS: {crps_avg / num}")
     
 
     # forecasts = xr.DataArray(samples, coords=[('member', np.arange(samples.shape[0])), ('b', np.arange(1)), ('x', np.arange(n_features * d_time))])
