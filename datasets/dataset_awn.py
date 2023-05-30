@@ -91,7 +91,7 @@ class AWN_Dataset(Dataset):
         self.std = np.nanstd(X_real, axis=0)
 
         if is_test:
-            X = np.expand_dims(data[test_indices], axis=0)
+            X = data[test_indices] #np.expand_dims(data[test_indices], axis=0)
         else:
             X = train_X
 

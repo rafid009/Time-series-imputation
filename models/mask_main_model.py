@@ -134,7 +134,7 @@ class Mask_base(nn.Module):
             for t in range(self.num_steps - 1, -1, -1):
                 diff_input = current_sample
                 diff_input = diff_input.unsqueeze(1)  # (B,1,K,L)
-            
+
                 predicted = self.diffmodel(diff_input, side_info, torch.tensor([t]).to(self.device))
 
                 coeff1 = 1 / self.alpha_hat[t] ** 0.5
