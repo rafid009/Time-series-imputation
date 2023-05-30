@@ -29,7 +29,7 @@ class NumpyArrayEncoder(JSONEncoder):
 
 given_features = features #['sin', 'cos2', 'harmonic', 'weight', 'lin_comb', 'non_lin_comb', 'mixed_history']
 
-miss_type = 'pattern'
+miss_type = 'random'
 seed = 10
 config_dict_csdi_pattern = {
     'train': {
@@ -224,7 +224,7 @@ models = {
 }
 # mse_folder = f"results_{dataset_name}_{name}_new/metric"
 # data_folder = f"results_{dataset_name}_{name}_new/data"
-name = 'pattern'
+name = miss_type
 mse_folder = f"results_{dataset_name}_{name}/metric"
 data_folder = f"results_{dataset_name}_{name}/data"
 lengths = [50, 100, 200]
