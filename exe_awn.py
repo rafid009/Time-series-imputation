@@ -35,7 +35,7 @@ config_dict_csdi_pattern = {
     'train': {
         'epochs': 3000,
         'batch_size': 4,
-        'lr': 5.0e-4
+        'lr': 1.0e-4
     },      
     'diffusion': {
         'layers': 4, 
