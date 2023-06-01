@@ -67,6 +67,7 @@ train_loader, valid_loader, test_loader, test_indices = get_dataloader(
     missing_ratio=config["model"]["test_missing_ratio"],
 )
 config['model']['type'] = 'CSDI'
+config['diffusion']['is_fast'] = False
 
 model_csdi = Mask_Physio(config, args['device']).to(args['device'])
 model_folder = "saved_model_physio_mask"
