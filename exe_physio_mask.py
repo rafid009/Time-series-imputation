@@ -68,7 +68,7 @@ train_loader, valid_loader, test_loader, test_indices = get_dataloader(
 )
 config['model']['type'] = 'CSDI'
 
-model_csdi = Mask_Physio(config, args['device'], device=args['device'])
+model_csdi = Mask_Physio(config, args['device']).to(args['device'])
 model_folder = "saved_model_physio_mask"
 filename = "model_csdi_physio_mask.pth"
 if not os.path.isdir(model_folder):
