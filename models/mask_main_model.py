@@ -95,27 +95,27 @@ class Mask_base(nn.Module):
         return side_info
 
     def calc_loss_valid(
-        self, observed_data, side_info, is_train
+        self, observed_mask, side_info, is_train
     ):
         loss_sum = 0
         for t in range(self.num_steps):  # calculate loss for all t
             loss = self.calc_loss(
-                observed_data, side_info, is_train, set_t=t
+                observed_mask, side_info, is_train, set_t=t
             )
             loss_sum += loss.detach()
         return loss_sum / self.num_steps
 
     def calc_loss(
-        self, observed_data, side_info, is_train, set_t=-1
+        self, observed_mask, side_info, is_train, set_t=-1
     ):
-        B, K, L = observed_data.shape
+        B, K, L = observed_mask.shape
         if is_train != 1:  # for validation
             t = (torch.ones(B) * set_t).long().to(self.device)
         else:
             t = torch.randint(0, self.num_steps, [B]).to(self.device)
         current_alpha = self.alpha_torch[t]  # (B,1,1)
-        noise = torch.randn_like(observed_data)
-        noisy_data = (current_alpha ** 0.5) * observed_data + ((1.0 - current_alpha) ** 0.5) * noise
+        noise = torch.randn_like(observed_mask)
+        noisy_data = (current_alpha ** 0.5) * observed_mask + ((1.0 - current_alpha) ** 0.5) * noise
         total_input = noisy_data.unsqueeze(1)  # (B,1,K,L) 
 
         predicted = self.diffmodel(total_input, side_info, t)  # (B,K,L)
@@ -155,6 +155,7 @@ class Mask_base(nn.Module):
     def forward(self, batch, is_train=1):
         (
             observed_data,
+            observed_mask,
             observed_tp,
             _
         ) = self.process_data(batch)
@@ -164,10 +165,10 @@ class Mask_base(nn.Module):
         else:
             side_info = self.get_side_info(observed_tp, observed_data.shape)
         loss_func = self.calc_loss if is_train == 1 else self.calc_loss_valid
-        return loss_func(observed_data, side_info, is_train)
+        return loss_func(observed_mask, side_info, is_train)
 
-    def evaluate(self, n_samples, shape):
-        B, K, L = shape
+    def evaluate(self, n_samples, shape=None, observed_data=None):
+        B, K, L = shape if shape is not None else observed_data.shape
         observed_tp = np.expand_dims(np.arange(L), axis=0)
         observed_tp = np.repeat(observed_tp, B, axis=0)
         observed_tp = torch.tensor(observed_tp, dtype=torch.float32).to(self.device)
@@ -181,9 +182,9 @@ class Mask_base(nn.Module):
         return samples
 
 
-class CSDI_PM25(Mask_base):
+class Mask_PM25(Mask_base):
     def __init__(self, config, device, target_dim=36, is_simple=False):
-        super(CSDI_PM25, self).__init__(target_dim, config, device)
+        super(Mask_PM25, self).__init__(target_dim, config, device)
 
     def process_data(self, batch):
         observed_data = batch["observed_data"].to(self.device).float()
@@ -211,61 +212,52 @@ class CSDI_PM25(Mask_base):
         )
 
 
-class CSDI_Physio(Mask_base):
+class Mask_Physio(Mask_base):
     def __init__(self, config, device, target_dim=35, is_simple=False):
-        super(CSDI_Physio, self).__init__(target_dim, config, device)
+        super(Mask_Physio, self).__init__(target_dim, config, device)
 
     def process_data(self, batch):
         observed_data = batch["observed_data"].to(self.device).float()
         observed_mask = batch["observed_mask"].to(self.device).float()
         observed_tp = batch["timepoints"].to(self.device).float()
-        gt_mask = batch["gt_mask"].to(self.device).float()
-        gt_intact = batch["gt_intact"]
+        # gt_mask = batch["gt_mask"].to(self.device).float()
+        # gt_intact = batch["gt_intact"]
         observed_data = observed_data.permute(0, 2, 1)
         observed_mask = observed_mask.permute(0, 2, 1)
         gt_mask = gt_mask.permute(0, 2, 1)
 
         cut_length = torch.zeros(len(observed_data)).long().to(self.device)
-        for_pattern_mask = observed_mask
+        # for_pattern_mask = observed_mask
 
         return (
             observed_data,
             observed_mask,
             observed_tp,
-            gt_mask,
-            for_pattern_mask,
             cut_length,
-            None,
-            gt_intact
         )
 
-class CSDI_Agaid(Mask_base):
+class Mask_Agaid(Mask_base):
     def __init__(self, config, device, target_dim=len(features), is_simple=False):
-        super(CSDI_Agaid, self).__init__(target_dim, config, device, is_simple=is_simple)
+        super(Mask_Agaid, self).__init__(target_dim, config, device, is_simple=is_simple)
 
     def process_data(self, batch):
         observed_data = batch["observed_data"].to(self.device).float()
         observed_mask = batch["observed_mask"].to(self.device).float()
         observed_tp = batch["timepoints"].to(self.device).float()
-        gt_mask = batch["gt_mask"].to(self.device).float()
-        observed_data_intact = batch["obs_data_intact"].to(self.device).float()
-        gt_intact = batch["gt_intact"]#.to(self.device).float()
+        # gt_mask = batch["gt_mask"].to(self.device).float()
+        # observed_data_intact = batch["obs_data_intact"].to(self.device).float()
+        # gt_intact = batch["gt_intact"]#.to(self.device).float()
         observed_data = observed_data.permute(0, 2, 1)
         observed_mask = observed_mask.permute(0, 2, 1)
         gt_mask = gt_mask.permute(0, 2, 1)
 
         cut_length = torch.zeros(len(observed_data)).long().to(self.device)
-        for_pattern_mask = observed_mask
 
         return (
             observed_data,
             observed_mask,
             observed_tp,
-            gt_mask,
-            for_pattern_mask,
             cut_length,
-            observed_data_intact,
-            gt_intact
         )
 
 class Mask_Synth(Mask_base):
