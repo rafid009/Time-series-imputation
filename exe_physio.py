@@ -61,7 +61,7 @@ train_loader, valid_loader, test_loader, test_indices = get_dataloader(
     missing_ratio=config["model"]["test_missing_ratio"],
 )
 config['model']['type'] = 'CSDI'
-config['model']['is_fast'] = False
+config['diffusion']['is_fast'] = False
 config['model']['num_patterns'] = 10000
 config['model']['pattern_dir'] = './data/physio/miss_patterns'
 
