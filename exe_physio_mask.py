@@ -53,7 +53,7 @@ path = "config/" + args["config"]
 with open(path, "r") as f:
     config = yaml.safe_load(f)
 
-config["model"]["is_unconditional"] = args["unconditional"]
+config["model"]["is_unconditional"] = True #args["unconditional"]
 config["model"]["test_missing_ratio"] = args["testmissingratio"]
 print(f"config_csdi:\n")
 print(json.dumps(config, indent=4))
