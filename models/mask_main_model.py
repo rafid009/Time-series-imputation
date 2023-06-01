@@ -224,7 +224,7 @@ class Mask_Physio(Mask_base):
         # gt_intact = batch["gt_intact"]
         observed_data = observed_data.permute(0, 2, 1)
         observed_mask = observed_mask.permute(0, 2, 1)
-        gt_mask = gt_mask.permute(0, 2, 1)
+        # gt_mask = gt_mask.permute(0, 2, 1)
 
         cut_length = torch.zeros(len(observed_data)).long().to(self.device)
         # for_pattern_mask = observed_mask
