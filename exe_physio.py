@@ -62,8 +62,8 @@ train_loader, valid_loader, test_loader, test_indices = get_dataloader(
 )
 config['model']['type'] = 'CSDI'
 config['model']['is_fast'] = False
-config['models']['num_patterns'] = 10000
-config['models']['pattern_dir'] = './data/physio/miss_patterns'
+config['model']['num_patterns'] = 10000
+config['model']['pattern_dir'] = './data/physio/miss_patterns'
 
 model_csdi = CSDI_Physio(config, args['device']).to(args['device'])
 model_folder = f"saved_model_physio_{miss_pattern}"
