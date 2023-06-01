@@ -86,7 +86,7 @@ train(
 
 nsample = 30000 # 3000 * 4 * 8
 ground = 0
-for i, val in enumerate(valid_loader):
+for i, val in enumerate(test_loader):
     ground = val['observed_mask'].to(args["device"]).float() # (B, L, K)
     # ground = ground.reshape(ground.shape[0], -1).cpu().numpy()
 
