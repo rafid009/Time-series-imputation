@@ -8,7 +8,7 @@ from pypots.imputation import SAITS
 import pickle
 import numpy as np
 from models.mask_main_model import Mask_Physio
-from datasets.dataset_physio import get_dataloader, attributes
+from datasets.dataset_physio_mask import get_dataloader, attributes
 from utils.utils import train, evaluate, get_num_params, evaluate_imputation_all
 
 def quantile_loss(target, forecast, q: float) -> float:
@@ -95,7 +95,7 @@ if not os.path.isdir(sample_folder):
     os.makedirs(sample_folder)
 # L = 48, K = 35
 with torch.no_grad():
-    output = model_csdi.evaluate(nsample, shape=(1, 35, 48))
+    output = model_csdi.evaluate(nsample, shape=(1, len(attributes), 48))
     samples = output
 
     samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
