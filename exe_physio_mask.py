@@ -90,7 +90,7 @@ for i, val in enumerate(test_loader):
     ground = val['observed_mask'].to(args["device"]).float() # (B, L, K)
     # ground = ground.reshape(ground.shape[0], -1).cpu().numpy()
 
-sample_folder = './Physio/miss_patterns'
+sample_folder = './data/physio/miss_patterns'
 
 if not os.path.isdir(sample_folder):
     os.makedirs(sample_folder)
