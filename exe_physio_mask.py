@@ -102,8 +102,8 @@ with torch.no_grad():
 
     samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
     # samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
-    save_samples = samples.squeeze(0)
-    for i in range(len(samples)):
+    save_samples = samples.squeeze()
+    for i in range(save_samples.shape[0]):
         np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i].cpu().numpy())
 
     crps_avg = 0
