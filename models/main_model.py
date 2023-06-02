@@ -73,8 +73,10 @@ class CSDI_base(nn.Module):
 
         if self.target_strategy == 'pattern':
             self.pattern_i = 0
+            self.val_pattern_i = 0
             self.pattern_folder = config['model']['pattern_dir']
             self.num_patterns = config['model']['num_patterns']
+            self.num_val_patterns = config['model']['num_val_patterns']
 
     def time_embedding(self, pos, d_model=128):
         pe = torch.zeros(pos.shape[0], pos.shape[1], d_model).to(self.device)
@@ -112,20 +114,23 @@ class CSDI_base(nn.Module):
                 cond_mask[i] = cond_mask[i] * for_pattern_mask[i - 1] 
         return cond_mask
     
-    def get_pattern_mask(self, observed_mask):
+    def get_pattern_mask(self, observed_mask, is_val=False):
         B, K, L = observed_mask.shape
         patterns = []
         for i in range(B):
-            pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
+            if is_val:
+                pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                self.val_pattern_i = (self.val_pattern_i + 1) % self.num_val_patterns
+            else:
+                pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
+                self.pattern_i = (self.pattern_i + 1) % self.num_patterns
             pattern = torch.tensor(pattern, dtype=torch.float32)
             patterns.append(pattern)
-            self.pattern_i = (self.pattern_i + 1) % self.num_patterns
+            
         patterns = torch.stack(patterns, dim=0)
         patterns = patterns.permute(0, 2, 1).to(self.device)
-        cond_mask = ((patterns - observed_mask) > 0).float()
+        cond_mask = patterns if (patterns != observed_mask).sum() != 0 else self.get_randmask(observed_mask)
 
-        if torch.count_nonzero(cond_mask) == 0:
-            cond_mask = self.get_randmask(observed_mask)
         return cond_mask
 
     def get_side_info(self, observed_tp, cond_mask):
@@ -318,7 +323,10 @@ class CSDI_base(nn.Module):
         ) = self.process_data(batch)
 
         with torch.no_grad():
-            cond_mask = gt_mask
+            if self.target_strategy == 'pattern':
+                cond_mask = self.get_pattern_mask(observed_mask, is_val=True)
+            else:
+                cond_mask = gt_mask
             target_mask = observed_mask - cond_mask
             if self.is_saits:
                 side_info = None

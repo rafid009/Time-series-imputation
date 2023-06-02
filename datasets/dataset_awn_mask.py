@@ -7,11 +7,13 @@ class AWN_Dataset(Dataset):
     def __init__(self, X, eval_length=31, type='Daily') -> None:
         super().__init__()
         self.eval_length = eval_length
-        self.observed_values = torch.isnan(torch.tensor(X, dtype=torch.float32)) * 1.0
+        self.observed_values = torch.tensor(X, dtype=torch.float32)
+        self.observed_masks = (~torch.isnan(self.observed_values)) * 1.0
     
     def __getitem__(self, index):
         s = {
             "observed_data": self.observed_values[index],
+            "observed_mask": self.observed_masks[index],
             "timepoints": np.arange(self.eval_length),
         }
         return s

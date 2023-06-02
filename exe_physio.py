@@ -62,7 +62,8 @@ train_loader, valid_loader, test_loader, test_indices = get_dataloader(
 )
 config['model']['type'] = 'CSDI'
 config['diffusion']['is_fast'] = False
-config['model']['num_patterns'] = 10000
+config['model']['num_patterns'] = 35000
+config['model']['num_val_patterns'] = 5000
 config['model']['pattern_dir'] = './data/physio/miss_patterns'
 
 model_csdi = CSDI_Physio(config, args['device']).to(args['device'])
