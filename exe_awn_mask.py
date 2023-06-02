@@ -125,7 +125,7 @@ def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
     return CRPS.item() / len(quantiles)
 
 
-nsample = 10000 # 3000 * 4 * 8
+nsample = 20000 # 3000 * 4 * 8
 ground = 0
 for i, val in enumerate(valid_loader):
     ground = val['observed_data'].to(device).float() # (B, L, K)
@@ -142,8 +142,9 @@ with torch.no_grad():
 
     samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
     # samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
-    # for i in range(len(samples)):
-    #     np.save(f"{sample_folder}/pattern_{i}.npy", samples[i].cpu().numpy())
+    save_samples = samples.squeeze()
+    for i in range(save_samples.shape[0]):
+        np.save(f"{sample_folder}/pattern_{i}.npy", samples[i].cpu().numpy())
 
     crps_avg = 0
     num = 0
