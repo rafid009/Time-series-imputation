@@ -72,11 +72,11 @@ class CSDI_base(nn.Module):
             self.loss_weight_f = config['model']['loss_weight_f']
 
         if self.target_strategy == 'pattern':
-            self.pattern_i = 0
-            self.val_pattern_i = 0
             self.pattern_folder = config['model']['pattern_dir']
             self.num_patterns = config['model']['num_patterns']
             self.num_val_patterns = config['model']['num_val_patterns']
+            self.pattern_i = 0
+            self.val_pattern_i = self.num_patterns
 
     def time_embedding(self, pos, d_model=128):
         pe = torch.zeros(pos.shape[0], pos.shape[1], d_model).to(self.device)
@@ -120,7 +120,9 @@ class CSDI_base(nn.Module):
         for i in range(B):
             if is_val:
                 pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
-                self.val_pattern_i = (self.val_pattern_i + 1) % self.num_val_patterns
+                self.val_pattern_i = self.val_pattern_i + 1
+                if self.val_pattern_i >= self.num_patterns:
+                    self.val_pattern_i = self.num_patterns
             else:
                 pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
                 self.pattern_i = (self.pattern_i + 1) % self.num_patterns
