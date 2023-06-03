@@ -117,12 +117,10 @@ class Mask_base(nn.Module):
         noise = torch.randn_like(observed_mask)
         noisy_data = (current_alpha ** 0.5) * observed_mask + ((1.0 - current_alpha) ** 0.5) * noise
         total_input = noisy_data.unsqueeze(1)  # (B,1,K,L) 
-
         predicted = self.diffmodel(total_input, side_info, t)  # (B,K,L)
-        residual = (noise - predicted) 
+        residual = (noise - predicted)
         loss = (residual ** 2).mean()
         return loss
-
 
     def impute(self, shape, side_info, n_samples):
         B, K, L = shape
@@ -134,13 +132,10 @@ class Mask_base(nn.Module):
             for t in range(self.num_steps - 1, -1, -1):
                 diff_input = current_sample
                 diff_input = diff_input.unsqueeze(1)  # (B,1,K,L)
-
                 predicted = self.diffmodel(diff_input, side_info, torch.tensor([t]).to(self.device))
-
                 coeff1 = 1 / self.alpha_hat[t] ** 0.5
                 coeff2 = (1 - self.alpha_hat[t]) / (1 - self.alpha[t]) ** 0.5
                 current_sample = coeff1 * (current_sample - coeff2 * predicted)
-
                 if t > 0:
                     noise = torch.randn_like(current_sample)
                     sigma = (
@@ -148,7 +143,6 @@ class Mask_base(nn.Module):
                     ) ** 0.5
                     current_sample += sigma * noise
                 ti += 1
-            # current_sample = current_sample
             imputed_samples[:, i] = current_sample.detach()
         return imputed_samples
 
@@ -159,7 +153,6 @@ class Mask_base(nn.Module):
             observed_tp,
             _
         ) = self.process_data(batch)
-
         if self.is_saits:
             side_info = None
         else:
@@ -178,7 +171,6 @@ class Mask_base(nn.Module):
             else:
                 side_info = self.get_side_info(observed_tp, shape)
             samples = self.impute(shape, side_info, n_samples)
-
         return samples
 
 
@@ -249,7 +241,7 @@ class Mask_Agaid(Mask_base):
         # gt_intact = batch["gt_intact"]#.to(self.device).float()
         observed_data = observed_data.permute(0, 2, 1)
         observed_mask = observed_mask.permute(0, 2, 1)
-        gt_mask = gt_mask.permute(0, 2, 1)
+        # gt_mask = gt_mask.permute(0, 2, 1)
 
         cut_length = torch.zeros(len(observed_data)).long().to(self.device)
 
