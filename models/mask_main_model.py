@@ -296,12 +296,15 @@ class Mask_AWN(Mask_base):
 
     def process_data(self, batch):
         observed_data = batch["observed_data"].to(self.device).float()
+        observed_mask = batch['observed_mask'].to(self.device).float()
         observed_tp = batch["timepoints"].to(self.device).float()
         observed_data = observed_data.permute(0, 2, 1)
+        observed_mask = observed_mask.permute(0, 2, 1)
 
         cut_length = torch.zeros(len(observed_data)).long().to(self.device)
         return (
             observed_data,
+            observed_mask,
             observed_tp,
             cut_length
         )
