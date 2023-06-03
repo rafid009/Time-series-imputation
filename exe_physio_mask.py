@@ -74,16 +74,16 @@ model_folder = "saved_model_physio_mask"
 filename = "model_csdi_physio_mask.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
-# train(
-#     model_csdi,
-#     config["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=filename
-# )
+train(
+    model_csdi,
+    config["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=filename
+)
 
-model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 
 nsample = 40000 # 3000 * 4 * 8
 ground = 0
@@ -102,7 +102,7 @@ with torch.no_grad():
 
     samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
     # samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
-    save_samples = samples.squeeze()
+    save_samples = samples.squeeze(0)
     for i in range(save_samples.shape[0]):
         np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i].cpu().numpy())
 
