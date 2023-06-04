@@ -102,7 +102,7 @@ class diff_CSDI(nn.Module):
         x = x.reshape(B, self.channels, K * L)
         x = self.output_projection1(x)  # (B,channel,K*L)
         x = F.relu(x)
-        x = self.output_projection2(x)  # (B,1,K*L)
+        x = F.sigmoid(self.output_projection2(x))  # (B,1,K*L)
         x = x.reshape(B, K, L)
         return x
 
