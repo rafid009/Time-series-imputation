@@ -71,7 +71,7 @@ config['diffusion']['is_fast'] = False
 
 model_csdi = Mask_Physio(config, args['device']).to(args['device'])
 model_folder = "saved_model_physio_mask"
-filename = "model_csdi_physio_mask.pth"
+filename = "model_csdi_physio_mask_no_sigmoid.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 train(
@@ -91,7 +91,7 @@ for i, val in enumerate(test_loader):
     ground = val['observed_mask'].to(args["device"]).float() # (B, L, K)
     # ground = ground.reshape(ground.shape[0], -1).cpu().numpy()
 
-sample_folder = './data/physio/miss_patterns'
+sample_folder = './data/physio/miss_patterns_no_sigmoid'
 
 if not os.path.isdir(sample_folder):
     os.makedirs(sample_folder)
