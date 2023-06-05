@@ -110,7 +110,7 @@ class Mask_base(nn.Module):
     ):
         B, K, L = observed_mask.shape
         if is_train != 1:  # for validation
-            t = (torch.ones(B) * self.num_steps).long().to(self.device)
+            t = (torch.ones(B) * set_t).long().to(self.device)
         else:
             t = torch.randint(0, self.num_steps, [B]).to(self.device)
         current_alpha = self.alpha_torch[t]  # (B,1,1)
