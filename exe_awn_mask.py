@@ -103,10 +103,8 @@ def quantile_loss(target, forecast, q: float) -> float:
         torch.abs((forecast - target) * ((target <= forecast) * 1.0 - q))
     )
 
-
 def calc_denominator(target):
     return torch.sum(torch.abs(target))
-
 
 def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
     print(f"target: {target.shape}\nforecast: {forecast.shape}")
