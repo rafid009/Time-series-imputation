@@ -96,7 +96,7 @@ for i, val in enumerate(test_loader):
     ground = val['observed_mask'].to(args["device"]).float() # (B, L, K)
     # ground = ground.reshape(ground.shape[0], -1).cpu().numpy()
 
-sample_folder = './data/physio/miss_patterns_no_sigmoid'
+sample_folder = './data/physio/miss_patterns'
 
 if not os.path.isdir(sample_folder):
     os.makedirs(sample_folder)
@@ -106,18 +106,22 @@ with torch.no_grad():
     samples = output
 
     samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
-    samples = (samples > 0).float()
+
+    # samples = (samples > 0).float()
     # samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
-    # save_samples = samples.squeeze(0)
+    save_samples = samples.squeeze(0)
+    print(f"sample 1: {save_samples[0]}")
+    print(f"sample 1: {save_samples[2]}")
+    print(f"sample 1: {save_samples[3]}")
     # for i in range(save_samples.shape[0]):
     #     np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i].cpu().numpy())
 
-    crps_avg = 0
-    num = 0
-    for i in range(len(ground)):
-        crps = calc_quantile_CRPS(ground[i].unsqueeze(0), samples, 0, 1)
-        print(f"CRPS for {i} : {crps}")
-        crps_avg += crps
-        num += 1
-    print(f"final CRPS: {crps_avg / num}")
+    # crps_avg = 0
+    # num = 0
+    # for i in range(len(ground)):
+    #     crps = calc_quantile_CRPS(ground[i].unsqueeze(0), samples, 0, 1)
+    #     print(f"CRPS for {i} : {crps}")
+    #     crps_avg += crps
+    #     num += 1
+    # print(f"final CRPS: {crps_avg / num}")
     
