@@ -33,7 +33,7 @@ miss_type = 'pattern'
 seed = 10
 config_dict_csdi_pattern = {
     'train': {
-        'epochs': 3000,
+        'epochs': 2000,
         'batch_size': 4,
         'lr': 1.0e-4
         # 'lr': 1.0e-4
@@ -129,6 +129,7 @@ filename = f"model_csdi_{dataset_name}_{miss_type}.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI training starts.....\n")
+model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 train(
     model_csdi,
     config_dict_csdi["train"],
