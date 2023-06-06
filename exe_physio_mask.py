@@ -106,6 +106,7 @@ with torch.no_grad():
     samples = output
 
     samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
+    samples = (samples > 0).float()
     # samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
     # save_samples = samples.squeeze(0)
     # for i in range(save_samples.shape[0]):

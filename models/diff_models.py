@@ -548,6 +548,108 @@ class ResidualEncoderLayer_new_2(nn.Module):
         # attn_weights = (attn_weights_1 + attn_weights_2) / 2 #torch.softmax(attn_weights_1 + attn_weights_2, dim=-1)
 
         return (x + residual) * math.sqrt(0.5), skip, attn_weights_time
+    
+
+class ResidualEncoderLayer_new_3(nn.Module):
+    def __init__(self, channels, d_time, actual_d_feature, d_model, d_inner, n_head, d_k, d_v, dropout,
+            diffusion_embedding_dim=128, diagonal_attention_mask=True, ablation_config=None, dilation=1) -> None:
+        super().__init__()
+
+        self.time_enc_layer = EncoderLayer(d_time, actual_d_feature, 2 * channels, d_inner, n_head, d_k, d_v, dropout, 0,
+                         diagonal_attention_mask)
+        self.ablation_config = ablation_config
+
+        self.diffusion_projection = nn.Linear(diffusion_embedding_dim, channels)
+        
+        self.is_linear = ablation_config['reduce-type'] == 'linear'
+        self.is_mask_enc_loop = ablation_config['res-block-mask']
+        self.is_fde_loop = ablation_config['is-fde-loop']
+        
+        if self.is_fde_loop:
+            self.feature_enc_layer = EncoderLayer(channels, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
+                                True, choice='fde-conv-multi')
+
+        if self.is_linear:
+            if self.is_mask_enc_loop:
+                self.init_proj = nn.Linear(d_model + actual_d_feature, channels)
+                self.init_cond = nn.Linear(d_model + actual_d_feature, channels)
+                self.pos_enc = PositionalEncoding(channels, n_position=d_time)
+            else:
+                self.init_proj = nn.Linear(d_model, channels)
+                self.init_cond = nn.Linear(d_model, channels)
+            self.output_proj = nn.Linear(channels, d_model)
+        else:
+            if self.is_mask_enc_loop:
+                self.init_proj = Conv1d_with_init_saits_new(d_model + actual_d_feature, channels, 1)
+                self.init_cond = Conv1d_with_init_saits_new(d_model + actual_d_feature, channels, 1)
+                self.pos_enc = PositionalEncoding(channels, n_position=d_time)
+            else:
+                self.init_proj = Conv1d_with_init_saits_new(d_model, channels, 1)
+                self.init_cond = Conv1d_with_init_saits_new(d_model, channels, 1)
+            self.output_proj = Conv1d_with_init_saits_new(channels, d_model, 1)
+
+
+    # new_design
+    def forward(self, x, cond, diffusion_emb, mask):
+        # x -> Noise
+        # L -> time
+        # D -> feature_proj
+        # K -> features
+        # C -> channels
+        # For masking with Conv, D = K and for most cases, we will use D = C, except masking with conv
+        B, D, L = x.shape
+        B, K, L = mask.shape
+
+        if self.is_linear:
+            x_in = torch.transpose(x, 1, 2) # (B, L, D)
+            cond_in = torch.transpose(cond, 1, 2) # (B, L, D)
+        else:
+            x_in = x # (B, D, L)
+            cond_in = cond # (B, D, L)
+
+        if self.is_mask_enc_loop:
+            if self.is_linear:
+                x_in = torch.cat([x_in, mask], dim=-1) # (B, L, D+K)
+                cond_in = torch.cat([cond_in, mask], dim=-1) # (B, L, D+K)
+            else:
+                # It has to be D = K
+                x_in = torch.stack([x_in, mask], dim=1) # (B, 2, D, L)
+                x_in = x_in.permute(0, 2, 1, 3) # (B, D, 2, L)
+                x_in = x_in.reshape(-1, 2*D, self.d_time) # (B, 2*D, L)
+
+                cond_in = torch.stack([cond_in, mask], dim=1) # (B, 2, D, L)
+                cond_in = cond_in.permute(0, 2, 1, 3) # (B, D, 2, L)
+                cond_in = cond_in.reshape(-1, 2*D, self.d_time) # (B, 2*D, L)
+                
+        # C = Channels
+        x_proj = self.init_proj(x_in) # (B, C, L) / linear -> (B, L, C)  
+        cond = self.init_cond(cond_in) # (B, C, L) / linear -> (B, L, C)
+
+        y = x_proj + cond
+
+        if self.is_mask_enc_loop:
+            if not self.is_linear:
+                y = torch.transpose(y, 1, 2) # (B, L, C)
+            y = self.pos_enc(y) # (B, L, C)
+            y = torch.transpose(y, 1, 2) # (B, C, L) 
+
+        diff_proj = self.diffusion_projection(diffusion_emb).unsqueeze(-1) # (B, C, 1)
+        y = y + diff_proj  # (B, C, L)
+
+        y, _ = self.feature_enc_layer(y) # (B, C, L), (B, C, C)
+        
+        y = torch.transpose(y, 1, 2) # (B, L, C)
+        y, attn_weights_time = self.time_enc_layer(y) # (B, L, C), (B, L, L)
+
+        if not self.is_linear:
+            y = torch.transpose(y, 1, 2) # (B, C, L)
+
+        y = self.output_proj(y) # (B, D, L) / linear -> (B, L, D)
+
+        if self.is_linear:
+            y = torch.transpose(y, 1, 2) # (B, D, L)
+
+        return y, attn_weights_time
 
 
 
