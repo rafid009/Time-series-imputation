@@ -119,14 +119,14 @@ class CSDI_base(nn.Module):
         patterns = []
         for i in range(B):
             if is_val:
-                # pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
-                pattern = np.load(f"{self.pattern_folder}/pattern_1.npy")
+                pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                # pattern = np.load(f"{self.pattern_folder}/pattern_1.npy")
                 self.val_pattern_i = self.val_pattern_i + 1
                 if self.val_pattern_i >= self.num_patterns:
                     self.val_pattern_i = self.num_patterns
             else:
-                # pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
-                pattern = np.load(f"{self.pattern_folder}/pattern_1.npy")
+                pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
+                # pattern = np.load(f"{self.pattern_folder}/pattern_1.npy")
                 self.pattern_i = (self.pattern_i + 1) % self.num_patterns
             pattern = torch.tensor(pattern, dtype=torch.float32)
             patterns.append(pattern)
@@ -297,7 +297,7 @@ class CSDI_base(nn.Module):
             _, _, _
         ) = self.process_data(batch)
         if is_train == 0:
-            cond_mask = gt_mask
+            cond_mask = self.get_pattern_mask(observed_data, is_val=True)
         elif self.target_strategy == 'pattern':
             cond_mask = self.get_pattern_mask(observed_data)
         elif self.target_strategy == "mix":

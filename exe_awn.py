@@ -35,8 +35,8 @@ config_dict_csdi_pattern = {
     'train': {
         'epochs': 3000,
         'batch_size': 4,
-        # 'lr': 5.0e-4
-        'lr': 1.0e-4
+        'lr': 5.0e-4
+        # 'lr': 1.0e-4
     },      
     'diffusion': {
         'layers': 4, 
@@ -125,7 +125,7 @@ train_loader, valid_loader = get_dataloader(data_file, is_year=is_year, batch_si
 config_dict_csdi = config_dict_csdi_pattern if miss_type == 'pattern' else config_dict_csdi_random
 model_csdi = CSDI_AWN(config_dict_csdi, device, target_dim=len(given_features)).to(device)
 model_folder = f"./saved_model_{dataset_name}"
-filename = f"model_csdi_{dataset_name}_{miss_type}_pt_1.pth"
+filename = f"model_csdi_{dataset_name}_{miss_type}.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI training starts.....\n")
@@ -228,8 +228,8 @@ models = {
 # mse_folder = f"results_{dataset_name}_{name}_new/metric"
 # data_folder = f"results_{dataset_name}_{name}_new/data"
 name = miss_type
-mse_folder = f"results_{dataset_name}_{name}_pt_1/metric"
-data_folder = f"results_{dataset_name}_{name}_pt_1/data"
+mse_folder = f"results_{dataset_name}_{name}/metric"
+data_folder = f"results_{dataset_name}_{name}/data"
 lengths = [50, 100, 200]
 for l in lengths:
     print(f"\nlength = {l}")
