@@ -45,7 +45,6 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
     else:
         shp = sample.shape
         evals = sample.reshape(-1).copy()
-        print(f"sample: {sample.shape}, length: {length}")
         a = np.arange(sample.shape[0] - length)
         # print(f"a: {a}\nsample: {sample.shape}")
         start_idx = np.random.choice(a)
