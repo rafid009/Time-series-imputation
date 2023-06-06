@@ -669,12 +669,22 @@ class diff_SAITS_new_2(nn.Module):
             d_model = d_feature
         channels = d_model
         
-        self.layer_stack_for_first_block = nn.ModuleList([
-            ResidualEncoderLayer_new_2(channels=channels, d_time=d_time, actual_d_feature=d_feature, 
-                        d_model=d_model, d_inner=d_inner, n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout,
-                        diffusion_embedding_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask, ablation_config=self.ablation_config)
-            for i in range(n_layers)
-        ])
+        self.is_not_residual = self.ablation_config['is-not-residual']
+
+        if self.is_not_residual:
+            self.layer_stack_for_first_block = nn.ModuleList([
+                ResidualEncoderLayer_new_3(channels=channels, d_time=d_time, actual_d_feature=d_feature, 
+                            d_model=d_model, d_inner=d_inner, n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout,
+                            diffusion_embedding_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask, ablation_config=self.ablation_config)
+                for i in range(n_layers)
+            ])
+        else:
+            self.layer_stack_for_first_block = nn.ModuleList([
+                ResidualEncoderLayer_new_2(channels=channels, d_time=d_time, actual_d_feature=d_feature, 
+                            d_model=d_model, d_inner=d_inner, n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout,
+                            diffusion_embedding_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask, ablation_config=self.ablation_config)
+                for i in range(n_layers)
+            ])
 
         self.diffusion_embedding = DiffusionEmbedding(diff_steps, diff_emb_dim)
         self.dropout = nn.Dropout(p=dropout)
@@ -694,8 +704,8 @@ class diff_SAITS_new_2(nn.Module):
             self.reduce_dim_gamma = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         else:
             self.position_enc_cond = PositionalEncoding(d_feature, n_position=d_time)
-            self.embedding_1 = Conv1d_with_init_saits_new(d_feature, d_feature, 1) # nn.Linear(actual_d_feature, d_model)
-            self.embedding_cond = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1) # nn.Linear(actual_d_feature, d_model)
+            self.embedding_1 = nn.Linear(2 * d_feature, d_feature, 1)
+            self.embedding_cond = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
             
             if self.ablation_config['is_2nd_block']:
                 self.reduce_dim_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
@@ -717,8 +727,6 @@ class diff_SAITS_new_2(nn.Module):
                                 True, choice='fde-conv-single')
                     for _ in range(self.ablation_config['fde-layers'])
                 ])
-                # self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, 1, d_time, d_time, dropout, 0,
-                #                 True, choice='fde-conv-single')
             elif self.ablation_config['fde-choice'] == 'fde-conv-multi':
                 self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
                 self.layer_stack_for_feature_weights = nn.ModuleList([
@@ -726,8 +734,6 @@ class diff_SAITS_new_2(nn.Module):
                                 True, choice='fde-conv-multi')
                     for _ in range(self.ablation_config['fde-layers'])
                 ])
-                # self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
-                #                 True, choice='fde-conv-multi')
             else:
                 self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
                 self.layer_stack_for_feature_weights = nn.ModuleList([
@@ -735,9 +741,7 @@ class diff_SAITS_new_2(nn.Module):
                                 True)
                     for _ in range(self.ablation_config['fde-layers'])
                 ])
-                # self.feature_encoder = EncoderLayer(actual_d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
-                #                 True)
-        
+
 
     def forward(self, inputs, diffusion_step):
         # print(f"Entered forward")
