@@ -32,7 +32,7 @@ def parse_data(x):
     return values
 
 
-def parse_id(id_, missing_ratio=0.1, is_test=False, forecasting=False, length=-1, random_trial=False):
+def parse_id(id_, missing_ratio=0.1, is_test=False, forecasting=False, length=-1, random_trial=False, pattern=None):
     data = pd.read_csv("./data/physio/set-a/{}.txt".format(id_))
     # set hour
     data["Time"] = data["Time"].apply(lambda x: extract_hour(x))
@@ -46,7 +46,18 @@ def parse_id(id_, missing_ratio=0.1, is_test=False, forecasting=False, length=-1
 
     # randomly set some percentage as ground-truth
     masks = observed_masks.reshape(-1).copy()
-    if (not is_test) or random_trial:
+    if pattern is not None:
+        choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
+        filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
+        gt_masks = np.load(filename)
+        eval_mask = gt_masks.reshape(-1).copy()
+        gt_indices = np.where(eval_mask)[0].tolist()
+        miss_indices = np.random.choice(
+            gt_indices, (int)(len(gt_indices) * missing_ratio), replace=False
+        )
+        gt_intact = observed_values.reshape(-1).copy()
+        gt_intact[miss_indices] = np.nan
+    elif (not is_test) or random_trial:
         obs_indices = np.where(masks)[0].tolist()
         miss_indices = np.random.choice(
             obs_indices, (int)(len(obs_indices) * missing_ratio), replace=False
@@ -88,7 +99,8 @@ def get_idlist():
 
 
 class Physio_Dataset(Dataset):
-    def __init__(self, eval_length=48, use_index_list=None, missing_ratio=0.0, seed=0, is_test=False, random_trial=False, forecasting=False, length=-1):
+    def __init__(self, eval_length=48, use_index_list=None, missing_ratio=0.0, seed=0, is_test=False, 
+                 random_trial=False, forecasting=False, length=-1, pattern=None, mean=None, std=None):
         self.eval_length = eval_length
         np.random.seed(seed)  # seed for ground truth choice
 
@@ -105,7 +117,7 @@ class Physio_Dataset(Dataset):
             for id_ in idlist:
                 try:
                     observed_values, observed_masks, gt_masks, gt_intact = parse_id(
-                        id_, missing_ratio, is_test=is_test, forecasting=forecasting, length=length, random_trial=random_trial
+                        id_, missing_ratio, is_test=is_test, forecasting=forecasting, length=length, random_trial=random_trial, pattern=pattern
                     )
                     self.observed_values.append(observed_values)
                     self.observed_masks.append(observed_masks)
@@ -119,18 +131,30 @@ class Physio_Dataset(Dataset):
             self.gt_masks = np.array(self.gt_masks)
             self.gt_intacts = np.array(self.gt_intacts)
 
+            if use_index_list is not None:
+                self.observed_values = self.observed_values[use_index_list]
+                self.observed_masks = self.observed_masks[use_index_list]
+                self.gt_masks = self.gt_masks[use_index_list]
+                self.gt_intacts = self.gt_intacts[use_index_list]
+
             # calc mean and std and normalize values
             # (it is the same normalization as Cao et al. (2018) (https://github.com/caow13/BRITS))
             tmp_values = self.observed_values.reshape(-1, 35)
             tmp_masks = self.observed_masks.reshape(-1, 35)
-            mean = np.zeros(35)
-            std = np.zeros(35)
-            for k in range(35):
-                c_data = tmp_values[:, k][tmp_masks[:, k] == 1]
-                mean[k] = c_data.mean()
-                std[k] = c_data.std()
+            if mean is not None and std is not None:
+                self.mean = mean
+                self.std = std
+            else:
+                mean = np.zeros(35)
+                std = np.zeros(35)
+                for k in range(35):
+                    c_data = tmp_values[:, k][tmp_masks[:, k] == 1]
+                    mean[k] = c_data.mean()
+                    std[k] = c_data.std()
+                self.mean = mean
+                self.std = std
             self.observed_values = (
-                (self.observed_values - mean) / std * self.observed_masks
+                ((self.observed_values - self.mean) / self.std) * self.observed_masks
             )
 
             with open(path, "wb") as f:
@@ -142,10 +166,9 @@ class Physio_Dataset(Dataset):
                 self.observed_values, self.observed_masks, self.gt_masks, self.gt_intacts = pickle.load(
                     f
                 )
-        if use_index_list is None:
-            self.use_index_list = np.arange(len(self.observed_values))
-        else:
-            self.use_index_list = use_index_list
+        self.use_index_list = np.arange(len(self.observed_values))
+        # else:
+        #     self.use_index_list = use_index_list
 
     def __getitem__(self, org_index):
         index = self.use_index_list[org_index]
@@ -162,7 +185,7 @@ class Physio_Dataset(Dataset):
         return len(self.use_index_list)
 
 
-def get_dataloader(seed=1, nfold=None, batch_size=16, missing_ratio=0.1):
+def get_dataloader(seed=1, nfold=None, batch_size=16, missing_ratio=0.1, pattern=None):
 
     # only to obtain total length of dataset
     dataset = Physio_Dataset(missing_ratio=missing_ratio, seed=seed)
@@ -186,22 +209,23 @@ def get_dataloader(seed=1, nfold=None, batch_size=16, missing_ratio=0.1):
     dataset = Physio_Dataset(
         use_index_list=train_index, missing_ratio=missing_ratio, seed=seed
     )
+    mean, std = dataset.mean, dataset.std
     train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=1)
     valid_dataset = Physio_Dataset(
-        use_index_list=valid_index, missing_ratio=missing_ratio, seed=seed
+        use_index_list=valid_index, missing_ratio=missing_ratio, seed=seed, mean=mean, std=std
     )
     valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=0)
     test_dataset = Physio_Dataset(
-        use_index_list=test_index, missing_ratio=missing_ratio, seed=seed
+        use_index_list=test_index, missing_ratio=missing_ratio, seed=seed, pattern=pattern, mean=mean, std=std
     )
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=0)
-    return train_loader, valid_loader, test_loader, test_index
+    return train_loader, valid_loader, test_loader, test_index, mean, std
 
 
-def get_testloader_physio(test_indices, seed=1, batch_size=16, missing_ratio=0.1, random_trial=False, forecasting=False, length=-1):
+def get_testloader_physio(test_indices, seed=1, batch_size=16, missing_ratio=0.1, random_trial=False, forecasting=False, length=-1, pattern=None, mean=None, std=None):
     test_dataset = Physio_Dataset(
         use_index_list=test_indices, missing_ratio=missing_ratio, seed=seed, is_test=True, 
-        random_trial=random_trial, forecasting=forecasting, length=length
+        random_trial=random_trial, forecasting=forecasting, length=length, pattern=pattern
     )
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
     return test_loader

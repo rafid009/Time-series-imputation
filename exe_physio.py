@@ -54,7 +54,7 @@ print(json.dumps(config, indent=4))
 # with open(foldername + "config.json", "w") as f:
 #     json.dump(config, f, indent=4)
 
-train_loader, valid_loader, test_loader, test_indices = get_dataloader(
+train_loader, valid_loader, test_loader, test_indices, mean, std = get_dataloader(
     seed=args["seed"],
     nfold=args["nfold"],
     batch_size=config["train"]["batch_size"],
@@ -62,7 +62,7 @@ train_loader, valid_loader, test_loader, test_indices = get_dataloader(
 )
 config['model']['type'] = 'CSDI'
 config['diffusion']['is_fast'] = False
-config['model']['num_patterns'] = 35000
+config['model']['num_patterns'] = 30000
 config['model']['num_val_patterns'] = 5000
 config['model']['pattern_dir'] = './data/physio/miss_patterns'
 
@@ -180,13 +180,24 @@ models = {
 mse_folder = f"results_physio_final_{miss_pattern}"
 data_folder = f"results_physio_data_final_{miss_pattern}"
 
+test_patterns_start = 35001
+num_test_patterns = 5000
+
+test_pattern_config = {
+    'start': test_patterns_start,
+    'num_patterns': num_test_patterns,
+    'pattern_dir': config['model']['pattern_dir']
+}
+
+evaluate_imputation_all(models=models, trials=5, mse_folder=mse_folder, dataset_name='physio', batch_size=32, test_indices=test_indices, pattern=test_pattern_config, mean=mean, std=std)
+
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
-    evaluate_imputation_all(models=models, trials=5, mse_folder=mse_folder, dataset_name='physio', batch_size=32, missing_ratio=ratio, random_trial=True, test_indices=test_indices)
+    evaluate_imputation_all(models=models, trials=5, mse_folder=mse_folder, dataset_name='physio', batch_size=32, missing_ratio=ratio, random_trial=True, test_indices=test_indices, mean=mean, std=std)
 
 print(f"\nForecasting:")
-evaluate_imputation_all(models=models, trials=5, mse_folder=mse_folder, dataset_name='physio', batch_size=32, length=(10, 30), forecasting=True, test_indices=test_indices)
+evaluate_imputation_all(models=models, trials=5, mse_folder=mse_folder, dataset_name='physio', batch_size=32, length=(10, 30), forecasting=True, test_indices=test_indices, mean=mean, std=std)
 
 # lengths = [10, 20, 30]
 # for l in lengths:

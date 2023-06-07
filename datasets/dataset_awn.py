@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from datasets.preprocess_awn import features
 
-def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=None, forward_trial=-1, lte_idx=None, random_trial=False):
+def parse_data(sample, rate=0.2, is_test=False, length=100, include_features=None, forward_trial=-1, lte_idx=None, random_trial=False, pattern=None):
     """Get mask of random points (missing at random) across channels based on k,
     where k == number of data points. Mask of sample's shape where 0's to be imputed, and 1's to preserved
     as per ts imputers"""
@@ -12,7 +12,18 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
 
     obs_mask = ~np.isnan(sample)
     
-    if not is_test:
+    if pattern is not None:
+        choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
+        filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
+        gt_masks = np.load(filename)
+        eval_mask = gt_masks.reshape(-1).copy()
+        gt_indices = np.where(eval_mask)[0].tolist()
+        miss_indices = np.random.choice(
+            gt_indices, (int)(len(gt_indices) * rate), replace=False
+        )
+        gt_intact = sample.reshape(-1).copy()
+        gt_intact[miss_indices] = np.nan
+    elif not is_test:
         shp = sample.shape
         evals = sample.reshape(-1).copy()
         indices = np.where(~np.isnan(evals))[0].tolist()
@@ -64,7 +75,7 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
     return obs_data, obs_mask, mask, sample, gt_intact
 
 class AWN_Dataset(Dataset):
-    def __init__(self, filename, is_year=True, rate=0.1, test_index=32, is_test=False, length=100, seed=10, forward_trial=-1, random_trial=False) -> None:
+    def __init__(self, filename, is_year=True, rate=0.1, test_index=32, is_test=False, length=100, seed=10, forward_trial=-1, random_trial=False, pattern=None) -> None:
         super().__init__()
         
         self.observed_values = []
@@ -98,14 +109,13 @@ class AWN_Dataset(Dataset):
 
         for i in range(X.shape[0]):
             obs_val, obs_mask, mask, sample, obs_intact = parse_data(X[i], rate, is_test, length, include_features=include_features, \
-                                                                     forward_trial=forward_trial, random_trial=random_trial)
+                                                                     forward_trial=forward_trial, random_trial=random_trial, pattern=pattern)
+            
             self.observed_values.append(obs_val)
             self.observed_masks.append(obs_mask)
             self.gt_masks.append(mask)
             self.obs_data_intact.append(sample)
             self.gt_intact.append(obs_intact)
-
-
 
         self.gt_masks = torch.tensor(np.array(self.gt_masks), dtype=torch.float32)
         self.observed_values = torch.tensor(np.array(self.observed_values), dtype=torch.float32)
@@ -135,11 +145,14 @@ class AWN_Dataset(Dataset):
         return len(self.observed_values)
 
 
-def get_dataloader(filename, batch_size=16, missing_ratio=0.1, is_test=False, test_index=32, is_year=True):
+def get_dataloader(filename, batch_size=16, missing_ratio=0.1, is_test=False, test_index=32, is_year=True, is_pattern=False):
     # np.random.seed(seed=seed)
     train_dataset = AWN_Dataset(filename, test_index=test_index, is_year=True, rate=missing_ratio)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    test_dataset = AWN_Dataset(filename, test_index=test_index, rate=missing_ratio, is_year=is_year, is_test=is_test)
+    if is_pattern:
+        test_dataset = AWN_Dataset(filename, test_index=test_index, rate=0.01, is_year=is_year, is_test=is_test, pattern=None, is_pattern=False)
+    else:
+        test_dataset = AWN_Dataset(filename, test_index=test_index, rate=missing_ratio, is_year=is_year, is_test=is_test, pattern=None, is_pattern=False)
     if is_test:
         test_loader = DataLoader(test_dataset, batch_size=1)
     else:
@@ -147,12 +160,12 @@ def get_dataloader(filename, batch_size=16, missing_ratio=0.1, is_test=False, te
     return train_loader, test_loader
 
 
-def get_testloader_awn(filename, is_year=True, n_steps=366, batch_size=16, missing_ratio=0.2, seed=10, test_index=32, length=100, forecasting=False, random_trial=False):
+def get_testloader_awn(filename, is_year=True, n_steps=366, batch_size=16, missing_ratio=0.2, seed=10, test_index=32, length=100, forecasting=False, random_trial=False, pattern=None):
     np.random.seed(seed=seed)
     if forecasting:
         forward = n_steps - length
-        test_dataset = AWN_Dataset(filename, is_year=is_year, test_index=test_index, rate=missing_ratio, is_test=True, length=length, forward_trial=forward)
+        test_dataset = AWN_Dataset(filename, is_year=is_year, test_index=test_index, rate=missing_ratio, is_test=True, length=length, forward_trial=forward, pattern=pattern)
     else:
-        test_dataset = AWN_Dataset(filename, is_year=is_year, test_index=test_index, rate=missing_ratio, is_test=True, length=length, random_trial=random_trial)
+        test_dataset = AWN_Dataset(filename, is_year=is_year, test_index=test_index, rate=missing_ratio, is_test=True, length=length, random_trial=random_trial, pattern=pattern)
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
     return test_loader

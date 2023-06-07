@@ -120,7 +120,7 @@ n_steps = 366
 n_features = len(given_features)
 test_season = 32
 is_year = True
-train_loader, valid_loader = get_dataloader(data_file, is_year=is_year, batch_size=4, test_index=test_season, missing_ratio=0.1, is_test=False)
+train_loader, valid_loader = get_dataloader(data_file, is_year=is_year, batch_size=4, test_index=test_season, missing_ratio=0.1, is_test=False, is_pattern=(miss_type == 'pattern'))
 
 config_dict_csdi = config_dict_csdi_pattern if miss_type == 'pattern' else config_dict_csdi_random
 model_csdi = CSDI_AWN(config_dict_csdi, device, target_dim=len(given_features)).to(device)
@@ -231,11 +231,22 @@ models = {
 name = miss_type
 mse_folder = f"results_{dataset_name}_{name}/metric"
 data_folder = f"results_{dataset_name}_{name}/data"
-lengths = [50, 100, 200]
-for l in lengths:
-    print(f"\nlength = {l}")
-    print(f"\nBlackout:")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=l, test_indices=test_season)
+
+test_patterns_start = 15001
+num_test_patterns = 5000
+
+test_pattern_config = {
+    'start': test_patterns_start,
+    'num_patterns': num_test_patterns,
+    'pattern_dir': './data/Daily/miss_pattern'
+}
+
+evaluate_imputation_all(models=models, trials=20, mse_folder=mse_folder, dataset_name='awn', batch_size=4, pattern=test_pattern_config, test_indices=test_season)
+# lengths = [50, 100, 200]
+# for l in lengths:
+#     print(f"\nlength = {l}")
+#     print(f"\nBlackout:")
+#     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=l, test_indices=test_season)
     # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True)
 
 print(f"\nForecasting:")
