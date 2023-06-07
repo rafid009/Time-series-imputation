@@ -275,10 +275,11 @@ def create_synthetic_data_v5(n_steps, num_seasons, seed=10, rate=0.05, length_ra
             elif feature == '1+tan':
                 f5 = data[i, :, feats_v5.index('tan')]
                 data[i, :, feats_v5.index(feature)] = 1 + f5 ** 2
+            data[i, :, feats_v5.index(feature)] = add_rn_missing(data[i, :, feats_v5.index(feature)], rate=rate)
             if feature == 'sin' or feature == 'cos' or feature == 'tan':
                 data[i, :, feats_v5.index(feature)] = add_rn_missing(data[i, :, feats_v5.index(feature)], length=lr)
             
-        data[i] = add_rn_missing(data[i], rate=rate)
+                
     
     data_rows = data.reshape((-1, num_features))
     mean = np.nanmean(data_rows, axis=0)

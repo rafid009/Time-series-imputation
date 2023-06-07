@@ -7,6 +7,7 @@ import os
 from pypots.imputation import SAITS
 import pickle
 import numpy as np
+np.set_printoptions(threshold=np.inf)
 from models.mask_main_model import Mask_Physio
 from datasets.dataset_physio_mask import get_dataloader, attributes
 from utils.utils import train, evaluate, get_num_params, evaluate_imputation_all
@@ -108,20 +109,25 @@ with torch.no_grad():
     samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
 
     # samples = (samples > 0).float()
+    # np.save(f"{sample_folder}/patterns.npy", samples.cpu().numpy())
+    print(f"sample 1: {samples[0][0].cpu().numpy()}")
+    print(f"sample 1: {samples[0][2].cpu().numpy()}")
+    print(f"sample 1: {samples[0][3].cpu().numpy()}")
+    samples = torch.round(samples)
     # samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
     save_samples = samples.squeeze(0)
-    print(f"sample 1: {save_samples[0]}")
-    print(f"sample 1: {save_samples[2]}")
-    print(f"sample 1: {save_samples[3]}")
-    # for i in range(save_samples.shape[0]):
-    #     np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i].cpu().numpy())
+    print(f"sample 1: {save_samples[0].cpu().numpy()}")
+    print(f"sample 1: {save_samples[2].cpu().numpy()}")
+    print(f"sample 1: {save_samples[3].cpu().numpy()}")
+    for i in range(save_samples.shape[0]):
+        np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i].cpu().numpy())
 
-    # crps_avg = 0
-    # num = 0
-    # for i in range(len(ground)):
-    #     crps = calc_quantile_CRPS(ground[i].unsqueeze(0), samples, 0, 1)
-    #     print(f"CRPS for {i} : {crps}")
-    #     crps_avg += crps
-    #     num += 1
-    # print(f"final CRPS: {crps_avg / num}")
+    crps_avg = 0
+    num = 0
+    for i in range(len(ground)):
+        crps = calc_quantile_CRPS(ground[i].unsqueeze(0), samples, 0, 1)
+        print(f"CRPS for {i} : {crps}")
+        crps_avg += crps
+        num += 1
+    print(f"final CRPS: {crps_avg / num}")
     
