@@ -159,3 +159,5 @@ def make_data():
     print(f"Miss data: {miss_data.shape}")
     print(f"Total number: {miss_data.shape[0] * miss_data.shape[1] * miss_data.shape[2]}")
     np.save(f'{awn_folder}/miss_data_yy.npy', miss_data)
+
+# make_data()
