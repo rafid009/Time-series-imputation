@@ -77,21 +77,21 @@ config['diffusion']['is_fast'] = False
 
 model_csdi = Mask_Physio(config, args['device']).to(args['device'])
 model_folder = "saved_model_physio_mask"
-filename = "model_csdi_physio_mask_no_sigmoid.pth"
+filename = "model_csdi_physio_mask.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
-# train(
-#     model_csdi,
-#     config["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=filename
-# )
+train(
+    model_csdi,
+    config["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=filename
+)
 
-model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 
-nsample = 30000 # 3000 * 4 * 8
+nsample = 40000 # 3000 * 4 * 8
 ground = 0
 for i, val in enumerate(test_loader):
     ground = val['observed_mask'].to(args["device"]).float() # (B, L, K)
