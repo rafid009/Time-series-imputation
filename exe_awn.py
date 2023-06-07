@@ -104,7 +104,7 @@ config_dict_csdi_random = {
         'd_v': 64,
         'dropout': 0.1,
         'diagonal_attention_mask': True,
-        'num_patterns': 15000,
+        'num_patterns': 10000,
         'num_val_patterns': 5000,
         'pattern_dir': './data/Daily/miss_pattern'
     },
