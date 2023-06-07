@@ -84,15 +84,15 @@ filename = f"model_csdi_mask_awn.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI Masked training starts.....\n")
-# train(
-#     model_csdi,
-#     config_dict_csdi["train"],
-#     train_loader,
-#     valid_loader=None,
-#     foldername=model_folder,
-#     filename=f"{filename}",
-#     is_saits=False
-# )
+train(
+    model_csdi,
+    config_dict_csdi["train"],
+    train_loader,
+    valid_loader=None,
+    foldername=model_folder,
+    filename=f"{filename}",
+    is_saits=False
+)
 model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
@@ -107,12 +107,12 @@ def calc_denominator(target):
     return torch.sum(torch.abs(target))
 
 def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
-    print(f"target: {target.shape}\nforecast: {forecast.shape}")
+    # print(f"target: {target.shape}\nforecast: {forecast.shape}")
     target = target * scaler + mean_scaler
     forecast = forecast * scaler + mean_scaler
 
-    print(f"target: {target}")
-    print(f"forecasts: {forecast[0:10]}")
+    # print(f"target: {target}")
+    # print(f"forecasts: {forecast[0:10]}")
 
     quantiles = np.arange(0.05, 1.0, 0.05)
     denom = calc_denominator(target)
@@ -123,9 +123,9 @@ def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
             q_pred.append(torch.quantile(forecast[j : j + 1], quantiles[i], dim=1))
         q_pred = torch.cat(q_pred, 0)
         q_loss = quantile_loss(target, q_pred, quantiles[i])
-        print(f"q_loss: {q_loss}, denom: {denom}")
+        # print(f"q_loss: {q_loss}, denom: {denom}")
         CRPS += q_loss / denom
-        print(f"CRPS each qunatile: {CRPS}")
+        # print(f"CRPS each qunatile: {CRPS}")
     return CRPS.item() / len(quantiles)
 
 
@@ -147,8 +147,14 @@ with torch.no_grad():
     samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
     # samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
     # samples = (samples > 0).float()
+    print(f"sample 1: {samples[0][1].cpu().numpy()}")
+    print(f"sample 2: {samples[0][2].cpu().numpy()}")
+    print(f"sample 3: {samples[0][3].cpu().numpy()}")
     samples = torch.round(samples)
     save_samples = samples.squeeze(0)
+    print(f"sample 1: {save_samples[1].cpu().numpy()}")
+    print(f"sample 2: {save_samples[2].cpu().numpy()}")
+    print(f"sample 3: {save_samples[3].cpu().numpy()}")
     for i in range(save_samples.shape[0]):
         np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i].cpu().numpy())
 
