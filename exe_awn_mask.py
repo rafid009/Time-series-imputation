@@ -84,21 +84,21 @@ filename = f"model_csdi_mask_awn.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI Masked training starts.....\n")
-train(
-    model_csdi,
-    config_dict_csdi["train"],
-    train_loader,
-    valid_loader=None,
-    foldername=model_folder,
-    filename=f"{filename}",
-    is_saits=False
-)
+# train(
+#     model_csdi,
+#     config_dict_csdi["train"],
+#     train_loader,
+#     valid_loader=None,
+#     foldername=model_folder,
+#     filename=f"{filename}",
+#     is_saits=False
+# )
 model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
 
 def quantile_loss(target, forecast, q: float) -> float:
-    print(f"in quant: target: {target.shape}, forecast: {forecast.shape}")
+    # print(f"in quant: target: {target.shape}, forecast: {forecast.shape}")
     return 2 * torch.sum(
         torch.abs((forecast - target) * ((target <= forecast) * 1.0 - q))
     )
