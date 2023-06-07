@@ -144,7 +144,7 @@ config_dict_diffsaits = {
         'fde-layers': 4,
         'is_fde': False,
         'weight_combine': False,
-        'no-mask': False,
+        'fde-no-mask': False,
         'fde-diagonal': False,
         'is_fde_2nd': False,
         'reduce-type': 'linear',

@@ -297,7 +297,10 @@ class CSDI_base(nn.Module):
             _, _, _
         ) = self.process_data(batch)
         if is_train == 0:
-            cond_mask = self.get_pattern_mask(observed_data, is_val=True)
+            if self.target_strategy == 'pattern':
+                cond_mask = self.get_pattern_mask(observed_data, is_val=True)
+            else:
+                cond_mask = gt_mask
         elif self.target_strategy == 'pattern':
             cond_mask = self.get_pattern_mask(observed_data)
         elif self.target_strategy == "mix":
