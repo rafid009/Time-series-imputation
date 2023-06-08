@@ -148,7 +148,10 @@ config_dict_diffsaits = {
         'fde-diagonal': False,
         'is_fde_2nd': False,
         'reduce-type': 'linear',
-        'is_2nd_block': False
+        'is_2nd_block': False,
+        'is-not-residual': True,
+        'res-block-mask': False,
+        'is-fde-loop': False
     }
 }
 print(f"config: {config_dict_diffsaits}")
