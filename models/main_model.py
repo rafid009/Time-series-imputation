@@ -114,18 +114,24 @@ class CSDI_base(nn.Module):
                 cond_mask[i] = cond_mask[i] * for_pattern_mask[i - 1] 
         return cond_mask
     
-    def get_pattern_mask(self, observed_mask, is_val=False):
+    def get_pattern_mask(self, observed_mask, is_val=False, pattern_folder=None):
         B, K, L = observed_mask.shape
         patterns = []
         for i in range(B):
             if is_val:
-                pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                try:
+                    pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                except:
+                    pattern = np.load(f"{pattern_folder}/pattern_{self.val_pattern_i}.npy")
                 # pattern = np.load(f"{self.pattern_folder}/pattern_1.npy")
                 self.val_pattern_i = self.val_pattern_i + 1
                 if self.val_pattern_i >= self.num_patterns:
                     self.val_pattern_i = self.num_patterns
             else:
-                pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
+                try:
+                    pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
+                except:
+                    pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
                 # pattern = np.load(f"{self.pattern_folder}/pattern_1.npy")
                 self.pattern_i = (self.pattern_i + 1) % self.num_patterns
             pattern = torch.tensor(pattern, dtype=torch.float32)
@@ -317,7 +323,7 @@ class CSDI_base(nn.Module):
         loss_func = self.calc_loss if is_train == 1 else self.calc_loss_valid
         return loss_func(observed_data, cond_mask, observed_mask, side_info, is_train)
 
-    def evaluate(self, batch, n_samples, is_pattern=False):
+    def evaluate(self, batch, n_samples):
         (
             observed_data,
             observed_mask,
@@ -330,7 +336,7 @@ class CSDI_base(nn.Module):
         ) = self.process_data(batch)
 
         with torch.no_grad():
-            if is_pattern:
+            if self.target_strategy == 'pattern':
                 cond_mask = self.get_pattern_mask(observed_mask, is_val=True)
             else:
                 cond_mask = gt_mask

@@ -737,7 +737,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
         
         for j, test_batch in enumerate(test_loader, start=1):
             if 'CSDI' in models.keys():
-                output = models['CSDI'].evaluate(test_batch, nsample, is_pattern=(pattern is not None))
+                output = models['CSDI'].evaluate(test_batch, nsample)
                 samples, c_target, eval_points, observed_points, observed_time, obs_intact, gt_intact = output
                 samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
                 c_target = c_target.permute(0, 2, 1)  # (B,L,K)
@@ -746,7 +746,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
                 samples_median = samples.median(dim=1)
             
             if 'DiffSAITS' in models.keys():
-                output_diff_saits = models['DiffSAITS'].evaluate(test_batch, nsample, is_pattern=(pattern is not None))
+                output_diff_saits = models['DiffSAITS'].evaluate(test_batch, nsample)
                 if 'CSDI' not in models.keys():
                     samples_diff_saits, c_target, eval_points, observed_points, observed_time, obs_intact, gt_intact = output_diff_saits
                     c_target = c_target.permute(0, 2, 1)  # (B,L,K)

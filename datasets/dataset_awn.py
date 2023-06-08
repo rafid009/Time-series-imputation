@@ -13,9 +13,16 @@ def parse_data(sample, rate=0.2, is_test=False, length=100, include_features=Non
     obs_mask = ~np.isnan(sample)
     
     if pattern is not None:
+        
         choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
         filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
         gt_masks = np.load(filename)
+        
+        while (obs_mask == gt_masks):
+            choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
+            filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
+            gt_masks = np.load(filename)
+        
         eval_mask = gt_masks.reshape(-1).copy()
         gt_indices = np.where(eval_mask)[0].tolist()
         miss_indices = np.random.choice(
