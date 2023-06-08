@@ -23,12 +23,12 @@ def calc_denominator(target):
 
 
 def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
-    print(f"target: {target.shape}\nforecast: {forecast.shape}")
+    # print(f"target: {target.shape}\nforecast: {forecast.shape}")
     target = target * scaler + mean_scaler
     forecast = forecast * scaler + mean_scaler
 
-    print(f"target: {target}")
-    print(f"forecasts: {forecast[0:10]}")
+    # print(f"target: {target}")
+    # print(f"forecasts: {forecast[0:10]}")
 
     quantiles = np.arange(0.05, 1.0, 0.05)
     denom = calc_denominator(target)
@@ -39,9 +39,9 @@ def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
             q_pred.append(torch.quantile(forecast[j : j + 1], quantiles[i], dim=1))
         q_pred = torch.cat(q_pred, 0)
         q_loss = quantile_loss(target, q_pred, quantiles[i])
-        print(f"q_loss: {q_loss}, denom: {denom}")
+        # print(f"q_loss: {q_loss}, denom: {denom}")
         CRPS += q_loss / denom
-        print(f"CRPS each qunatile: {CRPS}")
+        # print(f"CRPS each qunatile: {CRPS}")
     return CRPS.item() / len(quantiles)
 
 args = {
@@ -80,16 +80,16 @@ model_folder = "saved_model_physio_mask"
 filename = "model_csdi_physio_mask.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
-train(
-    model_csdi,
-    config["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename=filename
-)
+# train(
+#     model_csdi,
+#     config["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename=filename
+# )
 
-# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 
 nsample = 40000 # 3000 * 4 * 8
 ground = 0
