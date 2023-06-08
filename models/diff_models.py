@@ -628,9 +628,11 @@ class ResidualEncoderLayer_new_3(nn.Module):
 
         y = x_proj + cond
 
+        if self.is_linear:
+            y = torch.transpose(y, 1, 2) # (B, C, L)
+
         if self.is_mask_enc_loop:
-            if not self.is_linear:
-                y = torch.transpose(y, 1, 2) # (B, L, C)
+            y = torch.transpose(y, 1, 2) # (B, L, C)
             y = self.pos_enc(y) # (B, L, C)
             y = torch.transpose(y, 1, 2) # (B, C, L) 
 
@@ -647,10 +649,8 @@ class ResidualEncoderLayer_new_3(nn.Module):
             y = torch.transpose(y, 1, 2) # (B, C, L)
 
         y = self.output_proj(y) # (B, D, L) / linear -> (B, L, D)
-
         if self.is_linear:
             y = torch.transpose(y, 1, 2) # (B, D, L)
-
         return y, attn_weights_time
 
 
