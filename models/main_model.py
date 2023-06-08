@@ -317,7 +317,7 @@ class CSDI_base(nn.Module):
         loss_func = self.calc_loss if is_train == 1 else self.calc_loss_valid
         return loss_func(observed_data, cond_mask, observed_mask, side_info, is_train)
 
-    def evaluate(self, batch, n_samples):
+    def evaluate(self, batch, n_samples, is_pattern=False):
         (
             observed_data,
             observed_mask,
@@ -330,7 +330,7 @@ class CSDI_base(nn.Module):
         ) = self.process_data(batch)
 
         with torch.no_grad():
-            if self.target_strategy == 'pattern':
+            if is_pattern:
                 cond_mask = self.get_pattern_mask(observed_mask, is_val=True)
             else:
                 cond_mask = gt_mask
