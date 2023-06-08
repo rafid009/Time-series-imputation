@@ -16,14 +16,14 @@ def parse_data(sample, rate=0.2, is_test=False, length=100, include_features=Non
         
         choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
         filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
-        masks = np.load(filename)
+        mask = np.load(filename)
         
-        while (obs_mask == masks):
+        while (obs_mask == mask):
             choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
             filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
-            masks = np.load(filename)
+            mask = np.load(filename)
         
-        eval_mask = masks.reshape(-1).copy()
+        eval_mask = mask.reshape(-1).copy()
         gt_indices = np.where(eval_mask)[0].tolist()
         miss_indices = np.random.choice(
             gt_indices, (int)(len(gt_indices) * rate), replace=False
