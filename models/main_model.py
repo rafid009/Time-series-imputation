@@ -340,7 +340,7 @@ class CSDI_base(nn.Module):
                 cond_mask = self.get_pattern_mask(observed_mask, is_val=True)
             else:
                 cond_mask = gt_mask
-            print(f"obs:\n{observed_mask.cpu().numpy()}\ncond:\n{cond_mask.cpu().numpy()}")
+            # print(f"obs:\n{observed_mask.cpu().numpy()}\ncond:\n{cond_mask.cpu().numpy()}")
             target_mask = observed_mask - cond_mask
             if self.is_saits:
                 side_info = None
