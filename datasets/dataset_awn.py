@@ -17,6 +17,7 @@ def parse_data(sample, rate=0.2, is_test=False, length=100, include_features=Non
         choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
         filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
         mask = np.load(filename)
+        evals = sample.reshape(-1).copy()
         
         while (obs_mask == mask):
             choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
@@ -30,6 +31,9 @@ def parse_data(sample, rate=0.2, is_test=False, length=100, include_features=Non
         )
         gt_intact = sample.reshape(-1).copy()
         gt_intact[miss_indices] = np.nan
+        gt_intact = gt_intact.reshape(shp)
+        obs_data = np.nan_to_num(evals, copy=True)
+        obs_data = obs_data.reshape(shp)
     elif not is_test:
         shp = sample.shape
         evals = sample.reshape(-1).copy()
