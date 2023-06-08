@@ -598,7 +598,8 @@ class ResidualEncoderLayer_new_3(nn.Module):
         # C -> channels
         # For masking with Conv, D = K and for most cases, we will use D = C, except masking with conv
         B, D, L = x.shape
-        B, K, L = mask.shape
+        if self.is_mask_enc_loop:
+            B, K, L = mask.shape
 
         if self.is_linear:
             x_in = torch.transpose(x, 1, 2) # (B, L, D)
