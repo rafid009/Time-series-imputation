@@ -13,7 +13,7 @@ def parse_data(sample, rate=0.2, is_test=False, length=100, include_features=Non
     obs_mask = ~np.isnan(sample)
     
     if pattern is not None:
-        
+        shp = sample.shape
         choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
         print(f"start: {pattern['start']} end: {(pattern['start'] + pattern['num_patterns'] - 1)} choice: {choice}")
         filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
