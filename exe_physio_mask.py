@@ -113,7 +113,7 @@ with torch.no_grad():
     print(f"sample 1: {samples[0][0].cpu().numpy()}")
     print(f"sample 1: {samples[0][2].cpu().numpy()}")
     print(f"sample 1: {samples[0][3].cpu().numpy()}")
-    samples = torch.round(samples)
+    samples = torch.round(torch.abs(samples))
     # samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
     save_samples = samples.squeeze(0)
     print(f"sample 1: {save_samples[0].cpu().numpy()}")
