@@ -555,7 +555,7 @@ class ResidualEncoderLayer_new_3(nn.Module):
             diffusion_embedding_dim=128, diagonal_attention_mask=True, ablation_config=None, dilation=1) -> None:
         super().__init__()
 
-        self.time_enc_layer = EncoderLayer(d_time, actual_d_feature, 2 * channels, d_inner, n_head, d_k, d_v, dropout, 0,
+        self.time_enc_layer = EncoderLayer(d_time, actual_d_feature, channels, d_inner, n_head, d_k, d_v, dropout, 0,
                          diagonal_attention_mask)
         self.ablation_config = ablation_config
 
