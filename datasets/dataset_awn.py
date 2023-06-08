@@ -150,9 +150,9 @@ def get_dataloader(filename, batch_size=16, missing_ratio=0.1, is_test=False, te
     train_dataset = AWN_Dataset(filename, test_index=test_index, is_year=True, rate=missing_ratio)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     if is_pattern:
-        test_dataset = AWN_Dataset(filename, test_index=test_index, rate=0.01, is_year=is_year, is_test=is_test, pattern=None, is_pattern=False)
+        test_dataset = AWN_Dataset(filename, test_index=test_index, rate=0.01, is_year=is_year, is_test=is_test, pattern=None)
     else:
-        test_dataset = AWN_Dataset(filename, test_index=test_index, rate=missing_ratio, is_year=is_year, is_test=is_test, pattern=None, is_pattern=False)
+        test_dataset = AWN_Dataset(filename, test_index=test_index, rate=missing_ratio, is_year=is_year, is_test=is_test, pattern=None)
     if is_test:
         test_loader = DataLoader(test_dataset, batch_size=1)
     else:
