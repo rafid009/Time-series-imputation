@@ -100,7 +100,7 @@ def get_idlist():
 
 class Physio_Dataset(Dataset):
     def __init__(self, eval_length=48, use_index_list=None, missing_ratio=0.0, seed=0, is_test=False, 
-                 random_trial=False, forecasting=False, length=-1, pattern=None, mean=None, std=None):
+                 random_trial=False, forecasting=False, length=-1, pattern=None, mean=False, std=False):
         self.eval_length = eval_length
         np.random.seed(seed)  # seed for ground truth choice
 
@@ -111,7 +111,9 @@ class Physio_Dataset(Dataset):
         path = (
             "./data/physio_missing" + str(missing_ratio) + "_seed" + str(seed) + ".pk"
         )
-
+        
+        mean_file = './data/physio/mean' + str(missing_ratio) + "_seed" + str(seed) + ".npy"
+        std_file = './data/physio/std' + str(missing_ratio) + "_seed" + str(seed) + ".npy"
         if os.path.isfile(path) == False:  # if datasetfile is none, create
             idlist = get_idlist()
             for id_ in idlist:
@@ -141,9 +143,9 @@ class Physio_Dataset(Dataset):
             # (it is the same normalization as Cao et al. (2018) (https://github.com/caow13/BRITS))
             tmp_values = self.observed_values.reshape(-1, 35)
             tmp_masks = self.observed_masks.reshape(-1, 35)
-            if mean is not None and std is not None:
-                self.mean = mean
-                self.std = std
+            if mean and std:
+                self.mean = np.load(mean_file)
+                self.std = np.load(std_file)
             else:
                 mean = np.zeros(35)
                 std = np.zeros(35)
@@ -167,6 +169,10 @@ class Physio_Dataset(Dataset):
                     f
                 )
         self.use_index_list = np.arange(len(self.observed_values))
+        
+        if not mean and not std:
+            np.save(mean_file, self.mean)
+            np.save(std_file, self.std)
         # else:
         #     self.use_index_list = use_index_list
 
@@ -209,23 +215,22 @@ def get_dataloader(seed=1, nfold=None, batch_size=16, missing_ratio=0.1, pattern
     dataset = Physio_Dataset(
         use_index_list=train_index, missing_ratio=missing_ratio, seed=seed
     )
-    mean, std = dataset.mean, dataset.std
     train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=1)
     valid_dataset = Physio_Dataset(
-        use_index_list=valid_index, missing_ratio=missing_ratio, seed=seed, mean=mean, std=std
+        use_index_list=valid_index, missing_ratio=missing_ratio, seed=seed, mean=True, std=True
     )
     valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=0)
     test_dataset = Physio_Dataset(
-        use_index_list=test_index, missing_ratio=missing_ratio, seed=seed, pattern=pattern, mean=mean, std=std
+        use_index_list=test_index, missing_ratio=missing_ratio, seed=seed, pattern=pattern, mean=True, std=True
     )
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=0)
-    return train_loader, valid_loader, test_loader, test_index, mean, std
+    return train_loader, valid_loader, test_loader, test_index
 
 
-def get_testloader_physio(test_indices, seed=1, batch_size=16, missing_ratio=0.1, random_trial=False, forecasting=False, length=-1, pattern=None, mean=None, std=None):
+def get_testloader_physio(test_indices, seed=1, batch_size=16, missing_ratio=0.1, random_trial=False, forecasting=False, length=-1, pattern=None):
     test_dataset = Physio_Dataset(
         use_index_list=test_indices, missing_ratio=missing_ratio, seed=seed, is_test=True, 
-        random_trial=random_trial, forecasting=forecasting, length=length, pattern=pattern
+        random_trial=random_trial, forecasting=forecasting, length=length, pattern=pattern, mean=True, std=True
     )
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
     return test_loader
