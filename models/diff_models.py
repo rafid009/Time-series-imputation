@@ -857,6 +857,7 @@ class diff_SAITS_new_2(nn.Module):
                         # if self.ablation_config['reduce-type'] == 'linear':
                         #     skips_tilde_1 = self.reduce_skip_z(skips_tilde_1) # (B, K, L)
                         # else:
+                        skips_tilde_1 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
                         skips_tilde_1 = self.reduce_skip_z(skips_tilde_1) # (B, K, L)
                 else:
                     skips_tilde_2 += enc_output # (B, D, L)
@@ -865,6 +866,10 @@ class diff_SAITS_new_2(nn.Module):
                     # if self.ablation_config['reduce-type'] == 'linear':
                     #     skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2))) # (B, K, L)
                     # else:
+                    if self.ablation_config['is_2nd_block']:
+                        skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
+                    else:
+                        skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)))
                     skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
         else:
             for encoder in self.layer_stack_for_first_block:
@@ -914,6 +919,7 @@ class diff_SAITS_new_2(nn.Module):
                         # if self.ablation_config['reduce-type'] == 'linear':
                         #     skips_tilde_1 = self.reduce_skip_z(skips_tilde_1) # (B, K, L)
                         # else:
+                        skips_tilde_1 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
                         skips_tilde_1 = self.reduce_skip_z(skips_tilde_1) # (B, K, L)
                 else:
                     skips_tilde_2 += skip # (B, D, L)
@@ -922,13 +928,13 @@ class diff_SAITS_new_2(nn.Module):
                     # if self.ablation_config['reduce-type'] == 'linear':
                     #     skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2))) # (B, K, L)
                     # else:
+                    if self.ablation_config['is_2nd_block']:
+                        skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
+                    else:
+                        skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)))
                     skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
 
-        if self.ablation_config['is_2nd_block']:
-            skips_tilde_1 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
-            skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
-        else:
-            skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)))
+        
 
         if self.ablation_config['is_2nd_block']:
             if self.ablation_config['weight_combine']:
