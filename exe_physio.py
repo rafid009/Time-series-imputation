@@ -54,7 +54,7 @@ print(json.dumps(config, indent=4))
 # with open(foldername + "config.json", "w") as f:
 #     json.dump(config, f, indent=4)
 
-train_loader, valid_loader, test_loader, test_indices, mean, std = get_dataloader(
+train_loader, valid_loader, test_loader, test_indices = get_dataloader(
     seed=args["seed"],
     nfold=args["nfold"],
     batch_size=config["train"]["batch_size"],
