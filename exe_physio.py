@@ -189,15 +189,15 @@ test_pattern_config = {
     'pattern_dir': config['model']['pattern_dir']
 }
 
-evaluate_imputation_all(models=models, trials=5, mse_folder=mse_folder, dataset_name='physio', batch_size=32, test_indices=test_indices, pattern=test_pattern_config, mean=mean, std=std)
+evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='physio', batch_size=32, test_indices=test_indices, pattern=test_pattern_config, mean=mean, std=std)
 
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
-    evaluate_imputation_all(models=models, trials=5, mse_folder=mse_folder, dataset_name='physio', batch_size=32, missing_ratio=ratio, random_trial=True, test_indices=test_indices, mean=mean, std=std)
+    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='physio', batch_size=32, missing_ratio=ratio, random_trial=True, test_indices=test_indices, mean=mean, std=std)
 
 print(f"\nForecasting:")
-evaluate_imputation_all(models=models, trials=5, mse_folder=mse_folder, dataset_name='physio', batch_size=32, length=(10, 30), forecasting=True, test_indices=test_indices, mean=mean, std=std)
+evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='physio', batch_size=32, length=(10, 30), forecasting=True, test_indices=test_indices, mean=mean, std=std)
 
 # lengths = [10, 20, 30]
 # for l in lengths:
