@@ -147,14 +147,14 @@ class Physio_Dataset(Dataset):
             self.mean = np.load(mean_file)
             self.std = np.load(std_file)
         else:
-            mean = np.zeros(35)
-            std = np.zeros(35)
+            mu = np.zeros(35)
+            sigma = np.zeros(35)
             for k in range(35):
                 c_data = tmp_values[:, k][tmp_masks[:, k] == 1]
-                mean[k] = c_data.mean()
-                std[k] = c_data.std()
-            self.mean = mean
-            self.std = std
+                mu[k] = c_data.mean()
+                sigma[k] = c_data.std()
+            self.mean = mu
+            self.std = sigma
         self.observed_values = (
             ((self.observed_values - self.mean) / self.std) * self.observed_masks
         )
