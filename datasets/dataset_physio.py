@@ -114,60 +114,51 @@ class Physio_Dataset(Dataset):
         
         mean_file = './data/physio/mean' + str(missing_ratio) + "_seed" + str(seed) + ".npy"
         std_file = './data/physio/std' + str(missing_ratio) + "_seed" + str(seed) + ".npy"
-        if os.path.isfile(path) == False:  # if datasetfile is none, create
-            idlist = get_idlist()
-            for id_ in idlist:
-                try:
-                    observed_values, observed_masks, gt_masks, gt_intact = parse_id(
-                        id_, missing_ratio, is_test=is_test, forecasting=forecasting, length=length, random_trial=random_trial, pattern=pattern
-                    )
-                    self.observed_values.append(observed_values)
-                    self.observed_masks.append(observed_masks)
-                    self.gt_masks.append(gt_masks)
-                    self.gt_intacts.append(gt_intact)
-                except Exception as e:
-                    print(id_, e)
-                    continue
-            self.observed_values = np.array(self.observed_values)
-            self.observed_masks = np.array(self.observed_masks)
-            self.gt_masks = np.array(self.gt_masks)
-            self.gt_intacts = np.array(self.gt_intacts)
-
-            if use_index_list is not None:
-                self.observed_values = self.observed_values[use_index_list]
-                self.observed_masks = self.observed_masks[use_index_list]
-                self.gt_masks = self.gt_masks[use_index_list]
-                self.gt_intacts = self.gt_intacts[use_index_list]
-
-            # calc mean and std and normalize values
-            # (it is the same normalization as Cao et al. (2018) (https://github.com/caow13/BRITS))
-            tmp_values = self.observed_values.reshape(-1, 35)
-            tmp_masks = self.observed_masks.reshape(-1, 35)
-            if mean and std:
-                self.mean = np.load(mean_file)
-                self.std = np.load(std_file)
-            else:
-                mean = np.zeros(35)
-                std = np.zeros(35)
-                for k in range(35):
-                    c_data = tmp_values[:, k][tmp_masks[:, k] == 1]
-                    mean[k] = c_data.mean()
-                    std[k] = c_data.std()
-                self.mean = mean
-                self.std = std
-            self.observed_values = (
-                ((self.observed_values - self.mean) / self.std) * self.observed_masks
-            )
-
-            with open(path, "wb") as f:
-                pickle.dump(
-                    [self.observed_values, self.observed_masks, self.gt_masks, self.gt_intacts], f
+        # if os.path.isfile(path) == False:  # if datasetfile is none, create
+        idlist = get_idlist()
+        for id_ in idlist:
+            try:
+                observed_values, observed_masks, gt_masks, gt_intact = parse_id(
+                    id_, missing_ratio, is_test=is_test, forecasting=forecasting, length=length, random_trial=random_trial, pattern=pattern
                 )
-        else:  # load datasetfile
-            with open(path, "rb") as f:
-                self.observed_values, self.observed_masks, self.gt_masks, self.gt_intacts = pickle.load(
-                    f
-                )
+                self.observed_values.append(observed_values)
+                self.observed_masks.append(observed_masks)
+                self.gt_masks.append(gt_masks)
+                self.gt_intacts.append(gt_intact)
+            except Exception as e:
+                print(id_, e)
+                continue
+        self.observed_values = np.array(self.observed_values)
+        self.observed_masks = np.array(self.observed_masks)
+        self.gt_masks = np.array(self.gt_masks)
+        self.gt_intacts = np.array(self.gt_intacts)
+
+        if use_index_list is not None:
+            self.observed_values = self.observed_values[use_index_list]
+            self.observed_masks = self.observed_masks[use_index_list]
+            self.gt_masks = self.gt_masks[use_index_list]
+            self.gt_intacts = self.gt_intacts[use_index_list]
+
+        # calc mean and std and normalize values
+        # (it is the same normalization as Cao et al. (2018) (https://github.com/caow13/BRITS))
+        tmp_values = self.observed_values.reshape(-1, 35)
+        tmp_masks = self.observed_masks.reshape(-1, 35)
+        if mean and std:
+            self.mean = np.load(mean_file)
+            self.std = np.load(std_file)
+        else:
+            mean = np.zeros(35)
+            std = np.zeros(35)
+            for k in range(35):
+                c_data = tmp_values[:, k][tmp_masks[:, k] == 1]
+                mean[k] = c_data.mean()
+                std[k] = c_data.std()
+            self.mean = mean
+            self.std = std
+        self.observed_values = (
+            ((self.observed_values - self.mean) / self.std) * self.observed_masks
+        )
+
         self.use_index_list = np.arange(len(self.observed_values))
         
         if not mean and not std:
