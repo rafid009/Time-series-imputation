@@ -182,25 +182,16 @@ class Mask_PM25(Mask_base):
         observed_data = batch["observed_data"].to(self.device).float()
         observed_mask = batch["observed_mask"].to(self.device).float()
         observed_tp = batch["timepoints"].to(self.device).float()
-        gt_mask = batch["gt_mask"].to(self.device).float()
         cut_length = batch["cut_length"].to(self.device).long()
-        for_pattern_mask = batch["hist_mask"].to(self.device).float()
-        gt_intact = batch["gt_intact"].to(self.device).float()
+
         observed_data = observed_data.permute(0, 2, 1)
         observed_mask = observed_mask.permute(0, 2, 1)
-        gt_mask = gt_mask.permute(0, 2, 1)
-        gt_intact = gt_intact.permute(0, 2, 1)
-        for_pattern_mask = for_pattern_mask.permute(0, 2, 1)
 
         return (
             observed_data,
             observed_mask,
             observed_tp,
-            gt_mask,
-            for_pattern_mask,
-            cut_length,
-            None,
-            gt_intact
+            cut_length
         )
 
 
@@ -212,20 +203,16 @@ class Mask_Physio(Mask_base):
         observed_data = batch["observed_data"].to(self.device).float()
         observed_mask = batch["observed_mask"].to(self.device).float()
         observed_tp = batch["timepoints"].to(self.device).float()
-        # gt_mask = batch["gt_mask"].to(self.device).float()
-        # gt_intact = batch["gt_intact"]
+
         observed_data = observed_data.permute(0, 2, 1)
         observed_mask = observed_mask.permute(0, 2, 1)
-        # gt_mask = gt_mask.permute(0, 2, 1)
-
         cut_length = torch.zeros(len(observed_data)).long().to(self.device)
-        # for_pattern_mask = observed_mask
-
+        
         return (
             observed_data,
             observed_mask,
             observed_tp,
-            cut_length,
+            cut_length
         )
 
 class Mask_Agaid(Mask_base):
@@ -236,12 +223,8 @@ class Mask_Agaid(Mask_base):
         observed_data = batch["observed_data"].to(self.device).float()
         observed_mask = batch["observed_mask"].to(self.device).float()
         observed_tp = batch["timepoints"].to(self.device).float()
-        # gt_mask = batch["gt_mask"].to(self.device).float()
-        # observed_data_intact = batch["obs_data_intact"].to(self.device).float()
-        # gt_intact = batch["gt_intact"]#.to(self.device).float()
         observed_data = observed_data.permute(0, 2, 1)
         observed_mask = observed_mask.permute(0, 2, 1)
-        # gt_mask = gt_mask.permute(0, 2, 1)
 
         cut_length = torch.zeros(len(observed_data)).long().to(self.device)
 
@@ -249,7 +232,7 @@ class Mask_Agaid(Mask_base):
             observed_data,
             observed_mask,
             observed_tp,
-            cut_length,
+            cut_length
         )
 
 class Mask_Synth(Mask_base):
@@ -260,31 +243,41 @@ class Mask_Synth(Mask_base):
         observed_data = batch["observed_data"].to(self.device).float()
         observed_mask = batch["observed_mask"].to(self.device).float()
         observed_tp = batch["timepoints"].to(self.device).float()
-        gt_mask = batch["gt_mask"].to(self.device).float()
-        observed_data_intact = batch["obs_data_intact"].to(self.device).float()
-        gt_intact = batch["gt_intact"]#.to(self.device).float()
 
         observed_data = observed_data.permute(0, 2, 1)
         observed_mask = observed_mask.permute(0, 2, 1)
-        gt_mask = gt_mask.permute(0, 2, 1)
 
         cut_length = torch.zeros(len(observed_data)).long().to(self.device)
-        for_pattern_mask = observed_mask
 
         return (
             observed_data,
             observed_mask,
             observed_tp,
-            gt_mask,
-            for_pattern_mask,
-            cut_length,
-            observed_data_intact,
-            gt_intact
+            cut_length
         )
 
 class Mask_AWN(Mask_base):
     def __init__(self, config, device, target_dim=6, is_simple=False):
         super(Mask_AWN, self).__init__(target_dim, config, device, is_simple=is_simple)
+
+    def process_data(self, batch):
+        observed_data = batch["observed_data"].to(self.device).float()
+        observed_mask = batch['observed_mask'].to(self.device).float()
+        observed_tp = batch["timepoints"].to(self.device).float()
+        observed_data = observed_data.permute(0, 2, 1)
+        observed_mask = observed_mask.permute(0, 2, 1)
+
+        cut_length = torch.zeros(len(observed_data)).long().to(self.device)
+        return (
+            observed_data,
+            observed_mask,
+            observed_tp,
+            cut_length
+        )
+    
+class Mask_PM25(Mask_base):
+    def __init__(self, config, device, target_dim=6, is_simple=False):
+        super(Mask_PM25, self).__init__(target_dim, config, device, is_simple=is_simple)
 
     def process_data(self, batch):
         observed_data = batch["observed_data"].to(self.device).float()

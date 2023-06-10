@@ -88,7 +88,7 @@ print(f"config: {args}")
 
 
 train_loader, valid_loader, test_loader, test_indices = get_dataloader(
-    seed=args["seed"],
+    seed=,
     nfold=args["nfold"],
     batch_size=args["train"]["batch_size"],
     missing_ratio=args["model"]["test_missing_ratio"],
