@@ -13,6 +13,7 @@ from datasets.synthetic_data import create_synthetic_data_v2, feats_v2
 import json
 from json import JSONEncoder
 import math
+import time
 matplotlib.rc('xtick', labelsize=20) 
 matplotlib.rc('ytick', labelsize=20) 
 # torch.manual_seed(42)
@@ -72,7 +73,7 @@ n_steps = 100
 n_features = len(given_features)
 num_seasons = 32
 noise = False
-train_loader, valid_loader = get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=seeds[0], is_test=False, v2='v2', noise=noise)
+train_loader, valid_loader = get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=time.time(), is_test=False, v2='v2', noise=noise)
 
 model_csdi = CSDI_Synth(config_dict_csdi, device, target_dim=len(given_features)).to(device)
 model_folder = "./saved_model_synth_v2"

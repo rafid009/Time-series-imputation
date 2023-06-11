@@ -821,13 +821,17 @@ class diff_SAITS_new_2(nn.Module):
         layers = len(self.layer_stack_for_first_block)
         if self.is_not_residual:
             # Non residual block layers. Using only self-attention like SAITS
+            enc_prev = enc_output
             for encoder in self.layer_stack_for_first_block:
                 i += 1
                 if self.ablation_config['res-block-mask']:
-                    enc_output, attn_weights = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, D, L)
+                    enc_output_1, attn_weights = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, D, L)
                 else:
-                    enc_output, attn_weights = encoder(enc_output, cond, diffusion_embed) # (B, D, L)
-
+                    enc_output_1, attn_weights = encoder(enc_output, cond, diffusion_embed) # (B, D, L)
+                if self.ablation_config['skip-connect-no-res-layer'] and i%2 == 0 and i != layers:
+                    enc_output = (enc_prev + enc_output_1) * math.sqrt(0.5)
+                    enc_prev = enc_output
+                    
                 if self.ablation_config['is_2nd_block']:
                     if i <= layers/2:
                         skips_tilde_1 += enc_output
