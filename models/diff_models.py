@@ -709,27 +709,29 @@ class diff_SAITS_new_2(nn.Module):
                 self.embedding_cond = Conv1d_with_init_saits_new(d_feature, d_model, 1)
                 self.embedding_1 = Conv1d_with_init_saits_new(d_feature, d_model, 1)
 
-        if self.ablation_config['reduce-type'] == 'linear':
-            if not self.is_not_residual:
-                self.reduce_dim_z = nn.Linear(d_model, d_feature)
-            self.reduce_skip_z = nn.Linear(d_model, d_feature)
-        else:
-            if not self.is_not_residual:
-                self.reduce_dim_z = Conv1d_with_init_saits_new(d_model, d_feature, 1)
-            self.reduce_skip_z = Conv1d_with_init_saits_new(d_model, d_feature, 1)
+        
 
         if self.ablation_config['is_2nd_block']:
             if self.ablation_config['embed-type'] == 'linear':
                 self.embedding_2 = nn.Linear(2 * d_feature, d_model)
             else:
                 self.embedding_2 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-
+                
             if self.ablation_config['reduce-type'] == 'linear':
-                self.reduce_dim_beta = nn.Linear(d_model, d_feature)
-                self.reduce_dim_gamma = nn.Linear(d_feature, d_feature)
+                if not self.is_not_residual:
+                    self.reduce_dim_z = nn.Linear(d_model, d_feature)
+                self.reduce_skip_z = nn.Linear(d_model, d_feature)
             else:
-                self.reduce_dim_beta = Conv1d_with_init_saits_new(d_model, d_feature, 1)
-                self.reduce_dim_gamma = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+                if not self.is_not_residual:
+                    self.reduce_dim_z = Conv1d_with_init_saits_new(d_model, d_feature, 1)
+                self.reduce_skip_z = Conv1d_with_init_saits_new(d_model, d_feature, 1)
+
+        if self.ablation_config['reduce-type'] == 'linear':
+            self.reduce_dim_beta = nn.Linear(d_model, d_feature)
+            self.reduce_dim_gamma = nn.Linear(d_feature, d_feature)
+        else:
+            self.reduce_dim_beta = Conv1d_with_init_saits_new(d_model, d_feature, 1)
+            self.reduce_dim_gamma = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
         
         # for delta decay factor
         if self.ablation_config['weight_combine']:

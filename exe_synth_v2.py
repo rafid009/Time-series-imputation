@@ -153,7 +153,8 @@ config_dict_diffsaits = {
         'is_2nd_block': False,
         'is-not-residual': True,
         'res-block-mask': False,
-        'is-fde-loop': False
+        'is-fde-loop': False,
+        'skip-connect-no-res-layer': False
     }
 }
 print(f"config: {config_dict_diffsaits}")
