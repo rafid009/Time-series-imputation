@@ -7,6 +7,7 @@ import os
 from pypots.imputation import SAITS
 import pickle
 import numpy as np
+import time
 np.set_printoptions(threshold=np.inf)
 from models.mask_main_model import Mask_Physio
 from datasets.dataset_physio_mask import get_dataloader, attributes
@@ -88,7 +89,7 @@ print(f"config: {args}")
 
 
 train_loader, valid_loader, test_loader, test_indices = get_dataloader(
-    seed=,
+    seed=100, #time.time(),
     nfold=args["nfold"],
     batch_size=args["train"]["batch_size"],
     missing_ratio=args["model"]["test_missing_ratio"],
