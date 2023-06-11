@@ -691,45 +691,53 @@ class diff_SAITS_new_2(nn.Module):
         self.diffusion_embedding = DiffusionEmbedding(diff_steps, diff_emb_dim)
         self.dropout = nn.Dropout(p=dropout)
 
-        if self.ablation_config['reduce-type'] == 'linear':
-            self.embedding_1 = nn.Linear(2 * d_feature, d_model) # nn.Linear(actual_d_feature, d_model)
-            self.embedding_cond = nn.Linear(2 * d_feature, d_model) # nn.Linear(actual_d_feature, d_model)
+
+        if not self.ablation_config['res-block-mask']:
             self.position_enc_cond = PositionalEncoding(d_model, n_position=d_time)
             self.position_enc_noise = PositionalEncoding(d_model, n_position=d_time)
-            
-            if self.ablation_config['is_2nd_block']:
-                self.reduce_dim_z = Conv1d_with_init_saits_new(d_model, d_feature, 1)
-                self.reduce_skip_z = Conv1d_with_init_saits_new(d_model, d_feature, 1)
-                self.embedding_2 = nn.Linear(2 * d_feature, d_model)
-            
-            self.reduce_dim_beta = Conv1d_with_init_saits_new(d_model, d_feature, 1)
-            self.reduce_dim_gamma = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+            if self.ablation_config['embed-type'] == 'linear':
+                self.embedding_cond = nn.Linear(2 * d_feature, d_model)
+                self.embedding_1 = nn.Linear(2 * d_feature, d_model)
+            else:
+                self.embedding_cond = Conv1d_with_init_saits_new(2 * d_feature, d_model, 1)
+                self.embedding_1 = Conv1d_with_init_saits_new(2 * d_feature, d_model, 1)
         else:
-            self.position_enc_cond = PositionalEncoding(d_feature, n_position=d_time)
-            self.embedding_1 = nn.Linear(2 * d_feature, d_feature, 1)
-            self.embedding_cond = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
-            
-            if self.ablation_config['is_2nd_block']:
-                self.reduce_dim_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-                self.reduce_skip_z = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+            if self.ablation_config['embed-type'] == 'linear':
+                self.embedding_cond = nn.Linear(d_feature, d_model)
+                self.embedding_1 = nn.Linear(d_feature, d_model)
+            else:
+                self.embedding_cond = Conv1d_with_init_saits_new(d_feature, d_model, 1)
+                self.embedding_1 = Conv1d_with_init_saits_new(d_feature, d_model, 1)
+
+        if self.ablation_config['reduce-type'] == 'linear':
+            if not self.is_not_residual:
+                self.reduce_dim_z = nn.Linear(d_model, d_feature)
+            self.reduce_skip_z = nn.Linear(d_model, d_feature)
+        else:
+            if not self.is_not_residual:
+                self.reduce_dim_z = Conv1d_with_init_saits_new(d_model, d_feature, 1)
+            self.reduce_skip_z = Conv1d_with_init_saits_new(d_model, d_feature, 1)
+
+        if self.ablation_config['is_2nd_block']:
+            if self.ablation_config['embed-type'] == 'linear':
+                self.embedding_2 = nn.Linear(2 * d_feature, d_model)
+            else:
                 self.embedding_2 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-            
-            self.reduce_dim_beta = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-            self.reduce_dim_gamma = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+
+            if self.ablation_config['reduce-type'] == 'linear':
+                self.reduce_dim_beta = nn.Linear(d_model, d_feature)
+                self.reduce_dim_gamma = nn.Linear(d_feature, d_feature)
+            else:
+                self.reduce_dim_beta = Conv1d_with_init_saits_new(d_model, d_feature, 1)
+                self.reduce_dim_gamma = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
+        
         # for delta decay factor
         if self.ablation_config['weight_combine']:
             self.weight_combine = nn.Linear(d_feature + d_time, d_feature)
         # combi 2 more layers
 
         if self.ablation_config['is_fde']:
-            if self.ablation_config['fde-choice'] == 'fde-conv-single':
-                self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
-                self.layer_stack_for_feature_weights = nn.ModuleList([
-                    EncoderLayer(d_feature, d_time, d_time, d_inner, 1, d_time, d_time, dropout, 0,
-                                True, choice='fde-conv-single')
-                    for _ in range(self.ablation_config['fde-layers'])
-                ])
-            elif self.ablation_config['fde-choice'] == 'fde-conv-multi':
+            if self.ablation_config['fde-choice'] == 'fde-conv-multi':
                 self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
                 self.layer_stack_for_feature_weights = nn.ModuleList([
                     EncoderLayer(d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
@@ -739,16 +747,17 @@ class diff_SAITS_new_2(nn.Module):
             else:
                 self.mask_conv = Conv1d_with_init_saits_new(2 * d_feature, d_feature, 1)
                 self.layer_stack_for_feature_weights = nn.ModuleList([
-                    EncoderLayer(d_feature, d_time, d_time, d_inner, n_head, 64, 64, dropout, 0,
+                    EncoderLayer(d_feature, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
                                 True)
                     for _ in range(self.ablation_config['fde-layers'])
                 ])
+            if self.ablation_config['fde-pos-enc']:
+                self.fde_pos_enc = PositionalEncoding(d_time, n_position=d_feature)
 
 
     def forward(self, inputs, diffusion_step):
-        # print(f"Entered forward")
         X, masks = inputs['X'], inputs['missing_mask'] # (B, K, L)
-        masks[:,1,:,:] = masks[:,0,:,:]
+        masks[:,1,:,:] = masks[:,0,:,:] # (B, K, L)
         cond = X[:, 0, :, :] # (B, K, L)
         
         # Feature Dependency Encoder (FDE): We are trying to get a global feature time-series cross-sorrelation
@@ -756,7 +765,6 @@ class diff_SAITS_new_2(nn.Module):
         # time-series. We also get a feature attention/dependency matrix (feature attention weights) from it.
         if self.ablation_config['is_fde']:
             noise = X[:,0,:,:] + X[:,1,:,:] # (B, K, L)
-            # shp = noise.shape
             if not self.ablation_config['fde-no-mask']:
                 # In one branch, we do not apply the missing mask to the inputs of FDE
                 # and in the other we stack the mask with the input time-series for each feature
@@ -765,7 +773,8 @@ class diff_SAITS_new_2(nn.Module):
                 noise = noise.permute(0, 2, 1, 3) # (B, K, 2, L)
                 noise = noise.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
                 noise = self.mask_conv(noise) # (B, K, L)
-
+            if self.ablation_config['fde-pos-enc']:
+                noise = self.fde_pos_enc(noise) # (B, K, L)
             for feat_enc_layer in self.layer_stack_for_feature_weights:
                 noise, attn_weights_f = feat_enc_layer(noise) # (B, K, L), (B, K, K)
         else:
@@ -777,7 +786,7 @@ class diff_SAITS_new_2(nn.Module):
             noise = F.relu(self.position_enc_noise(self.embedding_1(noise))) # (B, L, D)
             noise = torch.transpose(noise, 1, 2) # (B, D, L)
 
-            if self.ablation_config['reduce-type'] == 'linear':
+            if self.ablation_config['embed-type'] == 'linear':
                 cond = torch.transpose(cond, 1, 2) # (B, L, K)
                 cond = torch.cat([cond, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
                 cond = self.position_enc_cond(self.embedding_cond(cond)) # (B, L, D)
@@ -834,29 +843,26 @@ class diff_SAITS_new_2(nn.Module):
                                 attn_weights_f = torch.softmax(attn_weights_f, dim=-1)
                             if self.ablation_config['reduce-type'] == 'linear':
                                 enc_output = torch.transpose(enc_output, 1, 2)
-                                enc_output = self.reduce_dim_z(enc_output)
+                                enc_output = self.reduce_skip_z(enc_output)
                                 enc_output = enc_output @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
                                 enc_output = torch.transpose(enc_output, 1, 2)
                             else:
-                                enc_output = self.reduce_dim_z(enc_output)
+                                enc_output = self.reduce_skip_z(enc_output)
                                 enc_output = torch.transpose(enc_output, 1, 2)
                                 enc_output = enc_output @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
                                 enc_output = torch.transpose(enc_output, 1, 2)
                         else:
                             if self.ablation_config['reduce-type'] == 'linear':
-                                enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :] # (B, K, L)
+                                enc_output = self.reduce_skip_z(enc_output) + X[:, 1, :, :] # (B, K, L)
                                 enc_output = torch.transpose(enc_output, 1, 2) # (B, L, K)
                                 if not self.ablation_config['res-block-mask']:
                                     enc_output = torch.cat([enc_output, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
                                 enc_output = self.embedding_2(enc_output) # (B, L, D)
                                 enc_output = torch.transpose(enc_output, 1, 2) # (B, D, L)
                             else:
-                                enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :]
+                                enc_output = self.reduce_skip_z(enc_output) + X[:, 1, :, :]
                                 enc_output = self.embedding_2(enc_output)
                         
-                        # if self.ablation_config['reduce-type'] == 'linear':
-                        #     skips_tilde_1 = self.reduce_skip_z(skips_tilde_1) # (B, K, L)
-                        # else:
                         skips_tilde_1 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
                         skips_tilde_1 = self.reduce_skip_z(skips_tilde_1) # (B, K, L)
                 else:
