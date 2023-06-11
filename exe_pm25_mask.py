@@ -9,7 +9,7 @@ import pickle
 import numpy as np
 import time
 np.set_printoptions(threshold=np.inf)
-from models.mask_main_model import Mask_Physio
+from models.mask_main_model import Mask_PM25
 from datasets.dataset_physio_mask import get_dataloader, attributes
 from utils.utils import train
 
@@ -67,7 +67,7 @@ args = {
         'is_unconditional': True,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "random",
+        'target_strategy': "mix",
         'type': 'CSDI',
         'n_layers': 3, 
         'd_time': d_time,
@@ -99,7 +99,7 @@ args['model']['type'] = 'CSDI'
 args['diffusion']['is_fast'] = False
 args['device'] = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-model_csdi = Mask_Physio(args, args['device']).to(args['device'])
+model_csdi = Mask_PM25(args, args['device']).to(args['device'])
 model_folder = "saved_model_physio_mask"
 filename = "model_csdi_physio_mask.pth"
 if not os.path.isdir(model_folder):

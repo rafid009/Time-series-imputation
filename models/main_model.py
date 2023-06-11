@@ -221,7 +221,6 @@ class CSDI_base(nn.Module):
             cond_obs = (cond_mask * observed_data).unsqueeze(1)
             noisy_target = ((1 - cond_mask) * noisy_data).unsqueeze(1)
             total_input = torch.cat([cond_obs, noisy_target], dim=1)  # (B,2,K,L)
-            
         return total_input
 
     def impute(self, observed_data, cond_mask, side_info, n_samples):
