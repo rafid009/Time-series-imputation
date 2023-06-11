@@ -716,7 +716,7 @@ class diff_SAITS_new_2(nn.Module):
                 self.embedding_2 = nn.Linear(2 * d_feature, d_model)
             else:
                 self.embedding_2 = Conv1d_with_init_saits_new(d_feature, d_feature, 1)
-                
+
             if self.ablation_config['reduce-type'] == 'linear':
                 if not self.is_not_residual:
                     self.reduce_dim_z = nn.Linear(d_model, d_feature)
@@ -855,15 +855,15 @@ class diff_SAITS_new_2(nn.Module):
                                 enc_output = torch.transpose(enc_output, 1, 2)
                         else:
                             if self.ablation_config['reduce-type'] == 'linear':
-                                enc_output = self.reduce_skip_z(enc_output) + X[:, 1, :, :] # (B, K, L)
-                                enc_output = torch.transpose(enc_output, 1, 2) # (B, L, K)
+                                enc_output = torch.transpose(enc_output, 1, 2) # (B, L, D)
+                                enc_output = self.reduce_skip_z(enc_output) + torch.transpose(X[:, 1, :, :], 1, 2) # (B, L, K)
                                 if not self.ablation_config['res-block-mask']:
                                     enc_output = torch.cat([enc_output, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
                                 enc_output = self.embedding_2(enc_output) # (B, L, D)
                                 enc_output = torch.transpose(enc_output, 1, 2) # (B, D, L)
                             else:
-                                enc_output = self.reduce_skip_z(enc_output) + X[:, 1, :, :]
-                                enc_output = self.embedding_2(enc_output)
+                                enc_output = self.reduce_skip_z(enc_output) + X[:, 1, :, :] # (B, K, L)
+                                enc_output = self.embedding_2(enc_output) # (B, D, L)
                         
                         skips_tilde_1 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
                         skips_tilde_1 = self.reduce_skip_z(skips_tilde_1) # (B, K, L)
@@ -878,7 +878,11 @@ class diff_SAITS_new_2(nn.Module):
                         skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
                     else:
                         skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)))
+                    if self.ablation_config['reduce-type'] == 'linear':
+                        skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
                     skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
+                    if self.ablation_config['reduce-type'] == 'linear':
+                        skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
         else:
             for encoder in self.layer_stack_for_first_block:
                 i += 1
