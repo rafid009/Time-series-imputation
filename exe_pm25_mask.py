@@ -115,12 +115,12 @@ train(
 
 model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 
-nsample = 40000 # 3000 * 4 * 8
+nsample = 30000 # 3000 * 4 * 8
 ground = 0
 for i, val in enumerate(test_loader):
     ground = val['observed_mask'].to(args["device"]).float() # (B, L, K)
 
-sample_folder = './data/physio/miss_patterns'
+sample_folder = './data/pm25/miss_patterns'
 
 if not os.path.isdir(sample_folder):
     os.makedirs(sample_folder)

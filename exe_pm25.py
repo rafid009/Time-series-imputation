@@ -153,7 +153,7 @@ models = {
 mse_folder = "results_pm25"
 data_folder = "results_pm25_data"
 
-test_patterns_start = 35001
+test_patterns_start = 25001
 num_test_patterns = 5000
 
 test_pattern_config = {
