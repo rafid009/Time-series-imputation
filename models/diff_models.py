@@ -831,6 +831,8 @@ class diff_SAITS_new_2(nn.Module):
                 if self.ablation_config['skip-connect-no-res-layer'] and i%2 == 0 and i != layers:
                     enc_output = (enc_prev + enc_output_1) * math.sqrt(0.5)
                     enc_prev = enc_output
+                else:
+                    enc_output = enc_output_1
                     
                 if self.ablation_config['is_2nd_block']:
                     if i <= layers/2:
