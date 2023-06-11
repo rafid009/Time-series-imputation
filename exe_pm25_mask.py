@@ -97,6 +97,7 @@ train_loader, valid_loader, test_loader, test_indices = get_dataloader(
 )
 args['model']['type'] = 'CSDI'
 args['diffusion']['is_fast'] = False
+args['device'] = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model_csdi = Mask_Physio(args, args['device']).to(args['device'])
 model_folder = "saved_model_physio_mask"
