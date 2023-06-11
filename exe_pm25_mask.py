@@ -48,7 +48,7 @@ def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
 d_time = 35
 args = {
     'train': {
-        'epochs': 200,
+        'epochs': 300,
         'batch_size': 4,
         'lr': 1.0e-3
     },      
