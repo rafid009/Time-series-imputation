@@ -85,6 +85,7 @@ args = {
 
 print(f"config: {args}")
 args['validationindex'] = 0
+args['device'] = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 train_loader, valid_loader, test_loader, std, mean = get_dataloader(
     args["train"]["batch_size"], device=args['device'], validindex=args['validationindex']
 )
