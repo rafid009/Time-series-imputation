@@ -10,7 +10,7 @@ import numpy as np
 import time
 np.set_printoptions(threshold=np.inf)
 from models.mask_main_model import Mask_PM25
-from datasets.dataset_physio_mask import get_dataloader, attributes
+from datasets.dataset_pm25_mask import get_dataloader
 from utils.utils import train
 
 def quantile_loss(target, forecast, q: float) -> float:
@@ -45,7 +45,7 @@ def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
         # print(f"CRPS each qunatile: {CRPS}")
     return CRPS.item() / len(quantiles)
 
-d_time = 35
+d_time = 36
 args = {
     'train': {
         'epochs': 300,
@@ -71,7 +71,7 @@ args = {
         'type': 'CSDI',
         'n_layers': 3, 
         'd_time': d_time,
-        'n_feature': len(attributes),
+        'n_feature': 36,#len(attributes),
         'd_model': 128,
         'd_inner': 128,
         'n_head': 8,
@@ -83,25 +83,18 @@ args = {
     }
 }
 
-# path = "config/" + args["config"]
-
 print(f"config: {args}")
-
-
-
-train_loader, valid_loader, test_loader, test_indices = get_dataloader(
-    seed=1, #time.time(),
-    nfold=0, #args["nfold"],
-    batch_size=args["train"]["batch_size"],
-    missing_ratio=args["model"]["test_missing_ratio"],
+args['validationindex'] = 0
+train_loader, valid_loader, test_loader, std, mean = get_dataloader(
+    args["train"]["batch_size"], device=args['device'], validindex=args['validationindex']
 )
 args['model']['type'] = 'CSDI'
 args['diffusion']['is_fast'] = False
 args['device'] = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model_csdi = Mask_PM25(args, args['device']).to(args['device'])
-model_folder = "saved_model_physio_mask"
-filename = "model_csdi_physio_mask.pth"
+model_folder = "saved_model_pm25_mask"
+filename = "model_csdi_pm25_mask.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 train(
@@ -126,7 +119,7 @@ if not os.path.isdir(sample_folder):
     os.makedirs(sample_folder)
 # L = 48, K = 35
 with torch.no_grad():
-    output = model_csdi.evaluate(nsample, shape=(1, len(attributes), 48))
+    output = model_csdi.evaluate(nsample, shape=(1, 36, 36))
     samples = output
     samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
 
@@ -149,4 +142,3 @@ with torch.no_grad():
         crps_avg += crps
         num += 1
     print(f"final CRPS: {crps_avg / num}")
-    
