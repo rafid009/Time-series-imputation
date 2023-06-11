@@ -78,7 +78,8 @@ args = {
         'd_k': 64,
         'd_v': 64,
         'dropout': 0.1,
-        'diagonal_attention_mask': True
+        'diagonal_attention_mask': True,
+        "test_missing_ratio": 0.1
     }
 }
 
@@ -89,8 +90,8 @@ print(f"config: {args}")
 
 
 train_loader, valid_loader, test_loader, test_indices = get_dataloader(
-    seed=100, #time.time(),
-    nfold=args["nfold"],
+    seed=1, #time.time(),
+    nfold=0, #args["nfold"],
     batch_size=args["train"]["batch_size"],
     missing_ratio=args["model"]["test_missing_ratio"],
 )
