@@ -32,6 +32,7 @@ with open(path, "r") as f:
 config["model"]["is_unconditional"] = args["unconditional"]
 config["model"]["test_missing_ratio"] = args["testmissingratio"]
 config["model"]['target_strategy'] = 'mix' if miss_pattern == 'random' else 'pattern'
+args['validationindex'] = 0
 print(f"config_csdi:\n")
 print(json.dumps(config, indent=4))
 
