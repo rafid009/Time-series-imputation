@@ -192,14 +192,16 @@ for l in lengths:
     print(f"\nlength = {l}")
     print(f"\nBlackout:")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=32, length=l, noise=noise)
-    # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True, noise=noise)
+    evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, length=l, data=True, noise=noise)
 
 print(f"\nForecasting:")
 evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=32, length=(10, 80), forecasting=True, noise=noise)
+evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, length=(10, 80), forecasting=True, data=True, noise=noise)
 # evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise)
+    evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, missing_ratio=ratio, random_trial=True, data=True, noise=noise)
     # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, noise=noise)
