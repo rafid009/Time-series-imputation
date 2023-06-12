@@ -196,7 +196,7 @@ for l in lengths:
 
 print(f"\nForecasting:")
 evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=32, length=(10, 80), forecasting=True, noise=noise)
-evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, length=(10, 80), forecasting=True, data=True, noise=noise)
+evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, length=50, forecasting=True, data=True, noise=noise)
 # evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
 miss_ratios = [0.1, 0.5, 0.9]
