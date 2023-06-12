@@ -20,7 +20,7 @@ args = {
     'testmissingratio': 0.1,
     'nfold': 0,
     'unconditional': False,
-    'modelfolder': f'saved_model_physio_{miss_pattern}',
+    'modelfolder': f'saved_model_pm25_{miss_pattern}',
     'nsample': 50
 }
 print(args)
