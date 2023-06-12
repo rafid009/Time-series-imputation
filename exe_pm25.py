@@ -38,7 +38,12 @@ print(json.dumps(config, indent=4))
 train_loader, valid_loader, test_loader, scaler, mean_scaler = get_dataloader(
     config["train"]["batch_size"], device=args['device'], validindex=args['validationindex']
 )
+
 config['model']['type'] = 'CSDI'
+config['diffusion']['is_fast'] = False
+config['model']['num_patterns'] = 20000
+config['model']['num_val_patterns'] = 5000
+config['model']['pattern_dir'] = './data/pm25/miss_patterns'
 
 model_csdi = CSDI_PM25(config, args['device']).to(args['device'])
 
