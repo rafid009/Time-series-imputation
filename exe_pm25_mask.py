@@ -49,7 +49,7 @@ d_time = 36
 args = {
     'train': {
         'epochs': 300,
-        'batch_size': 4,
+        'batch_size': 16,
         'lr': 1.0e-3
     },      
     'diffusion': {

@@ -275,21 +275,21 @@ class Mask_AWN(Mask_base):
             cut_length
         )
     
-class Mask_PM25(Mask_base):
-    def __init__(self, config, device, target_dim=6, is_simple=False):
-        super(Mask_PM25, self).__init__(target_dim, config, device, is_simple=is_simple)
+# class Mask_PM25(Mask_base):
+#     def __init__(self, config, device, target_dim=36, is_simple=False):
+#         super(Mask_PM25, self).__init__(target_dim, config, device, is_simple=is_simple)
 
-    def process_data(self, batch):
-        observed_data = batch["observed_data"].to(self.device).float()
-        observed_mask = batch['observed_mask'].to(self.device).float()
-        observed_tp = batch["timepoints"].to(self.device).float()
-        observed_data = observed_data.permute(0, 2, 1)
-        observed_mask = observed_mask.permute(0, 2, 1)
+#     def process_data(self, batch):
+#         observed_data = batch["observed_data"].to(self.device).float()
+#         observed_mask = batch['observed_mask'].to(self.device).float()
+#         observed_tp = batch["timepoints"].to(self.device).float()
+#         observed_data = observed_data.permute(0, 2, 1)
+#         observed_mask = observed_mask.permute(0, 2, 1)
 
-        cut_length = torch.zeros(len(observed_data)).long().to(self.device)
-        return (
-            observed_data,
-            observed_mask,
-            observed_tp,
-            cut_length
-        )
+#         cut_length = torch.zeros(len(observed_data)).long().to(self.device)
+#         return (
+#             observed_data,
+#             observed_mask,
+#             observed_tp,
+#             cut_length
+#         )
