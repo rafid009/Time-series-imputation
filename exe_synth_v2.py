@@ -81,15 +81,15 @@ filename = f"model_csdi_synth_v2.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI training starts.....\n")
-# train(
-#     model_csdi,
-#     config_dict_csdi["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{filename}",
-#     is_saits=False
-# )
+train(
+    model_csdi,
+    config_dict_csdi["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{filename}",
+    is_saits=False
+)
 # model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
@@ -160,30 +160,30 @@ config_dict_diffsaits = {
 }
 print(f"config: {config_dict_diffsaits}")
 name = 'fde-conv-multi'
-model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
+# model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
-filename = f"model_diffsaits_synth_v2_{name}_new_2.pth"
-print(f"\n\DiffSAITS training starts.....\n")
+# filename = f"model_diffsaits_synth_v2_{name}_new_2.pth"
+# print(f"\n\DiffSAITS training starts.....\n")
 
-# model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 
-train(
-    model_diff_saits,
-    config_dict_diffsaits["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename=f"{filename}",
-    is_saits=True
-)
+# train(
+#     model_diff_saits,
+#     config_dict_diffsaits["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename=f"{filename}",
+#     is_saits=True
+# )
 
-# model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
+# # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 models = {
-    # 'CSDI': model_csdi,
+    'CSDI': model_csdi,
     # 'SAITS': saits,
-    'DiffSAITS': model_diff_saits
+    # 'DiffSAITS': model_diff_saits
 }
 mse_folder = f"results_synth_v2_{name}_new_2/metric"
 data_folder = f"results_synth_v2_{name}_new_2/data"
