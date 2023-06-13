@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
+import os
 from datasets.synthetic_data import create_synthetic_data, create_synthetic_data_v2, create_synthetic_data_v3, create_synthetic_data_v4, create_synthetic_data_v5, create_synthetic_data_v6, create_synthetic_data_v7
 
 def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=None, forward_trial=-1, lte_idx=None, random_trial=False):
@@ -93,6 +94,11 @@ class Synth_Dataset(Dataset):
         else:
             self.mean = mu
             self.std = sigma
+            synth_dir = f"./data/synth/{v2}"
+            if not os.path.isdir(synth_dir):
+                os.makedirs(synth_dir)
+            np.save(f"{synth_dir}/mean.npy", self.mean)
+            np.save(f"{synth_dir}/std.npy", self.std)
 
         include_features = []
         # if exclude_features is not None:
@@ -141,12 +147,22 @@ def get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_rati
     np.random.seed(seed=seed)
     train_dataset = Synth_Dataset(n_steps, n_features, num_seasons, rate=missing_ratio, seed=seed, v2=v2, noise=noise)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    test_dataset = Synth_Dataset(n_steps, n_features, 2, rate=missing_ratio, seed=seed*5, v2=v2, noise=noise)
+    synth_dir = f"./data/synth/{v2}"
+    if os.path.exists(f"{synth_dir}/mean.npy"):
+        mean = np.load(f"{synth_dir}/mean.npy")
+    else:
+        mean = None
+    
+    if os.path.exists(f"{synth_dir}/std.npy"):
+        std = np.load(f"{synth_dir}/std.npy")
+    else:
+        std = None
+    test_dataset = Synth_Dataset(n_steps, n_features, 10, rate=missing_ratio, seed=seed*5, v2=v2, noise=noise, mean=mean, std=std)
     if is_test:
         test_loader = DataLoader(test_dataset, batch_size=1)
     else:
         test_loader = DataLoader(test_dataset, batch_size=len(test_dataset))
-    return train_loader, test_loader
+    return train_loader, test_loader, mean, std
 
 def get_testloader(n_steps, n_features, num_seasons, missing_ratio=0.2, seed=10, exclude_features=None, length=100, forward_trial=False, random_trial=False, v2='v1', noise=False):
     np.random.seed(seed=seed)

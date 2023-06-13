@@ -769,8 +769,9 @@ class diff_SAITS_new_2(nn.Module):
             noise = X[:,0,:,:] + X[:,1,:,:] # (B, K, L)
             if not self.ablation_config['fde-no-mask']:
                 # In one branch, we do not apply the missing mask to the inputs of FDE
-                # and in the other we stack the mask with the input time-series for each feature
-                # and embed them together to get a masked informed time-series data for each feature.
+                # and in the other we stack the mask with the input time-series for each 
+                # feature and embed them together to get a masked informed time-series data 
+                # for each feature.
                 noise = torch.stack([noise, masks[:,1,:,:]], dim=1) # (B, 2, K, L)
                 noise = noise.permute(0, 2, 1, 3) # (B, K, 2, L)
                 noise = noise.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
@@ -833,7 +834,7 @@ class diff_SAITS_new_2(nn.Module):
                     enc_prev = enc_output
                 else:
                     enc_output = enc_output_1
-                    
+
                 if self.ablation_config['is_2nd_block']:
                     if i <= layers/2:
                         skips_tilde_1 += enc_output
