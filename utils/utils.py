@@ -697,31 +697,32 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
         range_len = None
     if data:
         trials = 1
+    s = np.random.randint(0,100)
     for trial in range(trials):
         if forecasting and not data:
             length = np.random.randint(low=range_len[0], high=range_len[1] + 1)
         if dataset_name == 'synth':
-            test_loader = get_testloader_synth(n_steps=100, n_features=7, batch_size=batch_size, num_seasons=16, seed=(10 + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting)
+            test_loader = get_testloader_synth(n_steps=100, n_features=7, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting)
         elif dataset_name == 'synth_v2':
-            test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(10 + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v2', noise=noise, mean=mean, std=std)
+            test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v2', noise=noise, mean=mean, std=std)
         elif dataset_name == 'synth_v3':
-            test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(10 + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v3', noise=noise, mean=mean, std=std)
+            test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v3', noise=noise, mean=mean, std=std)
         elif dataset_name == 'synth_v4':
-            test_loader = get_testloader_synth(n_steps=100, n_features=4, batch_size=batch_size, num_seasons=16, seed=(10 + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v4', noise=noise, mean=mean, std=std)
+            test_loader = get_testloader_synth(n_steps=100, n_features=4, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v4', noise=noise, mean=mean, std=std)
         elif dataset_name == 'synth_v5':
-            test_loader = get_testloader_synth(n_steps=100, n_features=6, batch_size=batch_size, num_seasons=16, seed=(10 + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v5', noise=noise, mean=mean, std=std)
+            test_loader = get_testloader_synth(n_steps=100, n_features=6, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v5', noise=noise, mean=mean, std=std)
         elif dataset_name == 'synth_v6':
-            test_loader = get_testloader_synth(n_steps=100, n_features=5, batch_size=batch_size, num_seasons=16, seed=(10 + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v6', noise=noise, mean=mean, std=std)
+            test_loader = get_testloader_synth(n_steps=100, n_features=5, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v6', noise=noise, mean=mean, std=std)
         elif dataset_name == 'synth_v7':
-            test_loader = get_testloader_synth(n_steps=100, n_features=4, batch_size=batch_size, num_seasons=16, seed=(10 + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v7', noise=noise, mean=mean, std=std)
+            test_loader = get_testloader_synth(n_steps=100, n_features=4, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v7', noise=noise, mean=mean, std=std)
         elif dataset_name == 'awn':
-            test_loader = get_testloader_awn(filename, is_year=is_yearly, n_steps=n_steps, batch_size=batch_size, missing_ratio=missing_ratio, seed=(10 + trial), test_index=test_indices, length=length, forecasting=forecasting, random_trial=random_trial, pattern=pattern)
+            test_loader = get_testloader_awn(filename, is_year=is_yearly, n_steps=n_steps, batch_size=batch_size, missing_ratio=missing_ratio, seed=(s + trial), test_index=test_indices, length=length, forecasting=forecasting, random_trial=random_trial, pattern=pattern)
         elif dataset_name == 'physio':
-            test_loader = get_testloader_physio(test_indices=test_indices, seed=(10+trial), batch_size=batch_size, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, length=length, pattern=pattern, mean=mean, std=std)
+            test_loader = get_testloader_physio(test_indices=test_indices, seed=(s+trial), batch_size=batch_size, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, length=length, pattern=pattern, mean=mean, std=std)
         elif dataset_name == 'pm25':
             test_loader = test_indices # this contains the test loader for pm25
         else:
-            test_loader = get_testloader_agaid(seed=(10 + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecastig=forecasting, batch_size=batch_size)
+            test_loader = get_testloader_agaid(seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecastig=forecasting, batch_size=batch_size)
         
         csdi_rmse_avg = 0
         diffsaits_rmse_avg = 0

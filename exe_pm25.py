@@ -29,6 +29,27 @@ path = "config/" + args["config"]
 with open(path, "r") as f:
     config = yaml.safe_load(f)
 
+# train:
+#   epochs: 2000
+#   batch_size: 16 
+#   lr: 5.0e-3
+
+# diffusion:
+#   layers: 4 
+#   channels: 64 
+#   nheads: 8
+#   diffusion_embedding_dim: 128
+#   beta_start: 0.0001
+#   beta_end: 0.5
+#   num_steps: 50
+#   schedule: "quad"
+
+# model:
+#   is_unconditional: 0
+#   timeemb: 128
+#   featureemb: 16
+#   target_strategy: "random"
+config["train"]["lr"] = 1.0e-4
 config["model"]["is_unconditional"] = args["unconditional"]
 config["model"]["test_missing_ratio"] = args["testmissingratio"]
 config["model"]['target_strategy'] = 'mix' if miss_pattern == 'random' else 'pattern'
