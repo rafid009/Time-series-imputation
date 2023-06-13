@@ -722,7 +722,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
         elif dataset_name == 'pm25':
             test_loader = test_indices # this contains the test loader for pm25
         else:
-            test_loader = get_testloader_agaid(seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecastig=forecasting, batch_size=batch_size)
+            test_loader = get_testloader_agaid(seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecastig=forecasting, batch_size=batch_size, test_idx=test_indices, mean=mean, std=std)
         
         csdi_rmse_avg = 0
         diffsaits_rmse_avg = 0

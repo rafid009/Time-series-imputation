@@ -131,6 +131,8 @@ class Agaid_Dataset(Dataset):
         self.observed_values = ((self.observed_values - self.mean) / self.std) * self.observed_masks
         self.obs_data_intact = ((self.obs_data_intact - self.mean.numpy()) / self.std.numpy()) * self.observed_masks.numpy()
         self.gt_intact = ((self.gt_intact - self.mean.numpy()) / self.std.numpy()) * self.gt_masks.numpy()
+
+
         # print(f"obs_val: {self.observed_values.shape}")
 
     def __getitem__(self, index):
@@ -152,44 +154,55 @@ class Agaid_Dataset(Dataset):
         return len(self.observed_values)
 
         
-def get_dataloader(filename='ColdHardiness_Grape_Merlot_2.csv', batch_size=16, missing_ratio=0.2, seed=10, is_test=False, season_idx=None, random_trial=False):
+def get_dataloader(filename='ColdHardiness_Grape_Merlot_2.csv', batch_size=16, missing_ratio=0.2, seed=10, is_test=False, season_idx=-1, random_trial=False):
     np.random.seed(seed=seed)
     df = pd.read_csv(filename)
     modified_df, dormant_seasons = preprocess_missing_values(df, features, is_dormant=True)
     season_df, season_array, max_length = get_seasons_data(modified_df, dormant_seasons, features, is_dormant=True)
-    if season_idx is not None:
-        train_season_df = season_df.drop(season_array[season_idx], axis=0)
-    else:
-        train_season_df = season_df.drop(season_array[-1], axis=0)
-        train_season_df = train_season_df.drop(season_array[-2], axis=0)
-    mean, std = get_mean_std(train_season_df, features)
+    # if season_idx is not None:
+    #     train_season_df = season_df.drop(season_array[season_idx], axis=0)
+    # else:
+    #     train_season_df = season_df.drop(season_array[-1], axis=0)
+    #     train_season_df = train_season_df.drop(season_array[-2], axis=0)
+    # mean, std = get_mean_std(train_season_df, features)
     X, Y = split_XY(season_df, max_length, season_array, features)
-    if season_idx is not None:
-        X_test = np.expand_dims(X[season_idx], 0)
-        test_dataset = Agaid_Dataset(X_test, mean, std, rate=missing_ratio, is_test=is_test, randon_trial=random_trial)
-        
-        if season_idx == 0:
-            train_dataset = Agaid_Dataset(X[season_idx:], mean, std, rate=missing_ratio, randon_trial=random_trial)
-        elif season_idx == len(X) - 1:
-            train_dataset = Agaid_Dataset(X[:season_idx], mean, std, rate=missing_ratio, randon_trial=random_trial)
-        else:
-            X_copy_1 = X[:season_idx].copy()
-            if season_idx == len(X) - 2:
-                X_copy_2 = X[season_idx + 1].copy() 
-            else:
-                X_copy_2 = X[season_idx + 1:].copy()
-            X_new = np.concatenate((X_copy_1, X_copy_2), axis=0) 
-            train_dataset = Agaid_Dataset(X_new, mean, std, rate=missing_ratio)
-    else:
-        train_dataset = Agaid_Dataset(X[:-2], mean, std, rate=missing_ratio)
-        test_dataset = Agaid_Dataset(X[-2:], mean, std, rate=missing_ratio, is_test=is_test)
+
+    train_X = []
+    test_X = X[season_idx]
+    if len(test_X.shape) != 3:
+        test_X = np.expand_dims(test_X, 0)
+    for i in range(len(X)):
+        if i != season_idx:
+            train_X.append(X[i])
+    train_X = np.array(train_X)
+    train_X_real = np.reshape(train_X, (-1, len(features)))
+    mean, std = np.nanmean(train_X_real, axis=0), np.nanstd(train_X_real, axis=0)
+    # if season_idx is not None:
+    #     X_test = np.expand_dims(X[season_idx], 0)
+    #     test_dataset = Agaid_Dataset(X_test, mean, std, rate=missing_ratio, is_test=is_test, randon_trial=random_trial)
+    #     train_dataset = Agaid_Dataset(X[season_idx:], mean, std, rate=missing_ratio, randon_trial=random_trial)
+    #     # if season_idx == 0:
+    #     #     train_dataset = Agaid_Dataset(X[season_idx:], mean, std, rate=missing_ratio, randon_trial=random_trial)
+    #     # elif season_idx == len(X) - 1:
+    #     #     train_dataset = Agaid_Dataset(X[:season_idx], mean, std, rate=missing_ratio, randon_trial=random_trial)
+    #     # else:
+    #     #     X_copy_1 = X[:season_idx].copy()
+    #     #     if season_idx == len(X) - 2:
+    #     #         X_copy_2 = X[season_idx + 1].copy() 
+    #     #     else:
+    #     #         X_copy_2 = X[season_idx + 1:].copy()
+    #     #     X_new = np.concatenate((X_copy_1, X_copy_2), axis=0) 
+    #     #     train_dataset = Agaid_Dataset(X_new, mean, std, rate=missing_ratio)
+    # else:
+    train_dataset = Agaid_Dataset(train_X, mean, std, rate=missing_ratio)
+    test_dataset = Agaid_Dataset(test_X, mean, std, rate=missing_ratio, is_test=is_test)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     
     if is_test:
         test_loader = DataLoader(test_dataset, batch_size=1)
     else:
         test_loader = DataLoader(test_dataset, batch_size=len(test_dataset))
-    return train_loader, test_loader
+    return train_loader, test_loader, mean, std
 
 def get_testloader(filename='ColdHardiness_Grape_Merlot_2.csv', missing_ratio=0.2, seed=10, season_idx=None, exclude_features=None, length=100, forward_trial=-1, lte_idx=None, random_trial=False, forecastig=False):
     np.random.seed(seed=seed)
@@ -215,17 +228,18 @@ def get_forward_testloader(X, mean, std, forward_trial=-1, lte_idx=None):
     test_loader = DataLoader(test_dataset, batch_size=1)
     return test_loader
 
-def get_testloader_agaid(filename='ColdHardiness_Grape_Merlot_2.csv', batch_size=16, missing_ratio=0.2, seed=10, exclude_features=None, length=100, forward_trial=-1, random_trial=False, forecastig=False):
+def get_testloader_agaid(filename='ColdHardiness_Grape_Merlot_2.csv', batch_size=16, missing_ratio=0.2, seed=10, exclude_features=None, length=100, forward_trial=-1, random_trial=False, forecastig=False, mean=None, std=None, test_idx=-1):
     np.random.seed(seed=seed)
     df = pd.read_csv(filename)
     modified_df, dormant_seasons = preprocess_missing_values(df, features, is_dormant=True)
     season_df, season_array, max_length = get_seasons_data(modified_df, dormant_seasons, features, is_dormant=True)
 
-    train_season_df = season_df.drop(season_array[-1], axis=0)
-    train_season_df = train_season_df.drop(season_array[-2], axis=0)
-    mean, std = get_mean_std(train_season_df, features)
+    # train_season_df = season_df.drop(season_array[-1], axis=0)
+    # train_season_df = train_season_df.drop(season_array[-2], axis=0)
     X, Y = split_XY(season_df, max_length, season_array, features)
-    X = X[-2:]
+    X = X[test_idx]
+    if len(X.shape) != 3:
+        X = np.expand_dims(X, 0)
     if forecastig:
         forward_trial = max_length - length
     test_dataset = Agaid_Dataset(X, mean, std, rate=missing_ratio, is_test=True, length=length, exclude_features=exclude_features, forward_trial=forward_trial, randon_trial=random_trial)
