@@ -13,11 +13,11 @@ np.set_printoptions(threshold=sys.maxsize)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-seed = 10
+seed = np.random.randint(10, 100)
 config_dict_csdi = {
     'train': {
         'epochs': 3000,
-        'batch_size': 16 ,
+        'batch_size': 8,
         'lr': 1.0e-4
     },      
     'diffusion': {
@@ -51,74 +51,74 @@ config_dict_csdi = {
 
 data_file = 'ColdHardiness_Grape_Merlot_2.csv'
 
-train_loader, valid_loader = get_dataloader(
+train_loader, valid_loader, mean, std = get_dataloader(
     seed=seed,
     filename=data_file,
     batch_size=config_dict_csdi["train"]["batch_size"],
     missing_ratio=0.2,
-    season_idx=33
+    season_idx=[32, 33]
 )
 # 
 model_csdi = CSDI_Agaid(config_dict_csdi, device).to(device)
-model_folder = "./saved_model"
-# if not os.path.isdir(model_folder):
-#     os.makedirs(model_folder)
+model_folder = "./saved_model_agaid"
+if not os.path.isdir(model_folder):
+    os.makedirs(model_folder)
 filename = 'model_csdi.pth'
-# train(
-#     model_csdi,
-#     config_dict_csdi["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=filename
-# )
+train(
+    model_csdi,
+    config_dict_csdi["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=filename
+)
 # nsample = 50
-model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 # evaluate(model_csdi, valid_loader, nsample=nsample, scaler=1, foldername=model_folder)
 # model_folder_exp = "./saved_model_explode"
 # if not os.path.isdir(model_folder_exp):
 #     os.makedirs(model_folder_exp)
     
-config_dict_diffsaits = {
-    'train': {
-        'epochs': 5000,
-        'batch_size': 16 ,
-        'lr': 1.0e-3
-    },      
-    'diffusion': {
-        'layers': 4, 
-        'channels': 64,
-        'nheads': 8,
-        'diffusion_embedding_dim': 128,
-        'beta_start': 0.0001,
-        'beta_end': 0.5,
-        'num_steps': 50,
-        'schedule': "quad"
-    },
-    'model': {
-        'is_unconditional': 0,
-        'timeemb': 128,
-        'featureemb': 16,
-        'target_strategy': "random",
-        'type': 'SAITS',
-        'n_layers': 3,
-        'loss_weight_p': 1,
-        'loss_weight_f': 1,
-        'd_time': 252,
-        'n_feature': len(features),
-        'd_model': 128,
-        'd_inner': 128,
-        'n_head': 8,
-        'd_k': 64,
-        'd_v': 64,
-        'dropout': 0.2,
-        'diagonal_attention_mask': True
-    }
-}
-print(config_dict_diffsaits)
-# model_diff_saits_simple = CSDI_Agaid(config_dict, device, is_simple=True).to(device)
-model_diff_saits = CSDI_Agaid(config_dict_diffsaits, device, is_simple=False).to(device)
+# config_dict_diffsaits = {
+#     'train': {
+#         'epochs': 5000,
+#         'batch_size': 16 ,
+#         'lr': 1.0e-3
+#     },      
+#     'diffusion': {
+#         'layers': 4, 
+#         'channels': 64,
+#         'nheads': 8,
+#         'diffusion_embedding_dim': 128,
+#         'beta_start': 0.0001,
+#         'beta_end': 0.5,
+#         'num_steps': 50,
+#         'schedule': "quad"
+#     },
+#     'model': {
+#         'is_unconditional': 0,
+#         'timeemb': 128,
+#         'featureemb': 16,
+#         'target_strategy': "random",
+#         'type': 'SAITS',
+#         'n_layers': 3,
+#         'loss_weight_p': 1,
+#         'loss_weight_f': 1,
+#         'd_time': 252,
+#         'n_feature': len(features),
+#         'd_model': 128,
+#         'd_inner': 128,
+#         'n_head': 8,
+#         'd_k': 64,
+#         'd_v': 64,
+#         'dropout': 0.2,
+#         'diagonal_attention_mask': True
+#     }
+# }
+# print(config_dict_diffsaits)
+# # model_diff_saits_simple = CSDI_Agaid(config_dict, device, is_simple=True).to(device)
+# model_diff_saits = CSDI_Agaid(config_dict_diffsaits, device, is_simple=False).to(device)
 # filename_simple = 'model_diff_saits_simple.pth'
 filename = 'model_diff_saits_final.pth'
 config_info = 'model_diff_saits_final.pth'
@@ -136,8 +136,8 @@ config_info = 'model_diff_saits_final.pth'
 #     data_type='agaid'
 # )
 # nsample = 100
-model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
+# model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 
 # filename = "ColdHardiness_Grape_Merlot_2.csv"
@@ -153,40 +153,40 @@ print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 # X = X[:-1]
 # X = (X - mean) / std
-saits_model_file = f"{model_folder}/model_saits.pth"
-saits = SAITS(n_steps=252, n_features=len(features), n_layers=3, d_model=256, d_inner=128, n_head=4, d_k=64, d_v=64, dropout=0.1, epochs=3000, patience=200, device=device)
+# saits_model_file = f"{model_folder}/model_saits.pth"
+# saits = SAITS(n_steps=252, n_features=len(features), n_layers=3, d_model=256, d_inner=128, n_head=4, d_k=64, d_v=64, dropout=0.1, epochs=3000, patience=200, device=device)
 
 # saits.fit(X)  # train the model. Here I use the whole dataset as the training set, because ground truth is not visible to the model.
 # pickle.dump(saits, open(saits_model_file, 'wb'))
 
-saits = pickle.load(open(saits_model_file, 'rb'))
+# saits = pickle.load(open(saits_model_file, 'rb'))
 
 models = {
     'CSDI': model_csdi,
-    'SAITS': saits,
-    'DiffSAITS': model_diff_saits#,
+    # 'SAITS': saits,
+    # 'DiffSAITS': model_diff_saits#,
     # 'DiffSAITSsimple': model_diff_saits_simple
 }
 mse_folder = "results_agaid_qual"
 data_folder = "results_data_agaid_qual"
 lengths = [ 50, 100, 200]
 
-for l in lengths:
-    print(f"length = {l}")
-    print(f"\nBlackout:\n")
-    evaluate_imputation_all(models=models, trials=20, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, length=l)
-    # evaluate_imputation(models, data_folder, length=l, trials=1, data=True)
-    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', length=l, trials=1, batch_size=1, data=True)
+# for l in lengths:
+#     print(f"length = {l}")
+#     print(f"\nBlackout:\n")
+#     evaluate_imputation_all(models=models, trials=20, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, length=l)
+#     # evaluate_imputation(models, data_folder, length=l, trials=1, data=True)
+#     evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', length=l, trials=1, batch_size=1, data=True)
 
 print(f"\nForecasting:\n")
-evaluate_imputation_all(models=models, trials=20, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, length=(30, 150), forecasting=True)
+evaluate_imputation_all(models=models, trials=20, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, length=(30, 150), forecasting=True)
     # evaluate_imputation(models, mse_folder=data_folder, length=l, forecasting=True, trials=1, data=True)
-evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='agaid', length=l, trials=1, batch_size=1, data=True)
+evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='agaid', length=100, trials=1, batch_size=1, data=True)
 
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})\n")
-    evaluate_imputation_all(models=models, trials=20, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, missing_ratio=ratio, random_trial=True)
+    evaluate_imputation_all(models=models, trials=20, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, missing_ratio=ratio, random_trial=True)
     # evaluate_imputation(models, mse_folder=data_folder, random_trial=True, trials=1, data=True, missing_ratio=ratio)
     evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True)
 

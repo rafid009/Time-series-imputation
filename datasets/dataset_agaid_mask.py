@@ -106,8 +106,8 @@ class Agaid_Dataset(Dataset):
         self.gt_masks = []
         self.gt_intact = []
         
-        self.mean = torch.tensor(mean, dtype=torch.float32)
-        self.std = torch.tensor(std, dtype=torch.float32)
+        # self.mean = torch.tensor(mean, dtype=torch.float32)
+        # self.std = torch.tensor(std, dtype=torch.float32)
 
         # print(f"X: {X.shape} in {'Test' if is_test else 'Train'}")
         
@@ -128,9 +128,9 @@ class Agaid_Dataset(Dataset):
         self.obs_data_intact = np.array(self.obs_data_intact)
         self.gt_intact = np.array(self.gt_intact)
         self.observed_masks = torch.tensor(np.array(self.observed_masks), dtype=torch.float32)
-        self.observed_values = ((self.observed_values - self.mean) / self.std) * self.observed_masks
-        self.obs_data_intact = ((self.obs_data_intact - self.mean.numpy()) / self.std.numpy()) * self.observed_masks.numpy()
-        self.gt_intact = ((self.gt_intact - self.mean.numpy()) / self.std.numpy()) * self.gt_masks.numpy()
+        # self.observed_values = ((self.observed_values - self.mean) / self.std) * self.observed_masks
+        # self.obs_data_intact = ((self.obs_data_intact - self.mean.numpy()) / self.std.numpy()) * self.observed_masks.numpy()
+        # self.gt_intact = ((self.gt_intact - self.mean.numpy()) / self.std.numpy()) * self.gt_masks.numpy()
 
 
         # print(f"obs_val: {self.observed_values.shape}")
@@ -140,7 +140,6 @@ class Agaid_Dataset(Dataset):
             "observed_data": self.observed_values[index],
             "observed_mask": self.observed_masks[index],
             # "gt_mask": self.gt_masks[index],
-            "obs_data_intact": self.obs_data_intact[index],
             "timepoints": np.arange(self.eval_length),
             "gt_intact": self.gt_intact[index]
         }
