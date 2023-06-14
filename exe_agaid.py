@@ -105,7 +105,7 @@ train_loader, valid_loader, mean, std = get_dataloader(
     season_idx=[32, 33]
 )
 # 
-exit()
+
 model_csdi = CSDI_Agaid(config_dict_csdi, device).to(device)
 model_folder = "./saved_model_agaid"
 if not os.path.isdir(model_folder):
@@ -227,7 +227,7 @@ test_pattern_config = {
     'pattern_dir': './data/AgAid/miss_pattern'
 }
 
-evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, pattern=test_pattern_config, test_indices=[32,33])
+evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, pattern=test_pattern_config, test_indices=[32,33], mean=mean, std=std)
 
 
 # lengths = [ 50, 100, 200]
@@ -240,14 +240,14 @@ evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset
 #     evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', length=l, trials=1, batch_size=1, data=True)
 
 print(f"\nForecasting:\n")
-evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, length=(30, 150), forecasting=True, test_indices=[32,33])
+evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, length=(30, 150), forecasting=True, test_indices=[32,33], mean=mean, std=std)
     # evaluate_imputation(models, mse_folder=data_folder, length=l, forecasting=True, trials=1, data=True)
 # evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='agaid', length=100, trials=1, batch_size=1, data=True)
 
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})\n")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, missing_ratio=ratio, random_trial=True, test_indices=[32,33])
+    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, missing_ratio=ratio, random_trial=True, test_indices=[32,33], mean=mean, std=std)
     # evaluate_imputation(models, mse_folder=data_folder, random_trial=True, trials=1, data=True, missing_ratio=ratio)
     # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True)
 
