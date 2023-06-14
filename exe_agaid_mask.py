@@ -38,9 +38,9 @@ d_time = 252
 
 config_dict_csdi = {
     'train': {
-        'epochs': 200,
+        'epochs': 300,
         'batch_size': 4,
-        'lr': 1.0e-3
+        'lr': 1.0e-4
     },      
     'diffusion': {
         'layers': 4, 
@@ -49,7 +49,7 @@ config_dict_csdi = {
         'diffusion_embedding_dim': 128,
         'beta_start': 0.0001,
         'beta_end': 0.5,
-        'num_steps': 70,
+        'num_steps': 50,
         'schedule': "quad",
          'is_fast': False,
     },
