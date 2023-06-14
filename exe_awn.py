@@ -29,7 +29,7 @@ class NumpyArrayEncoder(JSONEncoder):
 
 given_features = features #['sin', 'cos2', 'harmonic', 'weight', 'lin_comb', 'non_lin_comb', 'mixed_history']
 
-miss_type = 'random'
+miss_type = 'pattern'
 seed = 10
 config_dict_csdi_pattern = {
     'train': {
@@ -53,7 +53,7 @@ config_dict_csdi_pattern = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': 'pattern',
+        'target_strategy': miss_type,
         'type': 'CSDI',
         'n_layers': 3, 
         'd_time': 100,
@@ -122,7 +122,7 @@ test_season = 32
 is_year = True
 train_loader, valid_loader = get_dataloader(data_file, is_year=is_year, batch_size=4, test_index=test_season, missing_ratio=0.1, is_test=False, is_pattern=(miss_type == 'pattern'))
 
-config_dict_csdi = config_dict_csdi_pattern if miss_type == 'pattern' else config_dict_csdi_random
+config_dict_csdi = config_dict_csdi_pattern if miss_type.startswith('pattern') else config_dict_csdi_random
 model_csdi = CSDI_AWN(config_dict_csdi, device, target_dim=len(given_features)).to(device)
 model_folder = f"./saved_model_{dataset_name}"
 filename = f"model_csdi_{dataset_name}_{miss_type}.pth"
@@ -130,16 +130,16 @@ if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI training starts.....\n")
 # model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-train(
-    model_csdi,
-    config_dict_csdi["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename=f"{filename}",
-    is_saits=False
-)
-# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# train(
+#     model_csdi,
+#     config_dict_csdi["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename=f"{filename}",
+#     is_saits=False
+# )
+model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
 

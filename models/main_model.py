@@ -326,10 +326,16 @@ class CSDI_base(nn.Module):
             _, _, _
         ) = self.process_data(batch)
         if is_train == 0:
-            if self.target_strategy == 'pattern':
+            if self.target_strategy.startswith('pattern'):
                 cond_mask = self.get_pattern_mask(observed_data, is_val=True)
             else:
                 cond_mask = gt_mask
+        elif self.target_strategy == 'pattern-random':
+            mask_choice = np.random.rand()
+            if mask_choice > 0.5:
+                cond_mask = self.get_pattern_mask(observed_data)
+            else:
+                cond_mask = self.get_randmask(observed_mask)
         elif self.target_strategy == 'pattern':
             cond_mask = self.get_pattern_mask(observed_data)
         elif self.target_strategy == "mix":
@@ -359,10 +365,10 @@ class CSDI_base(nn.Module):
         ) = self.process_data(batch)
 
         with torch.no_grad():
-            if self.target_strategy == 'pattern':
-                cond_mask = self.get_pattern_mask(observed_mask, is_val=True)
-            else:
-                cond_mask = gt_mask
+            # if self.target_strategy == 'pattern':
+            #     cond_mask = self.get_pattern_mask(observed_mask, is_val=True)
+            # else:
+            cond_mask = gt_mask
             # print(f"obs:\n{observed_mask.cpu().numpy()}\ncond:\n{cond_mask.cpu().numpy()}")
             target_mask = observed_mask - cond_mask
             if self.is_saits:
