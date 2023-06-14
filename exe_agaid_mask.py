@@ -49,7 +49,7 @@ config_dict_csdi = {
         'diffusion_embedding_dim': 128,
         'beta_start': 0.0001,
         'beta_end': 0.5,
-        'num_steps': 50,
+        'num_steps': 70,
         'schedule': "quad",
          'is_fast': False,
     },
@@ -82,7 +82,7 @@ train_loader, valid_loader, mean, std = get_dataloader(
     seed=seed,
     filename=data_file,
     batch_size=config_dict_csdi["train"]["batch_size"],
-    missing_ratio=0.1,
+    missing_ratio=0.01,
     season_idx=[32, 33]
 )
 
@@ -92,7 +92,7 @@ filename = f"model_csdi_mask_agaid.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI Masked training starts.....\n")
-model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 train(
     model_csdi,
     config_dict_csdi["train"],

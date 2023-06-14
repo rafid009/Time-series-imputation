@@ -112,21 +112,15 @@ class Agaid_Dataset(Dataset):
         # print(f"X: {X.shape} in {'Test' if is_test else 'Train'}")
         
         include_features = []
-        if exclude_features is not None:
-            for feature in features:
-                if feature not in exclude_features:
-                    include_features.append(features.index(feature))
+
         for i in range(len(X)):
             obs_data, obs_mask, gt_mask, obs_data_intact, gt_intact_data = parse_data(X[i], rate=rate, is_test=is_test, length=length, include_features=include_features, forward_trial=forward_trial, lte_idx=lte_idx, random_trial=randon_trial)
             self.obs_data_intact.append(obs_data_intact)
             self.gt_masks.append(gt_mask)
             self.observed_values.append(obs_data)
             self.observed_masks.append(obs_mask)
-            self.gt_intact.append(gt_intact_data)
         self.gt_masks = torch.tensor(np.array(self.gt_masks), dtype=torch.float32)
         self.observed_values = torch.tensor(np.array(self.observed_values), dtype=torch.float32)
-        self.obs_data_intact = np.array(self.obs_data_intact)
-        self.gt_intact = np.array(self.gt_intact)
         self.observed_masks = torch.tensor(np.array(self.observed_masks), dtype=torch.float32)
         # self.observed_values = ((self.observed_values - self.mean) / self.std) * self.observed_masks
         # self.obs_data_intact = ((self.obs_data_intact - self.mean.numpy()) / self.std.numpy()) * self.observed_masks.numpy()
@@ -141,7 +135,7 @@ class Agaid_Dataset(Dataset):
             "observed_mask": self.observed_masks[index],
             # "gt_mask": self.gt_masks[index],
             "timepoints": np.arange(self.eval_length),
-            "gt_intact": self.gt_intact[index]
+            # "gt_intact": self.gt_intact[index]
         }
         if len(self.gt_masks) == 0:
             s["gt_mask"] = None
@@ -217,8 +211,6 @@ def get_testloader_agaid(filename='ColdHardiness_Grape_Merlot_2.csv', batch_size
     modified_df, dormant_seasons = preprocess_missing_values(df, features, is_dormant=True)
     season_df, season_array, max_length = get_seasons_data(modified_df, dormant_seasons, features, is_dormant=True)
 
-    # train_season_df = season_df.drop(season_array[-1], axis=0)
-    # train_season_df = train_season_df.drop(season_array[-2], axis=0)
     X, Y = split_XY(season_df, max_length, season_array, features)
     X = X[test_idx]
     if len(X.shape) != 3:
