@@ -70,7 +70,7 @@ nsample = 50
 
 n_steps = 100
 n_features = len(given_features)
-num_seasons = 32
+num_seasons = 50
 noise = False
 train_loader, valid_loader, mean, std = get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=np.random.randint(0,100), is_test=False, v2='v3', noise=noise)
 

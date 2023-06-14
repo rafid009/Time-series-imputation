@@ -29,7 +29,7 @@ class NumpyArrayEncoder(JSONEncoder):
 given_features = feats_v5
 
 
-seed = 10
+seed = np.random.randint(10, 100)
 config_dict_csdi = {
     'train': {
         'epochs': 2500,
@@ -70,9 +70,9 @@ nsample = 50
 
 n_steps = 100
 n_features = len(given_features)
-num_seasons = 32
+num_seasons = 50
 noise = False
-train_loader, valid_loader = get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=10, is_test=False, v2='v5', noise=noise)
+train_loader, valid_loader, mean, std = get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=seed, is_test=False, v2='v5', noise=noise)
 
 model_csdi = CSDI_Synth(config_dict_csdi, device, target_dim=len(given_features)).to(device)
 model_folder = "./saved_model_synth_v5"
@@ -144,11 +144,17 @@ config_dict_diffsaits = {
         'fde-layers': 4,
         'is_fde': False,
         'weight_combine': False,
-        'no-mask': False,
+        'fde-no-mask': False,
         'fde-diagonal': False,
         'is_fde_2nd': False,
+        'fde-pos-enc': False,
         'reduce-type': 'linear',
-        'is_2nd_block': False
+        'embed-type': 'linear',
+        'is_2nd_block': False,
+        'is-not-residual': True,
+        'res-block-mask': False,
+        'is-fde-loop': False,
+        'skip-connect-no-res-layer': False
     }
 }
 print(f"config: {config_dict_diffsaits}")
@@ -184,15 +190,15 @@ lengths = [10, 50, 90]
 for l in lengths:
     print(f"\nlength = {l}")
     print(f"\nBlackout:")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v5', batch_size=32, length=l, noise=noise)
+    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v5', batch_size=32, length=l, noise=noise, mean=mean, std=std)
     # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
 print(f"\nForecasting:")
-evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v5', batch_size=32, length=(10, 80), forecasting=True, noise=noise)
+evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v5', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
 # evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v5', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise)
+    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v5', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise, mean=mean, std=std)
     # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, noise=noise)

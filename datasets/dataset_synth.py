@@ -159,7 +159,7 @@ def get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_rati
         std = None
     test_dataset = Synth_Dataset(n_steps, n_features, 10, rate=missing_ratio, seed=seed*5, v2=v2, noise=noise, mean=mean, std=std)
     if is_test:
-        test_loader = DataLoader(test_dataset, batch_size=1)
+        test_loader = DataLoader(test_dataset, batch_size=batch_size)
     else:
         test_loader = DataLoader(test_dataset, batch_size=len(test_dataset))
     return train_loader, test_loader, mean, std
