@@ -29,7 +29,7 @@ class NumpyArrayEncoder(JSONEncoder):
 
 given_features = features #['sin', 'cos2', 'harmonic', 'weight', 'lin_comb', 'non_lin_comb', 'mixed_history']
 
-miss_type = 'pattern'
+miss_type = 'pattern-random'
 seed = np.random.randint(10,100)
 config_dict_csdi_pattern = {
     'train': {
