@@ -15,7 +15,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 seed = np.random.randint(10, 100)
 
-miss_type = 'random'
+miss_type = 'pattern'
 
 config_dict_csdi_pattern = {
     'train': {
