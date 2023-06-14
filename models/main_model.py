@@ -142,6 +142,19 @@ class CSDI_base(nn.Module):
                     if self.val_pattern_i >= self.num_patterns:
                         self.val_pattern_i = self.num_patterns
                     zeros = np.count_nonzero(1 - pattern)
+                zeros = np.count_nonzero(pattern)
+                while zeros == 0:
+                    try:
+                        pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                    except:
+                        pattern = np.load(f"{pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                    # pattern = np.load(f"{self.pattern_folder}/pattern_1.npy")
+
+                    self.val_pattern_i = self.val_pattern_i + 1
+
+                    if self.val_pattern_i >= self.num_patterns:
+                        self.val_pattern_i = self.num_patterns
+                    zeros = np.count_nonzero(1 - pattern)
             else:
                 try:
                     pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
@@ -157,6 +170,19 @@ class CSDI_base(nn.Module):
                         pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
                     # pattern = np.load(f"{self.pattern_folder}/pattern_1.npy")
                     self.pattern_i = (self.pattern_i + 1) % self.num_patterns
+                    zeros = np.count_nonzero(1 - pattern)
+                zeros = np.count_nonzero(1 - pattern)
+                while zeros == 0:
+                    try:
+                        pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                    except:
+                        pattern = np.load(f"{pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                    # pattern = np.load(f"{self.pattern_folder}/pattern_1.npy")
+
+                    self.val_pattern_i = self.val_pattern_i + 1
+
+                    if self.val_pattern_i >= self.num_patterns:
+                        self.val_pattern_i = self.num_patterns
                     zeros = np.count_nonzero(1 - pattern)
             pattern = torch.tensor(pattern, dtype=torch.float32)
             patterns.append(pattern)
