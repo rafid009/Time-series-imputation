@@ -71,7 +71,7 @@ class CSDI_base(nn.Module):
             self.loss_weight_p = config['model']['loss_weight_p']
             self.loss_weight_f = config['model']['loss_weight_f']
 
-        if self.target_strategy == 'pattern':
+        if self.target_strategy.startswith('pattern'):
             self.pattern_folder = config['model']['pattern_dir']
             self.num_patterns = config['model']['num_patterns']
             self.num_val_patterns = config['model']['num_val_patterns']
