@@ -14,7 +14,49 @@ np.set_printoptions(threshold=sys.maxsize)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 seed = np.random.randint(10, 100)
-config_dict_csdi = {
+
+miss_type = 'pattern'
+
+config_dict_csdi_pattern = {
+    'train': {
+        'epochs': 5000,
+        'batch_size': 8,
+        'lr': 1.0e-4
+    },      
+    'diffusion': {
+        'layers': 4, 
+        'channels': 64,
+        'nheads': 8,
+        'diffusion_embedding_dim': 128,
+        'beta_start': 0.0001,
+        'beta_end': 0.5,
+        'num_steps': 70,
+        'schedule': "quad",
+        'is_fast': False,
+    },
+    'model': {
+        'is_unconditional': 0,
+        'timeemb': 128,
+        'featureemb': 16,
+        'target_strategy': miss_type,
+        'type': 'CSDI',
+        'n_layers': 3, 
+        'd_time': 100,
+        'n_feature': len(features),
+        'd_model': 128,
+        'd_inner': 128,
+        'n_head': 8,
+        'd_k': 64,
+        'd_v': 64,
+        'dropout': 0.1,
+        'diagonal_attention_mask': True,
+        'num_patterns': 15000,
+        'num_val_patterns': 5000,
+        'pattern_dir': './data/AgAid/miss_pattern'
+    },
+}
+
+config_dict_csdi_random = {
     'train': {
         'epochs': 3000,
         'batch_size': 8,
@@ -45,11 +87,15 @@ config_dict_csdi = {
         'd_k': 64,
         'd_v': 64,
         'dropout': 0.1,
-        'diagonal_attention_mask': False
+        'diagonal_attention_mask': False,
+        'num_patterns': 15000,
+        'num_val_patterns': 5000,
+        'pattern_dir': './data/AgAid/miss_pattern'
     }
 }
 
 data_file = 'ColdHardiness_Grape_Merlot_2.csv'
+config_dict_csdi = config_dict_csdi_pattern if miss_type.startswith('pattern') else config_dict_csdi_random
 
 train_loader, valid_loader, mean, std = get_dataloader(
     seed=seed,
@@ -120,8 +166,8 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 # # model_diff_saits_simple = CSDI_Agaid(config_dict, device, is_simple=True).to(device)
 # model_diff_saits = CSDI_Agaid(config_dict_diffsaits, device, is_simple=False).to(device)
 # filename_simple = 'model_diff_saits_simple.pth'
-filename = 'model_diff_saits_final.pth'
-config_info = 'model_diff_saits_final.pth'
+# filename = 'model_diff_saits_final.pth'
+# config_info = 'model_diff_saits_final.pth'
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # 
@@ -169,7 +215,21 @@ models = {
 }
 mse_folder = "results_agaid_qual"
 data_folder = "results_data_agaid_qual"
-lengths = [ 50, 100, 200]
+
+name = miss_type
+test_patterns_start = 15001
+num_test_patterns = 5000
+
+test_pattern_config = {
+    'start': test_patterns_start,
+    'num_patterns': num_test_patterns,
+    'pattern_dir': './data/AgAid/miss_pattern'
+}
+
+evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, pattern=test_pattern_config, test_indices=[32,33])
+
+
+# lengths = [ 50, 100, 200]
 
 # for l in lengths:
 #     print(f"length = {l}")
@@ -179,16 +239,16 @@ lengths = [ 50, 100, 200]
 #     evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', length=l, trials=1, batch_size=1, data=True)
 
 print(f"\nForecasting:\n")
-evaluate_imputation_all(models=models, trials=20, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, length=(30, 150), forecasting=True)
+evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, length=(30, 150), forecasting=True, test_indices=[32,33])
     # evaluate_imputation(models, mse_folder=data_folder, length=l, forecasting=True, trials=1, data=True)
-evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='agaid', length=100, trials=1, batch_size=1, data=True)
+# evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='agaid', length=100, trials=1, batch_size=1, data=True)
 
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})\n")
-    evaluate_imputation_all(models=models, trials=20, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, missing_ratio=ratio, random_trial=True)
+    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, missing_ratio=ratio, random_trial=True, test_indices=[32,33])
     # evaluate_imputation(models, mse_folder=data_folder, random_trial=True, trials=1, data=True, missing_ratio=ratio)
-    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True)
+    # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True)
 
 
 # print("For All")
