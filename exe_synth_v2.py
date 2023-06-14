@@ -30,7 +30,6 @@ class NumpyArrayEncoder(JSONEncoder):
 given_features = feats_v2
 
 
-seed = 10
 config_dict_csdi = {
     'train': {
         'epochs': 2500,
@@ -71,7 +70,7 @@ nsample = 50
 
 n_steps = 100
 n_features = len(given_features)
-num_seasons = 32
+num_seasons = 50
 noise = False
 train_loader, valid_loader, mean, std = get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=np.random.randint(0,100), is_test=False, v2='v2', noise=noise)
 
@@ -81,15 +80,15 @@ filename = f"model_csdi_synth_v2.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI training starts.....\n")
-train(
-    model_csdi,
-    config_dict_csdi["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename=f"{filename}",
-    is_saits=False
-)
+# train(
+#     model_csdi,
+#     config_dict_csdi["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename=f"{filename}",
+#     is_saits=False
+# )
 # model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
@@ -127,7 +126,7 @@ config_dict_diffsaits = {
         'featureemb': 16,
         'target_strategy': "mix", # noise mix
         'type': 'SAITS',
-        'n_layers': 6,
+        'n_layers': 8,
         'loss_weight_p': 1,
         'loss_weight_f': 1,
         'd_time': n_steps,
@@ -160,30 +159,30 @@ config_dict_diffsaits = {
 }
 print(f"config: {config_dict_diffsaits}")
 name = 'fde-conv-multi'
-# model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
+model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
-# filename = f"model_diffsaits_synth_v2_{name}_new_2.pth"
-# print(f"\n\DiffSAITS training starts.....\n")
-
-# # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-
-# train(
-#     model_diff_saits,
-#     config_dict_diffsaits["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{filename}",
-#     is_saits=True
-# )
+filename = f"model_diffsaits_synth_v2_{name}_new_2.pth"
+print(f"\n\DiffSAITS training starts.....\n")
 
 # # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-# print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
+
+train(
+    model_diff_saits,
+    config_dict_diffsaits["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{filename}",
+    is_saits=True
+)
+
+# # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 models = {
-    'CSDI': model_csdi,
+    # 'CSDI': model_csdi,
     # 'SAITS': saits,
-    # 'DiffSAITS': model_diff_saits
+    'DiffSAITS': model_diff_saits
 }
 mse_folder = f"results_synth_v2_{name}_new_2/metric"
 data_folder = f"results_synth_v2_{name}_new_2/data"
