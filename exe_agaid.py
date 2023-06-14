@@ -70,7 +70,8 @@ config_dict_csdi_random = {
         'beta_start': 0.0001,
         'beta_end': 0.5,
         'num_steps': 70,
-        'schedule': "quad"
+        'schedule': "quad",
+        'is_fast': False,
     },
     'model': {
         'is_unconditional': 0,
