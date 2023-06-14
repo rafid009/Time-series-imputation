@@ -15,7 +15,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 seed = np.random.randint(10, 100)
 
-miss_type = 'pattern'
+miss_type = 'random'
 
 config_dict_csdi_pattern = {
     'train': {
@@ -105,6 +105,7 @@ train_loader, valid_loader, mean, std = get_dataloader(
     season_idx=[32, 33]
 )
 # 
+exit()
 model_csdi = CSDI_Agaid(config_dict_csdi, device).to(device)
 model_folder = "./saved_model_agaid"
 if not os.path.isdir(model_folder):
