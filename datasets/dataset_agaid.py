@@ -4,7 +4,7 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-def parse_data(sample, rate=0.2, is_test=False, length=100, include_features=None, forward_trial=-1, lte_idx=None, random_trial=False):
+def parse_data(sample, rate=0.2, is_test=False, length=100, include_features=None, forward_trial=-1, lte_idx=None, random_trial=False, pattern=None):
     """Get mask of random points (missing at random) across channels based on k,
     where k == number of data points. Mask of sample's shape where 0's to be imputed, and 1's to preserved
     as per ts imputers"""
@@ -12,7 +12,31 @@ def parse_data(sample, rate=0.2, is_test=False, length=100, include_features=Non
         sample = sample.numpy()
 
     obs_mask = ~np.isnan(sample)
-    if not is_test:
+    if pattern is not None:
+        shp = sample.shape
+        choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
+        # print(f"start: {pattern['start']} end: {(pattern['start'] + pattern['num_patterns'] - 1)} choice: {choice}")
+        filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
+        mask = np.load(filename)
+        evals = sample.reshape(-1).copy()
+        
+        # while ((obs_mask == mask).all()):
+        #     choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
+        #     print(f"start: {pattern['start']} end: {(pattern['start'] + pattern['num_patterns'] - 1)} choice: {choice}")
+        #     filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
+        #     mask = np.load(filename)
+        
+        eval_mask = mask.reshape(-1).copy()
+        gt_indices = np.where(eval_mask)[0].tolist()
+        miss_indices = np.random.choice(
+            gt_indices, (int)(len(gt_indices) * rate), replace=False
+        )
+        gt_intact = sample.reshape(-1).copy()
+        gt_intact[miss_indices] = np.nan
+        gt_intact = gt_intact.reshape(shp)
+        obs_data = np.nan_to_num(evals, copy=True)
+        obs_data = obs_data.reshape(shp)
+    elif not is_test:
         shp = sample.shape
         evals = sample.reshape(-1).copy()
         indices = np.where(~np.isnan(evals))[0].tolist()
@@ -97,7 +121,7 @@ def get_mask_bm(sample, rate):
 
 
 class Agaid_Dataset(Dataset):
-    def __init__(self, X, mean, std, eval_length=252, rate=0.2, is_test=False, length=100, exclude_features=None, forward_trial=-1, lte_idx=None, randon_trial=False) -> None:
+    def __init__(self, X, mean, std, eval_length=252, rate=0.2, is_test=False, length=100, exclude_features=None, forward_trial=-1, lte_idx=None, randon_trial=False, pattern=None) -> None:
         super().__init__()
         self.eval_length = eval_length
         self.observed_values = []
@@ -112,12 +136,9 @@ class Agaid_Dataset(Dataset):
         # print(f"X: {X.shape} in {'Test' if is_test else 'Train'}")
         
         include_features = []
-        if exclude_features is not None:
-            for feature in features:
-                if feature not in exclude_features:
-                    include_features.append(features.index(feature))
+
         for i in range(len(X)):
-            obs_data, obs_mask, gt_mask, obs_data_intact, gt_intact_data = parse_data(X[i], rate=rate, is_test=is_test, length=length, include_features=include_features, forward_trial=forward_trial, lte_idx=lte_idx, random_trial=randon_trial)
+            obs_data, obs_mask, gt_mask, obs_data_intact, gt_intact_data = parse_data(X[i], rate=rate, is_test=is_test, length=length, include_features=include_features, forward_trial=forward_trial, lte_idx=lte_idx, random_trial=randon_trial, pattern=pattern)
             self.obs_data_intact.append(obs_data_intact)
             self.gt_masks.append(gt_mask)
             self.observed_values.append(obs_data)
@@ -211,7 +232,7 @@ def get_forward_testloader(X, mean, std, forward_trial=-1, lte_idx=None):
     test_loader = DataLoader(test_dataset, batch_size=1)
     return test_loader
 
-def get_testloader_agaid(filename='ColdHardiness_Grape_Merlot_2.csv', batch_size=16, missing_ratio=0.2, seed=10, exclude_features=None, length=100, forward_trial=-1, random_trial=False, forecastig=False, mean=None, std=None, test_idx=-1):
+def get_testloader_agaid(filename='ColdHardiness_Grape_Merlot_2.csv', batch_size=16, missing_ratio=0.2, seed=10, exclude_features=None, length=100, forward_trial=-1, random_trial=False, forecastig=False, mean=None, std=None, test_idx=-1, pattern=None):
     np.random.seed(seed=seed)
     df = pd.read_csv(filename)
     modified_df, dormant_seasons = preprocess_missing_values(df, features, is_dormant=True)
@@ -225,6 +246,6 @@ def get_testloader_agaid(filename='ColdHardiness_Grape_Merlot_2.csv', batch_size
         X = np.expand_dims(X, 0)
     if forecastig:
         forward_trial = max_length - length
-    test_dataset = Agaid_Dataset(X, mean, std, rate=missing_ratio, is_test=True, length=length, exclude_features=exclude_features, forward_trial=forward_trial, randon_trial=random_trial)
+    test_dataset = Agaid_Dataset(X, mean, std, rate=missing_ratio, is_test=True, length=length, exclude_features=exclude_features, forward_trial=forward_trial, randon_trial=random_trial, pattern=pattern)
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
     return test_loader
