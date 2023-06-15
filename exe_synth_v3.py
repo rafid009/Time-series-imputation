@@ -126,7 +126,7 @@ config_dict_diffsaits = {
         'featureemb': 16,
         'target_strategy': "mix", # noise mix
         'type': 'SAITS',
-        'n_layers': 6,
+        'n_layers': 8,
         'loss_weight_p': 1,
         'loss_weight_f': 1,
         'd_time': n_steps,
@@ -154,7 +154,7 @@ config_dict_diffsaits = {
         'is-not-residual': True,
         'res-block-mask': False,
         'is-fde-loop': False,
-        'skip-connect-no-res-layer': False
+        'skip-connect-no-res-layer': True
     }
 }
 print(f"config: {config_dict_diffsaits}")
@@ -180,7 +180,7 @@ model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 models = {
-    'CSDI': model_csdi,
+    # 'CSDI': model_csdi,
     # 'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }
