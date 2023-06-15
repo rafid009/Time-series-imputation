@@ -120,11 +120,11 @@ class CSDI_base(nn.Module):
         for i in range(B):
             obs = torch.transpose(observed_mask[i], 0, 1).cpu().numpy()
             if is_val:
-                # try:
-                #     pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
-                # except:
-                #     pattern = np.load(f"{pattern_folder}/pattern_{self.val_pattern_i}.npy")
-                pattern = np.load(f"{self.pattern_folder}/pattern_10.npy")
+                try:
+                    pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                except:
+                    pattern = np.load(f"{pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                # pattern = np.load(f"{self.pattern_folder}/pattern_10.npy")
 
                 self.val_pattern_i = self.val_pattern_i + 1
 
@@ -134,11 +134,11 @@ class CSDI_base(nn.Module):
                 zeros = np.count_nonzero(1 - pattern)
                 target_mask = obs - pattern
                 while zeros == 0 or target_mask.sum() == 0:
-                    # try:
-                    #     pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
-                    # except:
-                    #     pattern = np.load(f"{pattern_folder}/pattern_{self.val_pattern_i}.npy")
-                    pattern = np.load(f"{self.pattern_folder}/pattern_11.npy")
+                    try:
+                        pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                    except:
+                        pattern = np.load(f"{pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                    # pattern = np.load(f"{self.pattern_folder}/pattern_11.npy")
                     self.val_pattern_i = self.val_pattern_i + 1
 
                     if self.val_pattern_i >= self.num_patterns:
@@ -146,32 +146,32 @@ class CSDI_base(nn.Module):
                     zeros = np.count_nonzero(1 - pattern)
                     target_mask = obs - pattern
             else:
-                # try:
-                #     pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
-                # except:
-                #     pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
-                pattern = np.load(f"{self.pattern_folder}/pattern_10.npy")
+                try:
+                    pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
+                except:
+                    pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
+                # pattern = np.load(f"{self.pattern_folder}/pattern_10.npy")
                 self.pattern_i = (self.pattern_i + 1) % self.num_patterns
                 pattern = pattern * obs
                 zeros = np.count_nonzero(1 - pattern)
                 target_mask = obs - pattern
                 while zeros == 0 or target_mask.sum() == 0:
-                    # try:
-                    #     pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
-                    # except:
-                    #     pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
-                    pattern = np.load(f"{self.pattern_folder}/pattern_11.npy")
+                    try:
+                        pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
+                    except:
+                        pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
+                    # pattern = np.load(f"{self.pattern_folder}/pattern_11.npy")
                     self.pattern_i = (self.pattern_i + 1) % self.num_patterns
                     zeros = np.count_nonzero(1 - pattern)
                     target_mask = obs - pattern
-            print(f"pattern: {pattern}")
+            # print(f"pattern: {pattern}")
             pattern = torch.tensor(pattern, dtype=torch.float32)
             patterns.append(pattern)
             
         patterns = torch.stack(patterns, dim=0)
         patterns = patterns.permute(0, 2, 1).to(self.device)
         cond_mask = patterns if (patterns != observed_mask).sum() != 0 else self.get_randmask(observed_mask)
-        print(f"obs: {observed_mask}")
+        # print(f"obs: {observed_mask}")
         return cond_mask
 
     def get_side_info(self, observed_tp, cond_mask):

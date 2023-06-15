@@ -34,7 +34,7 @@ config_dict_csdi = {
     'train': {
         'epochs': 2500,
         'batch_size': 16 ,
-        'lr': 1.0e-3
+        'lr': 1.0e-4
     },      
     'diffusion': {
         'layers': 4, 
@@ -154,7 +154,7 @@ config_dict_diffsaits = {
         'is-not-residual': True,
         'res-block-mask': False,
         'is-fde-loop': False,
-        'skip-connect-no-res-layer': True
+        'skip-connect-no-res-layer': False
     }
 }
 print(f"config: {config_dict_diffsaits}")
