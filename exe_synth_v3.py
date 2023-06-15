@@ -105,9 +105,9 @@ model_folder = "./saved_model_synth_v3"
 
 config_dict_diffsaits = {
     'train': {
-        'epochs':2000, # 3000 -> ds3
+        'epochs':2500, # 3000 -> ds3
         'batch_size': 16 ,
-        'lr': 1.0e-4
+        'lr': 1.0e-5
     },      
     'diffusion': {
         'layers': 4, 
