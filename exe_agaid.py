@@ -22,7 +22,7 @@ config_dict_csdi_pattern = {
     'train': {
         'epochs': 2500,
         'batch_size': 8,
-        'lr': 1.0e-3
+        'lr': 1.0e-4
     },      
     'diffusion': {
         'layers': 4, 
