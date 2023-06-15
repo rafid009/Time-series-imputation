@@ -20,7 +20,7 @@ miss_type = 'pattern'
 
 config_dict_csdi_pattern = {
     'train': {
-        'epochs': 5000,
+        'epochs': 2500,
         'batch_size': 8,
         'lr': 1.0e-3
     },      
