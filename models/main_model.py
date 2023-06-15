@@ -129,8 +129,10 @@ class CSDI_base(nn.Module):
 
                 if self.val_pattern_i >= self.num_patterns:
                     self.val_pattern_i = self.num_patterns
+                pattern = pattern * observed_mask
                 zeros = np.count_nonzero(1 - pattern)
-                while zeros == 0:
+                target_mask = observed_mask - pattern
+                while zeros == 0 or target_mask.sum() == 0:
                     # try:
                     #     pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
                     # except:
@@ -141,7 +143,7 @@ class CSDI_base(nn.Module):
                     if self.val_pattern_i >= self.num_patterns:
                         self.val_pattern_i = self.num_patterns
                     zeros = np.count_nonzero(1 - pattern)
-                
+                    target_mask = observed_mask - pattern
             else:
                 # try:
                 #     pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
@@ -149,8 +151,10 @@ class CSDI_base(nn.Module):
                 #     pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
                 pattern = np.load(f"{self.pattern_folder}/pattern_10.npy")
                 self.pattern_i = (self.pattern_i + 1) % self.num_patterns
+                pattern = pattern * observed_mask
                 zeros = np.count_nonzero(1 - pattern)
-                while zeros == 0:
+                target_mask = observed_mask - pattern
+                while zeros == 0 or target_mask.sum() == 0:
                     # try:
                     #     pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
                     # except:
@@ -158,6 +162,7 @@ class CSDI_base(nn.Module):
                     pattern = np.load(f"{self.pattern_folder}/pattern_11.npy")
                     self.pattern_i = (self.pattern_i + 1) % self.num_patterns
                     zeros = np.count_nonzero(1 - pattern)
+                    target_mask = observed_mask - pattern
             print(f"pattern: {pattern}")
             pattern = torch.tensor(pattern, dtype=torch.float32)
             patterns.append(pattern)
