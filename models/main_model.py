@@ -158,14 +158,14 @@ class CSDI_base(nn.Module):
                     pattern = np.load(f"{self.pattern_folder}/pattern_11.npy")
                     self.pattern_i = (self.pattern_i + 1) % self.num_patterns
                     zeros = np.count_nonzero(1 - pattern)
-                
+            pattern(f"pattern: {pattern}")
             pattern = torch.tensor(pattern, dtype=torch.float32)
             patterns.append(pattern)
             
         patterns = torch.stack(patterns, dim=0)
         patterns = patterns.permute(0, 2, 1).to(self.device)
         cond_mask = patterns if (patterns != observed_mask).sum() != 0 else self.get_randmask(observed_mask)
-
+        print(f"obs: {observed_mask}")
         return cond_mask
 
     def get_side_info(self, observed_tp, cond_mask):
