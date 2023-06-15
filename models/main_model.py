@@ -143,7 +143,7 @@ class CSDI_base(nn.Module):
                     zeros = np.count_nonzero(1 - pattern)
                 
             else:
-                try:
+                # try:
                 #     pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
                 # except:
                 #     pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
