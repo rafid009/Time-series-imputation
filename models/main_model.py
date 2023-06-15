@@ -129,7 +129,7 @@ class CSDI_base(nn.Module):
 
                 if self.val_pattern_i >= self.num_patterns:
                     self.val_pattern_i = self.num_patterns
-                pattern = pattern * observed_mask.cpu().numpy()
+                pattern = pattern * torch.transpose(observed_mask[i], 0, 1).cpu().numpy()
                 zeros = np.count_nonzero(1 - pattern)
                 target_mask = observed_mask - pattern
                 while zeros == 0 or target_mask.sum() == 0:
@@ -151,7 +151,7 @@ class CSDI_base(nn.Module):
                 #     pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
                 pattern = np.load(f"{self.pattern_folder}/pattern_10.npy")
                 self.pattern_i = (self.pattern_i + 1) % self.num_patterns
-                pattern = pattern * observed_mask.cpu().numpy()
+                pattern = pattern * torch.transpose(observed_mask[i], 0, 1).cpu().numpy()
                 zeros = np.count_nonzero(1 - pattern)
                 target_mask = observed_mask - pattern
                 while zeros == 0 or target_mask.sum() == 0:
