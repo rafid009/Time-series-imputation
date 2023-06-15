@@ -9,7 +9,8 @@ from pypots.imputation import SAITS
 from datasets.process_data import *
 import pickle
 
-np.set_printoptions(threshold=sys.maxsize)
+np.set_printoptions(threshold=np.inf)
+torch.set_printoptions(threshold=torch.inf)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
