@@ -119,11 +119,11 @@ class CSDI_base(nn.Module):
         patterns = []
         for i in range(B):
             if is_val:
-                try:
-                    pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
-                except:
-                    pattern = np.load(f"{pattern_folder}/pattern_{self.val_pattern_i}.npy")
-                # pattern = np.load(f"{self.pattern_folder}/pattern_1.npy")
+                # try:
+                #     pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                # except:
+                #     pattern = np.load(f"{pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                pattern = np.load(f"{self.pattern_folder}/pattern_10.npy")
 
                 self.val_pattern_i = self.val_pattern_i + 1
 
@@ -131,12 +131,11 @@ class CSDI_base(nn.Module):
                     self.val_pattern_i = self.num_patterns
                 zeros = np.count_nonzero(1 - pattern)
                 while zeros == 0:
-                    try:
-                        pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
-                    except:
-                        pattern = np.load(f"{pattern_folder}/pattern_{self.val_pattern_i}.npy")
-                    # pattern = np.load(f"{self.pattern_folder}/pattern_1.npy")
-
+                    # try:
+                    #     pattern = np.load(f"{self.pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                    # except:
+                    #     pattern = np.load(f"{pattern_folder}/pattern_{self.val_pattern_i}.npy")
+                    pattern = np.load(f"{self.pattern_folder}/pattern_11.npy")
                     self.val_pattern_i = self.val_pattern_i + 1
 
                     if self.val_pattern_i >= self.num_patterns:
@@ -145,18 +144,18 @@ class CSDI_base(nn.Module):
                 
             else:
                 try:
-                    pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
-                except:
-                    pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
-                # pattern = np.load(f"{self.pattern_folder}/pattern_1.npy")
+                #     pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
+                # except:
+                #     pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
+                pattern = np.load(f"{self.pattern_folder}/pattern_10.npy")
                 self.pattern_i = (self.pattern_i + 1) % self.num_patterns
                 zeros = np.count_nonzero(1 - pattern)
                 while zeros == 0:
-                    try:
-                        pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
-                    except:
-                        pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
-                    # pattern = np.load(f"{self.pattern_folder}/pattern_1.npy")
+                    # try:
+                    #     pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
+                    # except:
+                    #     pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
+                    pattern = np.load(f"{self.pattern_folder}/pattern_11.npy")
                     self.pattern_i = (self.pattern_i + 1) % self.num_patterns
                     zeros = np.count_nonzero(1 - pattern)
                 
