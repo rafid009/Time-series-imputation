@@ -158,7 +158,7 @@ class CSDI_base(nn.Module):
                     pattern = np.load(f"{self.pattern_folder}/pattern_11.npy")
                     self.pattern_i = (self.pattern_i + 1) % self.num_patterns
                     zeros = np.count_nonzero(1 - pattern)
-            pattern(f"pattern: {pattern}")
+            print(f"pattern: {pattern}")
             pattern = torch.tensor(pattern, dtype=torch.float32)
             patterns.append(pattern)
             
