@@ -237,8 +237,8 @@ def train(
                 #     lr_scheduler.step()
                 pass
             else:
-                # lr_scheduler.step()
-                pass
+                lr_scheduler.step()
+                # pass
             
         if valid_loader is not None and (epoch_no + 1) % valid_epoch_interval == 0:
             model.eval()
