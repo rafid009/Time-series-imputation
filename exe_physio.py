@@ -40,7 +40,8 @@ args = {
 path = "config/" + args["config"]
 with open(path, "r") as f:
     config = yaml.safe_load(f)
-
+config['train']["epochs"] = 2000
+config["train"]["lr"] = 1.0e-3
 config["model"]["is_unconditional"] = args["unconditional"]
 config["model"]["test_missing_ratio"] = args["testmissingratio"]
 config["model"]['target_strategy'] = miss_pattern
