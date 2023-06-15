@@ -89,7 +89,7 @@ print(f"\n\nCSDI training starts.....\n")
 #     filename=f"{filename}",
 #     is_saits=False
 # )
-# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
 
@@ -154,7 +154,7 @@ config_dict_diffsaits = {
         'is-not-residual': True,
         'res-block-mask': False,
         'is-fde-loop': False,
-        'skip-connect-no-res-layer': True
+        'skip-connect-no-res-layer': False
     }
 }
 print(f"config: {config_dict_diffsaits}")
