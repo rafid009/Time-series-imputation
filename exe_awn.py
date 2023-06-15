@@ -33,7 +33,7 @@ miss_type = 'pattern'
 seed = np.random.randint(10,100)
 config_dict_csdi_pattern = {
     'train': {
-        'epochs': 5000,
+        'epochs': 3500,
         'batch_size': 4,
         'lr': 1.0e-4
         # 'lr': 1.0e-4
