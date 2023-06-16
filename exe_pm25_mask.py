@@ -11,7 +11,7 @@ import time
 np.set_printoptions(threshold=np.inf)
 from models.mask_main_model import Mask_PM25
 from datasets.dataset_pm25_mask import get_dataloader
-from utils.utils import train
+from utils.utils import train, clip_pattern_mask
 
 def quantile_loss(target, forecast, q: float) -> float:
     return 2 * torch.sum(
@@ -124,16 +124,16 @@ with torch.no_grad():
     samples = output
     samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
 
-    print(f"sample 1: {samples[0][0].cpu().numpy()}")
-    print(f"sample 1: {samples[0][2].cpu().numpy()}")
-    print(f"sample 1: {samples[0][3].cpu().numpy()}")
-    samples = torch.round(torch.abs(samples))
-    save_samples = samples.squeeze(0)
-    print(f"sample 1: {save_samples[0].cpu().numpy()}")
-    print(f"sample 1: {save_samples[2].cpu().numpy()}")
-    print(f"sample 1: {save_samples[3].cpu().numpy()}")
+    # print(f"sample 1: {samples[0][0].cpu().numpy()}")
+    # print(f"sample 1: {samples[0][2].cpu().numpy()}")
+    # print(f"sample 1: {samples[0][3].cpu().numpy()}")
+    save_samples = clip_pattern_mask(samples.cpu().numpy())
+    save_samples = save_samples.squeeze(0)
+    # print(f"sample 1: {save_samples[0].cpu().numpy()}")
+    # print(f"sample 1: {save_samples[2].cpu().numpy()}")
+    # print(f"sample 1: {save_samples[3].cpu().numpy()}")
     for i in range(save_samples.shape[0]):
-        np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i].cpu().numpy())
+        np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i])
 
     crps_avg = 0
     num = 0

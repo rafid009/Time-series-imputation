@@ -1,6 +1,6 @@
 from models.mask_main_model import Mask_Agaid
 from datasets.dataset_agaid_mask import get_dataloader
-from utils.utils import train, get_num_params, calc_quantile_CRPS, evaluate_imputation_all
+from utils.utils import train, get_num_params, calc_quantile_CRPS, evaluate_imputation_all, clip_pattern_mask
 import numpy as np
 import torch
 import sys
@@ -16,7 +16,6 @@ import math
 from tqdm import tqdm
 import xskillscore as xs
 import xarray as xr
-import scipy.stats as st
 matplotlib.rc('xtick', labelsize=20) 
 matplotlib.rc('ytick', labelsize=20) 
 # torch.manual_seed(42)
@@ -135,13 +134,13 @@ def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
     return CRPS.item() / len(quantiles)
 
 
-nsample = 2000 # 3000 * 4 * 8
+nsample = 20000 # 3000 * 4 * 8
 ground = 0
 for i, val in enumerate(valid_loader):
     ground = val['observed_mask'].to(device).float() # (B, L, K)
     # ground = ground.reshape(ground.shape[0], -1).cpu().numpy()
 
-sample_folder = './data/AgAid/miss_pattern_debug'
+sample_folder = './data/AgAid/miss_pattern'
 
 if not os.path.isdir(sample_folder):
     os.makedirs(sample_folder)
@@ -156,15 +155,15 @@ with torch.no_grad():
     # print(f"sample 1: {samples[0][1].cpu().numpy()}")
     # print(f"sample 2: {samples[0][2].cpu().numpy()}")
     # print(f"sample 3: {samples[0][3].cpu().numpy()}")
-    save_samples = torch.round(torch.abs(samples))
+    save_samples = clip_pattern_mask(samples.cpu().numpy())
     save_samples = save_samples.squeeze(0)
     # print(f"sample 1: {save_samples[1].cpu().numpy()}")
     # print(f"sample 2: {save_samples[2].cpu().numpy()}")
     # print(f"sample 3: {save_samples[3].cpu().numpy()}")
     for i in range(save_samples.shape[0]):
         print(f"samples: {samples[0][i].cpu().numpy()}")
-        print(f"save samples: {save_samples[i].cpu().numpy()}")
-        np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i].cpu().numpy())
+        print(f"save samples: {save_samples[i]}")
+        np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i])
 
     crps_avg = 0
     num = 0

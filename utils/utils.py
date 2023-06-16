@@ -887,5 +887,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
         json.dump(results_data, fp=fp, indent=4, cls=NumpyArrayEncoder)
         fp.close()
 
-    
-
+def clip_pattern_mask(mask):
+    mask = np.where(mask < 0, 0, mask)
+    mask = np.where(mask > 1, 1, mask)
+    return np.round(mask)

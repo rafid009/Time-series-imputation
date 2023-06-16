@@ -10,7 +10,7 @@ import numpy as np
 np.set_printoptions(threshold=np.inf)
 from models.mask_main_model import Mask_Physio
 from datasets.dataset_physio_mask import get_dataloader, attributes
-from utils.utils import train, evaluate, get_num_params, evaluate_imputation_all
+from utils.utils import train, evaluate, get_num_params, evaluate_imputation_all, clip_pattern_mask
 
 def quantile_loss(target, forecast, q: float) -> float:
     return 2 * torch.sum(
@@ -110,17 +110,16 @@ with torch.no_grad():
 
     # samples = (samples > 0).float()
     # np.save(f"{sample_folder}/patterns.npy", samples.cpu().numpy())
-    print(f"sample 1: {samples[0][0].cpu().numpy()}")
-    print(f"sample 1: {samples[0][2].cpu().numpy()}")
-    print(f"sample 1: {samples[0][3].cpu().numpy()}")
-    samples = torch.round(torch.abs(samples))
-    # samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
-    save_samples = samples.squeeze(0)
-    print(f"sample 1: {save_samples[0].cpu().numpy()}")
-    print(f"sample 1: {save_samples[2].cpu().numpy()}")
-    print(f"sample 1: {save_samples[3].cpu().numpy()}")
+    # print(f"sample 1: {samples[0][0].cpu().numpy()}")
+    # print(f"sample 1: {samples[0][2].cpu().numpy()}")
+    # print(f"sample 1: {samples[0][3].cpu().numpy()}")
+    save_samples = clip_pattern_mask(samples.cpu().numpy())
+    save_samples = save_samples.squeeze(0)
+    # print(f"sample 1: {save_samples[0].cpu().numpy()}")
+    # print(f"sample 1: {save_samples[2].cpu().numpy()}")
+    # print(f"sample 1: {save_samples[3].cpu().numpy()}")
     for i in range(save_samples.shape[0]):
-        np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i].cpu().numpy())
+        np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i])
 
     crps_avg = 0
     num = 0
