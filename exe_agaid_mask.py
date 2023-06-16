@@ -135,7 +135,7 @@ def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
     return CRPS.item() / len(quantiles)
 
 
-nsample = 20000 # 3000 * 4 * 8
+nsample = 1000 # 3000 * 4 * 8
 ground = 0
 for i, val in enumerate(valid_loader):
     ground = val['observed_mask'].to(device).float() # (B, L, K)
@@ -153,15 +153,17 @@ with torch.no_grad():
     samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
     # samples = samples.reshape(samples.shape[0], samples.shape[1], -1).cpu().numpy()
     # samples = (samples > 0).float()
-    print(f"sample 1: {samples[0][1].cpu().numpy()}")
-    print(f"sample 2: {samples[0][2].cpu().numpy()}")
-    print(f"sample 3: {samples[0][3].cpu().numpy()}")
-    samples = torch.round(torch.abs(samples))
-    save_samples = samples.squeeze(0)
-    print(f"sample 1: {save_samples[1].cpu().numpy()}")
-    print(f"sample 2: {save_samples[2].cpu().numpy()}")
-    print(f"sample 3: {save_samples[3].cpu().numpy()}")
+    # print(f"sample 1: {samples[0][1].cpu().numpy()}")
+    # print(f"sample 2: {samples[0][2].cpu().numpy()}")
+    # print(f"sample 3: {samples[0][3].cpu().numpy()}")
+    save_samples = torch.round(torch.abs(samples))
+    save_samples = save_samples.squeeze(0)
+    # print(f"sample 1: {save_samples[1].cpu().numpy()}")
+    # print(f"sample 2: {save_samples[2].cpu().numpy()}")
+    # print(f"sample 3: {save_samples[3].cpu().numpy()}")
     for i in range(save_samples.shape[0]):
+        print(f"samples: {samples[0][i].cpu().numpy()}")
+        print(f"save samples: {save_samples[i].cpu().numpy()}")
         np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i].cpu().numpy())
 
     crps_avg = 0

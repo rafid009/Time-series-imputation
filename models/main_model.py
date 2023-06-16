@@ -147,20 +147,20 @@ class CSDI_base(nn.Module):
                     zeros = np.count_nonzero(1 - pattern)
                     target_mask = obs - pattern
             else:
-                try:
-                    pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
-                except:
-                    pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
+                # try:
+                pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
+                # except:
+                #     pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
                 # pattern = np.load(f"{self.pattern_folder}/pattern_10.npy")
                 self.pattern_i = (self.pattern_i + 1) % self.num_patterns
                 pattern = pattern * obs
                 zeros = np.count_nonzero(1 - pattern)
                 target_mask = obs - pattern
                 while zeros == 0 or target_mask.sum() == 0:
-                    try:
-                        pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
-                    except:
-                        pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
+                    # try:
+                    pattern = np.load(f"{self.pattern_folder}/pattern_{self.pattern_i}.npy")
+                    # except:
+                    #     pattern = np.load(f"{pattern_folder}/pattern_{self.pattern_i}.npy")
                     # pattern = np.load(f"{self.pattern_folder}/pattern_11.npy")
                     self.pattern_i = (self.pattern_i + 1) % self.num_patterns
                     pattern = pattern * obs
