@@ -718,7 +718,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
         elif dataset_name == 'awn':
             test_loader = get_testloader_awn(filename, is_year=is_yearly, n_steps=n_steps, batch_size=batch_size, missing_ratio=missing_ratio, seed=(s + trial), test_index=test_indices, length=length, forecasting=forecasting, random_trial=random_trial, pattern=pattern)
         elif dataset_name == 'physio':
-            test_loader = get_testloader_physio(test_indices=test_indices, seed=(s+trial), batch_size=batch_size, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, length=length, pattern=pattern, mean=mean, std=std)
+            test_loader = get_testloader_physio(test_indices=test_indices, seed=(s+trial), batch_size=batch_size, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, length=length, pattern=pattern)
         elif dataset_name == 'pm25':
             test_loader = test_indices # this contains the test loader for pm25
         else:
