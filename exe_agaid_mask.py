@@ -166,14 +166,14 @@ with torch.no_grad():
         print(f"save samples: {save_samples[i].cpu().numpy()}")
         np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i].cpu().numpy())
 
-    # crps_avg = 0
-    # num = 0
-    # for i in range(len(ground)):
-    #     crps = calc_quantile_CRPS(ground[i].unsqueeze(0), samples, 0, 1)
-    #     print(f"CRPS for {i} : {crps}")
-    #     crps_avg += crps
-    #     num += 1
-    # print(f"final CRPS: {crps_avg / num}")
+    crps_avg = 0
+    num = 0
+    for i in range(len(ground)):
+        crps = calc_quantile_CRPS(ground[i].unsqueeze(0), samples, 0, 1)
+        print(f"CRPS for {i} : {crps}")
+        crps_avg += crps
+        num += 1
+    print(f"final CRPS: {crps_avg / num}")
     
 
     # forecasts = xr.DataArray(samples, coords=[('member', np.arange(samples.shape[0])), ('b', np.arange(1)), ('x', np.arange(n_features * d_time))])
