@@ -38,8 +38,8 @@ d_time = 252
 
 config_dict_csdi = {
     'train': {
-        'epochs': 300,
-        'batch_size': 4,
+        'epochs': 500,
+        'batch_size': 8,
         'lr': 1.0e-4
     },      
     'diffusion': {
@@ -49,7 +49,7 @@ config_dict_csdi = {
         'diffusion_embedding_dim': 128,
         'beta_start': 0.0001,
         'beta_end': 0.5,
-        'num_steps': 50,
+        'num_steps': 100,
         'schedule': "quad",
          'is_fast': False,
     },
@@ -93,16 +93,16 @@ if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI Masked training starts.....\n")
 # model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-# train(
-#     model_csdi,
-#     config_dict_csdi["train"],
-#     train_loader,
-#     valid_loader=None,
-#     foldername=model_folder,
-#     filename=f"{filename}",
-#     is_saits=False
-# )
-model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+train(
+    model_csdi,
+    config_dict_csdi["train"],
+    train_loader,
+    valid_loader=None,
+    foldername=model_folder,
+    filename=f"{filename}",
+    is_saits=False
+)
+# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
 
@@ -135,7 +135,7 @@ def calc_quantile_CRPS(target, forecast, mean_scaler, scaler):
     return CRPS.item() / len(quantiles)
 
 
-nsample = 1000 # 3000 * 4 * 8
+nsample = 2000 # 3000 * 4 * 8
 ground = 0
 for i, val in enumerate(valid_loader):
     ground = val['observed_mask'].to(device).float() # (B, L, K)
