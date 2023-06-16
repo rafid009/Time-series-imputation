@@ -166,13 +166,13 @@ class CSDI_base(nn.Module):
                     pattern = pattern * obs
                     zeros = np.count_nonzero(1 - pattern)
                     target_mask = obs - pattern
-            # print(f"pattern: {pattern}")
+            print(f"pattern: {pattern}")
             pattern = torch.tensor(pattern, dtype=torch.float32)
             patterns.append(pattern)
             
         patterns = torch.stack(patterns, dim=0)
         patterns = patterns.permute(0, 2, 1).to(self.device)
-        cond_mask = patterns if (patterns != observed_mask).sum() != 0 else self.get_randmask(observed_mask)
+        cond_mask = patterns #if (patterns != observed_mask).sum() != 0 else self.get_randmask(observed_mask)
         # print(f"obs: {observed_mask}")
         return cond_mask
 
@@ -218,6 +218,7 @@ class CSDI_base(nn.Module):
         noisy_data = (current_alpha ** 0.5) * observed_data + ((1.0 - current_alpha) ** 0.5) * noise
         total_input = self.set_input_to_diffmodel(noisy_data, observed_data, cond_mask)
         target_mask = observed_mask - cond_mask
+        print(f"target: {target_mask}")
         num_eval = target_mask.sum()
         if self.is_saits:
             temp_mask = cond_mask.unsqueeze(dim=1)
@@ -243,7 +244,6 @@ class CSDI_base(nn.Module):
                 loss = self.loss_weight_f * loss + self.loss_weight_p * pred_loss
         else:
             predicted = self.diffmodel(total_input, side_info, t)  # (B,K,L)
-            print(f"target: {target_mask}")
             residual = (noise - predicted) * target_mask
             loss = (residual ** 2).sum() / (num_eval if num_eval > 0 else 1)
         return loss

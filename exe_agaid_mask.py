@@ -93,16 +93,16 @@ if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI Masked training starts.....\n")
 # model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-train(
-    model_csdi,
-    config_dict_csdi["train"],
-    train_loader,
-    valid_loader=None,
-    foldername=model_folder,
-    filename=f"{filename}",
-    is_saits=False
-)
-# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# train(
+#     model_csdi,
+#     config_dict_csdi["train"],
+#     train_loader,
+#     valid_loader=None,
+#     foldername=model_folder,
+#     filename=f"{filename}",
+#     is_saits=False
+# )
+model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
 
@@ -141,7 +141,7 @@ for i, val in enumerate(valid_loader):
     ground = val['observed_mask'].to(device).float() # (B, L, K)
     # ground = ground.reshape(ground.shape[0], -1).cpu().numpy()
 
-sample_folder = './data/AgAid/miss_pattern'
+sample_folder = './data/AgAid/miss_pattern_debug'
 
 if not os.path.isdir(sample_folder):
     os.makedirs(sample_folder)
