@@ -695,6 +695,44 @@ class ResBlockEncDec(nn.Module):
         return y
 
 
+class EncoderDecoderBlock(nn.Module):
+    def __init__(self, n_layers, d_model, d_time, d_inner, n_head, d_k, d_v, dropout, 
+                 diff_emb_dim, diagonal_attention_mask, ablation_config) -> None:
+        super().__init__()
+        channels = d_model
+        layers = []
+        for i in range(n_layers):
+            layer = ResBlockEncDec(cond_emb_channel=d_model, in_channels=channels, out_channels=int(channels/2), d_time=d_time, d_inner=d_inner,
+                                    n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout, diffusion_embedding_dim=diff_emb_dim, 
+                                    diagonal_attention_mask=diagonal_attention_mask, ablation_config=ablation_config)
+            layers.append(layer)
+            channels /= 2
+        self.layer_stack_for_encoder = nn.ModuleList(layers)
+
+        layers = []
+        for i in range(n_layers):
+            layer = ResBlockEncDec(cond_emb_channel=d_model, in_channels=channels, out_channels=2*channels, d_time=d_time, d_inner=d_inner,
+                                    n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout, diffusion_embedding_dim=diff_emb_dim, 
+                                    diagonal_attention_mask=diagonal_attention_mask, ablation_config=ablation_config)
+            layers.append(layer)
+            channels *= 2
+        self.layer_stack_for_decoder = nn.ModuleList(layers)
+
+    def forward(self, x, cond, diff_emb):
+        skips = []
+        y = x
+        for i in range(len(self.layer_stack_for_encoder)):
+            y = self.layer_stack_for_encoder(y, cond, diff_emb)
+            if i != len(self.layer_stack_for_encoder) - 1:
+                skips.append(y)
+        
+        for i in range(len(self.layer_stack_for_decoder)):
+            if i != 0:
+                y = (y + skips[i - 1]) * math.sqrt(0.5)
+            y = self.layer_stack_for_decoder(y, cond, diff_emb)
+        return y
+
+
 class diff_SAITS_new_2(nn.Module):
     def __init__(self, diff_steps, diff_emb_dim, n_layers, d_time, d_feature, d_model, d_inner, n_head, d_k, d_v,
             dropout, diagonal_attention_mask=True, is_simple=False, ablation_config=None):
@@ -714,24 +752,11 @@ class diff_SAITS_new_2(nn.Module):
         self.is_not_residual = self.ablation_config['is-not-residual']
 
         if self.ablation_config['enc-dec']:
-            channels = d_model
-            layers = []
-            for i in range(n_layers):
-                layer = ResBlockEncDec(cond_emb_channel=d_model, in_channels=channels, out_channels=int(channels/2), d_time=d_time, d_inner=d_inner,
-                                       n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout, diffusion_embedding_dim=diff_emb_dim, 
-                                       diagonal_attention_mask=diagonal_attention_mask, ablation_config=ablation_config)
-                layers.append(layer)
-                channels /= 2
-            self.layer_stack_for_encoder = nn.ModuleList(layers)
-
-            layers = []
-            for i in range(n_layers):
-                layer = ResBlockEncDec(cond_emb_channel=d_model, in_channels=channels, out_channels=2*channels, d_time=d_time, d_inner=d_inner,
-                                       n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout, diffusion_embedding_dim=diff_emb_dim, 
-                                       diagonal_attention_mask=diagonal_attention_mask, ablation_config=ablation_config)
-                layers.append(layer)
-                channels *= 2
-            self.layer_stack_for_decoder = nn.ModuleList(layers)
+            
+            self.enc_dec_block = EncoderDecoderBlock(n_layers=n_layers, d_model=d_model, d_time=d_time, d_inner=d_inner, n_head=n_head,
+                                                d_k=d_k, d_v=d_v, dropout=dropout, diff_emb_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask,
+                                                ablation_config=ablation_config)
+            
         elif self.is_not_residual:
             self.layer_stack_for_first_block = nn.ModuleList([
                 ResidualEncoderLayer_new_3(channels=channels, d_time=d_time, actual_d_feature=d_feature, 
@@ -842,201 +867,227 @@ class diff_SAITS_new_2(nn.Module):
         else:
             noise = X[:, 1, :, :] # (B, K, L)
 
-        if not self.ablation_config['res-block-mask']:
+        if self.ablation_config['enc-dec']:
             noise = torch.transpose(noise, 1, 2) # (B, L, K)
             noise = torch.cat([noise, torch.transpose(masks[:, 1, :, :], 1, 2)], dim=-1) # (B, L, 2K)
             noise = F.relu(self.position_enc_noise(self.embedding_1(noise))) # (B, L, D)
             noise = torch.transpose(noise, 1, 2) # (B, D, L)
 
-            if self.ablation_config['embed-type'] == 'linear':
-                cond = torch.transpose(cond, 1, 2) # (B, L, K)
-                cond = torch.cat([cond, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
-                cond = self.position_enc_cond(self.embedding_cond(cond)) # (B, L, D)
-                cond = torch.transpose(cond, 1, 2) # (B, D, L)
-            else:
-                cond = torch.stack([cond, masks[:, 1, :, :]], dim=1) # (B, 2, K, L)
-                cond = cond.permute(0, 2, 1, 3) # (B, K, 2, L)
-                cond = cond.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
-                cond = self.embedding_cond(cond) # (B,2*K, L)
-                cond = torch.transpose(cond, 1, 2)
-                cond = self.position_enc_cond(cond) # (B, K, L)
-                cond = torch.transpose(cond, 1, 2)
-        else:
-            noise = torch.transpose(noise, 1, 2) # (B, L, K)
-            noise = F.relu(self.embedding_1(noise)) # (B, L, D)
-            noise = torch.transpose(noise, 1, 2) # (B, D, L)
-
             cond = torch.transpose(cond, 1, 2) # (B, L, K)
-            cond = self.embedding_2(cond) # (B, L, D)
+            cond = torch.cat([cond, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
+            cond = self.position_enc_cond(self.embedding_cond(cond)) # (B, L, D)
             cond = torch.transpose(cond, 1, 2) # (B, D, L)
+            
+            diffusion_embed = self.diffusion_embedding(diffusion_step) 
+            skips_tilde_2 = self.enc_dec_block(noise, cond, diffusion_embed) # (B, D, L)
+            
+            if self.ablation_config['reduce-type'] == 'linear':
+                skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
 
+            skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
 
-        diffusion_embed = self.diffusion_embedding(diffusion_step)
+            if self.ablation_config['reduce-type'] == 'linear':
+                skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
 
-        skips_tilde_2 = torch.zeros_like(noise)
-        if self.ablation_config['is_2nd_block']:
-            skips_tilde_1 = torch.zeros_like(noise)
-        enc_output = noise
-        i = 0
-        layers = len(self.layer_stack_for_first_block)
-        if self.is_not_residual:
-            # Non residual block layers. Using only self-attention like SAITS
-            enc_prev = enc_output
-            for encoder in self.layer_stack_for_first_block:
-                i += 1
-                if self.ablation_config['res-block-mask']:
-                    enc_output_1, attn_weights = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, D, L)
-                else:
-                    enc_output_1, attn_weights = encoder(enc_output, cond, diffusion_embed) # (B, D, L)
-                if self.ablation_config['skip-connect-no-res-layer'] and i%2 == 0 and i != layers:
-                    enc_output = (enc_prev + enc_output_1) * math.sqrt(0.5)
-                    enc_prev = enc_output
-                else:
-                    enc_output = enc_output_1
-
-                if self.ablation_config['is_2nd_block']:
-                    if i <= layers/2:
-                        skips_tilde_1 += enc_output
-                    else:
-                        skips_tilde_2 += enc_output
-                    if i == layers/2:
-                        if self.ablation_config['is_fde'] and self.ablation_config['is_fde_2nd']:
-                        # Feature attention added
-                            attn_weights_f = attn_weights_f.squeeze(dim=1)  # namely term A_hat in Eq.
-                            if len(attn_weights_f.shape) == 4:
-                                # if having more than 1 head, then average attention weights from all heads
-                                attn_weights_f = torch.transpose(attn_weights_f, 1, 3)
-                                attn_weights_f = attn_weights_f.mean(dim=3)
-                                attn_weights_f = torch.transpose(attn_weights_f, 1, 2)
-                                attn_weights_f = torch.softmax(attn_weights_f, dim=-1)
-                            if self.ablation_config['reduce-type'] == 'linear':
-                                enc_output = torch.transpose(enc_output, 1, 2)
-                                enc_output = self.reduce_skip_z(enc_output)
-                                enc_output = enc_output @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
-                                enc_output = torch.transpose(enc_output, 1, 2)
-                            else:
-                                enc_output = self.reduce_skip_z(enc_output)
-                                enc_output = torch.transpose(enc_output, 1, 2)
-                                enc_output = enc_output @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
-                                enc_output = torch.transpose(enc_output, 1, 2)
-                        else:
-                            if self.ablation_config['reduce-type'] == 'linear':
-                                enc_output = torch.transpose(enc_output, 1, 2) # (B, L, D)
-                                enc_output = self.reduce_skip_z(enc_output) + torch.transpose(X[:, 1, :, :], 1, 2) # (B, L, K)
-                                if not self.ablation_config['res-block-mask']:
-                                    enc_output = torch.cat([enc_output, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
-                                enc_output = self.embedding_2(enc_output) # (B, L, D)
-                                enc_output = torch.transpose(enc_output, 1, 2) # (B, D, L)
-                            else:
-                                enc_output = self.reduce_skip_z(enc_output) + X[:, 1, :, :] # (B, K, L)
-                                enc_output = self.embedding_2(enc_output) # (B, D, L)
-                        
-                        skips_tilde_1 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
-                        skips_tilde_1 = self.reduce_skip_z(skips_tilde_1) # (B, K, L)
-                else:
-                    skips_tilde_2 += enc_output # (B, D, L)
-
-                if i == layers:
-                    # if self.ablation_config['reduce-type'] == 'linear':
-                    #     skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2))) # (B, K, L)
-                    # else:
-                    if self.ablation_config['is_2nd_block']:
-                        skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
-                    else:
-                        skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)))
-                    if self.ablation_config['reduce-type'] == 'linear':
-                        skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
-                    skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
-                    if self.ablation_config['reduce-type'] == 'linear':
-                        skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
+            skips_tilde_3 = skips_tilde_2 # (B, K, L)
+            skips_tilde_2 = None
+            skips_tilde_1 = None
         else:
-            for encoder in self.layer_stack_for_first_block:
-                i += 1
-                if self.ablation_config['res-block-mask']:
-                    enc_output, skip, attn_weights = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, D, L)
+            if not self.ablation_config['res-block-mask']:
+                noise = torch.transpose(noise, 1, 2) # (B, L, K)
+                noise = torch.cat([noise, torch.transpose(masks[:, 1, :, :], 1, 2)], dim=-1) # (B, L, 2K)
+                noise = F.relu(self.position_enc_noise(self.embedding_1(noise))) # (B, L, D)
+                noise = torch.transpose(noise, 1, 2) # (B, D, L)
+
+                if self.ablation_config['embed-type'] == 'linear':
+                    cond = torch.transpose(cond, 1, 2) # (B, L, K)
+                    cond = torch.cat([cond, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
+                    cond = self.position_enc_cond(self.embedding_cond(cond)) # (B, L, D)
+                    cond = torch.transpose(cond, 1, 2) # (B, D, L)
                 else:
-                    enc_output, skip, attn_weights = encoder(enc_output, cond, diffusion_embed) # (B, D, L)
-
-                if self.ablation_config['is_2nd_block']:
-                    if i <= layers/2:
-                        skips_tilde_1 += skip
-                    else:
-                        skips_tilde_2 += skip
-                    if i == layers/2:
-                        if self.ablation_config['is_fde'] and self.ablation_config['is_fde_2nd']:
-                        # Feature attention added
-                            attn_weights_f = attn_weights_f.squeeze(dim=1)  # namely term A_hat in Eq.
-                            if len(attn_weights_f.shape) == 4:
-                                # if having more than 1 head, then average attention weights from all heads
-                                attn_weights_f = torch.transpose(attn_weights_f, 1, 3)
-                                attn_weights_f = attn_weights_f.mean(dim=3)
-                                attn_weights_f = torch.transpose(attn_weights_f, 1, 2)
-                                attn_weights_f = torch.softmax(attn_weights_f, dim=-1)
-                            if self.ablation_config['reduce-type'] == 'linear':
-                                enc_output = torch.transpose(enc_output, 1, 2)
-                                enc_output = self.reduce_dim_z(enc_output)
-                                enc_output = enc_output @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
-                                enc_output = torch.transpose(enc_output, 1, 2)
-                            else:
-                                enc_output = self.reduce_dim_z(enc_output)
-                                enc_output = torch.transpose(enc_output, 1, 2)
-                                enc_output = enc_output @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
-                                enc_output = torch.transpose(enc_output, 1, 2)
-                        else:
-                            if self.ablation_config['reduce-type'] == 'linear':
-                                
-                                enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :] # (B, K, L)
-                                enc_output = torch.transpose(enc_output, 1, 2) # (B, L, K)
-                                enc_output = torch.cat([enc_output, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
-                                enc_output = self.embedding_2(enc_output) # (B, L, D)
-                                enc_output = torch.transpose(enc_output, 1, 2) # (B, D, L)
-                            else:
-                                enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :]
-                                enc_output = self.embedding_2(enc_output)
-                        
-                        # if self.ablation_config['reduce-type'] == 'linear':
-                        #     skips_tilde_1 = self.reduce_skip_z(skips_tilde_1) # (B, K, L)
-                        # else:
-                        skips_tilde_1 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
-                        skips_tilde_1 = self.reduce_skip_z(skips_tilde_1) # (B, K, L)
-                else:
-                    skips_tilde_2 += skip # (B, D, L)
-
-                if i == layers:
-                    # if self.ablation_config['reduce-type'] == 'linear':
-                    #     skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2))) # (B, K, L)
-                    # else:
-                    if self.ablation_config['is_2nd_block']:
-                        skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
-                    else:
-                        skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)))
-                    skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
-
-        
-
-        if self.ablation_config['is_2nd_block']:
-            if self.ablation_config['weight_combine']:
-                # attention-weighted combine
-                attn_weights = attn_weights.squeeze(dim=1)  # namely term A_hat in Eq.
-                if len(attn_weights.shape) == 4:
-                    # if having more than 1 head, then average attention weights from all heads
-                    attn_weights = torch.transpose(attn_weights, 1, 3)
-                    attn_weights = attn_weights.mean(dim=3)
-                    attn_weights = torch.transpose(attn_weights, 1, 2)
-
-                combining_weights = torch.sigmoid(
-                    self.weight_combine(torch.cat([torch.transpose(masks[:, 0, :, :], 1, 2), attn_weights], dim=2))
-                )  # namely term eta
-                combining_weights = torch.transpose(combining_weights, 1, 2)
-                skips_tilde_3 = (1 - combining_weights) * skips_tilde_1 + combining_weights * skips_tilde_2
+                    cond = torch.stack([cond, masks[:, 1, :, :]], dim=1) # (B, 2, K, L)
+                    cond = cond.permute(0, 2, 1, 3) # (B, K, 2, L)
+                    cond = cond.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
+                    cond = self.embedding_cond(cond) # (B,2*K, L)
+                    cond = torch.transpose(cond, 1, 2)
+                    cond = self.position_enc_cond(cond) # (B, K, L)
+                    cond = torch.transpose(cond, 1, 2)
             else:
-                # skips_tilde_3 = (skips_tilde_1 + skips_tilde_2) / 2
+                noise = torch.transpose(noise, 1, 2) # (B, L, K)
+                noise = F.relu(self.embedding_1(noise)) # (B, L, D)
+                noise = torch.transpose(noise, 1, 2) # (B, D, L)
+
+                cond = torch.transpose(cond, 1, 2) # (B, L, K)
+                cond = self.embedding_2(cond) # (B, L, D)
+                cond = torch.transpose(cond, 1, 2) # (B, D, L)
+
+
+            diffusion_embed = self.diffusion_embedding(diffusion_step)
+
+            skips_tilde_2 = torch.zeros_like(noise)
+            if self.ablation_config['is_2nd_block']:
+                skips_tilde_1 = torch.zeros_like(noise)
+            enc_output = noise
+            i = 0
+            layers = len(self.layer_stack_for_first_block)
+            if self.is_not_residual:
+                # Non residual block layers. Using only self-attention like SAITS
+                enc_prev = enc_output
+                for encoder in self.layer_stack_for_first_block:
+                    i += 1
+                    if self.ablation_config['res-block-mask']:
+                        enc_output_1, attn_weights = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, D, L)
+                    else:
+                        enc_output_1, attn_weights = encoder(enc_output, cond, diffusion_embed) # (B, D, L)
+                    if self.ablation_config['skip-connect-no-res-layer'] and i%2 == 0 and i != layers:
+                        enc_output = (enc_prev + enc_output_1) * math.sqrt(0.5)
+                        enc_prev = enc_output
+                    else:
+                        enc_output = enc_output_1
+
+                    if self.ablation_config['is_2nd_block']:
+                        if i <= layers/2:
+                            skips_tilde_1 += enc_output
+                        else:
+                            skips_tilde_2 += enc_output
+                        if i == layers/2:
+                            if self.ablation_config['is_fde'] and self.ablation_config['is_fde_2nd']:
+                            # Feature attention added
+                                attn_weights_f = attn_weights_f.squeeze(dim=1)  # namely term A_hat in Eq.
+                                if len(attn_weights_f.shape) == 4:
+                                    # if having more than 1 head, then average attention weights from all heads
+                                    attn_weights_f = torch.transpose(attn_weights_f, 1, 3)
+                                    attn_weights_f = attn_weights_f.mean(dim=3)
+                                    attn_weights_f = torch.transpose(attn_weights_f, 1, 2)
+                                    attn_weights_f = torch.softmax(attn_weights_f, dim=-1)
+                                if self.ablation_config['reduce-type'] == 'linear':
+                                    enc_output = torch.transpose(enc_output, 1, 2)
+                                    enc_output = self.reduce_skip_z(enc_output)
+                                    enc_output = enc_output @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
+                                    enc_output = torch.transpose(enc_output, 1, 2)
+                                else:
+                                    enc_output = self.reduce_skip_z(enc_output)
+                                    enc_output = torch.transpose(enc_output, 1, 2)
+                                    enc_output = enc_output @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
+                                    enc_output = torch.transpose(enc_output, 1, 2)
+                            else:
+                                if self.ablation_config['reduce-type'] == 'linear':
+                                    enc_output = torch.transpose(enc_output, 1, 2) # (B, L, D)
+                                    enc_output = self.reduce_skip_z(enc_output) + torch.transpose(X[:, 1, :, :], 1, 2) # (B, L, K)
+                                    if not self.ablation_config['res-block-mask']:
+                                        enc_output = torch.cat([enc_output, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
+                                    enc_output = self.embedding_2(enc_output) # (B, L, D)
+                                    enc_output = torch.transpose(enc_output, 1, 2) # (B, D, L)
+                                else:
+                                    enc_output = self.reduce_skip_z(enc_output) + X[:, 1, :, :] # (B, K, L)
+                                    enc_output = self.embedding_2(enc_output) # (B, D, L)
+                            
+                            skips_tilde_1 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
+                            skips_tilde_1 = self.reduce_skip_z(skips_tilde_1) # (B, K, L)
+                    else:
+                        skips_tilde_2 += enc_output # (B, D, L)
+
+                    if i == layers:
+                        # if self.ablation_config['reduce-type'] == 'linear':
+                        #     skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2))) # (B, K, L)
+                        # else:
+                        if self.ablation_config['is_2nd_block']:
+                            skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
+                        else:
+                            skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)))
+                        if self.ablation_config['reduce-type'] == 'linear':
+                            skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
+                        skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
+                        if self.ablation_config['reduce-type'] == 'linear':
+                            skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
+            else:
+                for encoder in self.layer_stack_for_first_block:
+                    i += 1
+                    if self.ablation_config['res-block-mask']:
+                        enc_output, skip, attn_weights = encoder(enc_output, cond, diffusion_embed, masks[:, 1, :, :]) # (B, D, L)
+                    else:
+                        enc_output, skip, attn_weights = encoder(enc_output, cond, diffusion_embed) # (B, D, L)
+
+                    if self.ablation_config['is_2nd_block']:
+                        if i <= layers/2:
+                            skips_tilde_1 += skip
+                        else:
+                            skips_tilde_2 += skip
+                        if i == layers/2:
+                            if self.ablation_config['is_fde'] and self.ablation_config['is_fde_2nd']:
+                            # Feature attention added
+                                attn_weights_f = attn_weights_f.squeeze(dim=1)  # namely term A_hat in Eq.
+                                if len(attn_weights_f.shape) == 4:
+                                    # if having more than 1 head, then average attention weights from all heads
+                                    attn_weights_f = torch.transpose(attn_weights_f, 1, 3)
+                                    attn_weights_f = attn_weights_f.mean(dim=3)
+                                    attn_weights_f = torch.transpose(attn_weights_f, 1, 2)
+                                    attn_weights_f = torch.softmax(attn_weights_f, dim=-1)
+                                if self.ablation_config['reduce-type'] == 'linear':
+                                    enc_output = torch.transpose(enc_output, 1, 2)
+                                    enc_output = self.reduce_dim_z(enc_output)
+                                    enc_output = enc_output @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
+                                    enc_output = torch.transpose(enc_output, 1, 2)
+                                else:
+                                    enc_output = self.reduce_dim_z(enc_output)
+                                    enc_output = torch.transpose(enc_output, 1, 2)
+                                    enc_output = enc_output @ attn_weights_f + torch.transpose(X[:, 1, :, :], 1, 2)
+                                    enc_output = torch.transpose(enc_output, 1, 2)
+                            else:
+                                if self.ablation_config['reduce-type'] == 'linear':
+                                    
+                                    enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :] # (B, K, L)
+                                    enc_output = torch.transpose(enc_output, 1, 2) # (B, L, K)
+                                    enc_output = torch.cat([enc_output, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
+                                    enc_output = self.embedding_2(enc_output) # (B, L, D)
+                                    enc_output = torch.transpose(enc_output, 1, 2) # (B, D, L)
+                                else:
+                                    enc_output = self.reduce_dim_z(enc_output) + X[:, 1, :, :]
+                                    enc_output = self.embedding_2(enc_output)
+                            
+                            # if self.ablation_config['reduce-type'] == 'linear':
+                            #     skips_tilde_1 = self.reduce_skip_z(skips_tilde_1) # (B, K, L)
+                            # else:
+                            skips_tilde_1 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
+                            skips_tilde_1 = self.reduce_skip_z(skips_tilde_1) # (B, K, L)
+                    else:
+                        skips_tilde_2 += skip # (B, D, L)
+
+                    if i == layers:
+                        # if self.ablation_config['reduce-type'] == 'linear':
+                        #     skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2))) # (B, K, L)
+                        # else:
+                        if self.ablation_config['is_2nd_block']:
+                            skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)/2))
+                        else:
+                            skips_tilde_2 /= math.sqrt(int(len(self.layer_stack_for_first_block)))
+                        skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2)))
+
+            
+
+            if self.ablation_config['is_2nd_block']:
+                if self.ablation_config['weight_combine']:
+                    # attention-weighted combine
+                    attn_weights = attn_weights.squeeze(dim=1)  # namely term A_hat in Eq.
+                    if len(attn_weights.shape) == 4:
+                        # if having more than 1 head, then average attention weights from all heads
+                        attn_weights = torch.transpose(attn_weights, 1, 3)
+                        attn_weights = attn_weights.mean(dim=3)
+                        attn_weights = torch.transpose(attn_weights, 1, 2)
+
+                    combining_weights = torch.sigmoid(
+                        self.weight_combine(torch.cat([torch.transpose(masks[:, 0, :, :], 1, 2), attn_weights], dim=2))
+                    )  # namely term eta
+                    combining_weights = torch.transpose(combining_weights, 1, 2)
+                    skips_tilde_3 = (1 - combining_weights) * skips_tilde_1 + combining_weights * skips_tilde_2
+                else:
+                    # skips_tilde_3 = (skips_tilde_1 + skips_tilde_2) / 2
+                    skips_tilde_3 = skips_tilde_2
+                    skips_tilde_2 = None
+                    skips_tilde_1 = None
+            else:
                 skips_tilde_3 = skips_tilde_2
                 skips_tilde_2 = None
                 skips_tilde_1 = None
-        else:
-            skips_tilde_3 = skips_tilde_2
-            skips_tilde_2 = None
-            skips_tilde_1 = None
 
         return skips_tilde_1, skips_tilde_2, skips_tilde_3

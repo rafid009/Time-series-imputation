@@ -126,7 +126,7 @@ config_dict_diffsaits = {
         'featureemb': 16,
         'target_strategy': "mix", # noise mix
         'type': 'SAITS',
-        'n_layers': 8,
+        'n_layers': 3,
         'loss_weight_p': 1,
         'loss_weight_f': 1,
         'd_time': n_steps,
@@ -151,15 +151,15 @@ config_dict_diffsaits = {
         'reduce-type': 'linear',
         'embed-type': 'linear',
         'is_2nd_block': False,
-        'is-not-residual': True,
+        'is-not-residual': False,
         'res-block-mask': False,
         'is-fde-loop': False,
         'skip-connect-no-res-layer': False,
-        'enc-dec': False
+        'enc-dec': True
     }
 }
 print(f"config: {config_dict_diffsaits}")
-name = 'fde-conv-multi'
+name = 'enc-dec'
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
 filename = f"model_diffsaits_synth_v2_{name}_new_2.pth"
