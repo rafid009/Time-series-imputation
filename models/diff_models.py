@@ -731,7 +731,7 @@ class EncoderDecoderBlock(nn.Module):
         
         for i in range(len(self.layer_stack_for_decoder)):
             if i != 0:
-                y = (y + skips[i - 1]) * math.sqrt(0.5)
+                y = (y + skips[len(self.layer_stack_for_encoder) - i - 1]) * math.sqrt(0.5)
             y = self.layer_stack_for_decoder[i](y, cond, diff_emb)
         return y
 
