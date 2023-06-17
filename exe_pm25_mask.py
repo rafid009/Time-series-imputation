@@ -107,7 +107,7 @@ train(
     filename=filename
 )
 
-model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 
 nsample = 30000 # 3000 * 4 * 8
 ground = 0
