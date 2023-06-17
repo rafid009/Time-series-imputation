@@ -131,7 +131,7 @@ config_dict_diffsaits = {
         'loss_weight_f': 1,
         'd_time': n_steps,
         'n_feature': len(given_features),
-        'd_model': 128,
+        'd_model': 256, # 256 for enc-dec
         'd_inner': 128,
         'n_head': 8,
         'd_k': 64, #len(given_features),
