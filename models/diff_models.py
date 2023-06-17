@@ -870,7 +870,7 @@ class diff_SAITS_new_2(nn.Module):
         if self.ablation_config['enc-dec']:
             noise = torch.transpose(noise, 1, 2) # (B, L, K)
             noise = torch.cat([noise, torch.transpose(masks[:, 1, :, :], 1, 2)], dim=-1) # (B, L, 2K)
-            noise = F.relu(self.position_enc_noise(self.embedding_1(noise))) # (B, L, D)
+            noise = self.dropout(self.position_enc_noise(self.embedding_1(noise))) # (B, L, D)
             noise = torch.transpose(noise, 1, 2) # (B, D, L)
 
             cond = torch.transpose(cond, 1, 2) # (B, L, K)
@@ -896,7 +896,7 @@ class diff_SAITS_new_2(nn.Module):
             if not self.ablation_config['res-block-mask']:
                 noise = torch.transpose(noise, 1, 2) # (B, L, K)
                 noise = torch.cat([noise, torch.transpose(masks[:, 1, :, :], 1, 2)], dim=-1) # (B, L, 2K)
-                noise = F.relu(self.position_enc_noise(self.embedding_1(noise))) # (B, L, D)
+                noise = self.dropout(self.position_enc_noise(self.embedding_1(noise))) # (B, L, D)
                 noise = torch.transpose(noise, 1, 2) # (B, D, L)
 
                 if self.ablation_config['embed-type'] == 'linear':
