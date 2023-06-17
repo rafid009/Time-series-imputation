@@ -161,8 +161,8 @@ with torch.no_grad():
     # print(f"sample 2: {save_samples[2].cpu().numpy()}")
     # print(f"sample 3: {save_samples[3].cpu().numpy()}")
     for i in range(save_samples.shape[0]):
-        print(f"samples: {samples[0][i].cpu().numpy()}")
-        print(f"save samples: {save_samples[i]}")
+        # print(f"samples: {samples[0][i].cpu().numpy()}")
+        # print(f"save samples: {save_samples[i]}")
         np.save(f"{sample_folder}/pattern_{i}.npy", save_samples[i])
 
     crps_avg = 0

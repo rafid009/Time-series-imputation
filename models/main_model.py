@@ -166,7 +166,7 @@ class CSDI_base(nn.Module):
                     pattern = pattern * obs
                     zeros = np.count_nonzero(1 - pattern)
                     target_mask = obs - pattern
-            print(f"pattern: {pattern}")
+            # print(f"pattern: {pattern}")
             pattern = torch.tensor(pattern, dtype=torch.float32)
             patterns.append(pattern)
             
@@ -218,7 +218,7 @@ class CSDI_base(nn.Module):
         noisy_data = (current_alpha ** 0.5) * observed_data + ((1.0 - current_alpha) ** 0.5) * noise
         total_input = self.set_input_to_diffmodel(noisy_data, observed_data, cond_mask)
         target_mask = observed_mask - cond_mask
-        print(f"target: {target_mask}")
+        # print(f"target: {target_mask}")
         num_eval = target_mask.sum()
         if self.is_saits:
             temp_mask = cond_mask.unsqueeze(dim=1)
