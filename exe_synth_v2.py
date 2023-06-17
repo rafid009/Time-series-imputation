@@ -105,9 +105,9 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 
 config_dict_diffsaits = {
     'train': {
-        'epochs':5000, # 3000 -> ds3
+        'epochs':3000, # 3000 -> ds3
         'batch_size': 16 ,
-        'lr': 1.0e-4
+        'lr': 1.0e-3
     },      
     'diffusion': {
         'layers': 4, 
