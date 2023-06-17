@@ -654,6 +654,46 @@ class ResidualEncoderLayer_new_3(nn.Module):
         return y, attn_weights_time
 
 
+class ResBlockEncDec(nn.Module):
+    def __init__(self, cond_emb_channel, in_channels, out_channels, d_time, d_inner, n_head, d_k, d_v, dropout,
+            diffusion_embedding_dim=128, diagonal_attention_mask=True, ablation_config=None, dilation=1) -> None:
+        super().__init__()
+
+        self.is_fde_loop = ablation_config['is-fde-loop']
+        self.ablation_config = ablation_config
+        self.time_enc_layer = EncoderLayer(d_time, -1, in_channels, d_inner, n_head, d_k, d_v, dropout, 0,
+                         diagonal_attention_mask)
+        self.noise_proj_init = Conv1d_with_init_saits_new(in_channels, in_channels, 1)
+        self.cond_proj_init = Conv1d_with_init_saits_new(cond_emb_channel, in_channels, 1)
+        self.mid_proj = Conv1d_with_init_saits_new(in_channels, in_channels, 1)
+        self.noise_proj_out_1 = Conv1d_with_init_saits_new(in_channels, out_channels, 1)
+        self.noise_proj_out_2 = Conv1d_with_init_saits_new(out_channels, out_channels, 1)
+        self.diffusion_projection = nn.Linear(diffusion_embedding_dim, in_channels)
+        if self.is_fde_loop:
+            self.feature_enc_layer = EncoderLayer(in_channels, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
+                                True, choice='fde-conv-multi')
+        
+    def forward(self, x, cond, diffusion_emb):
+        B, C, L = x.shape
+        y = self.noise_proj_init(x) # (B, C, L)
+        cy = self.cond_proj_init(cond) # (B, C, L)
+
+        diff_emb = self.diffusion_projection(diffusion_emb) # (B, C, 1)
+        y = y + diffusion_emb # (B, C, L)
+
+        y = self.mid_proj(y) # (B, C, L)
+        y = y + cy # (B, C, L)
+ 
+        y = torch.transpose(y, 1, 2) # (B, L, C)
+        y, attn_time = self.time_enc_layer(y) # (B, L, C), (B, L, L)
+        y = torch.transpose(y, 1, 2) # (B, C, L)
+
+        if self.is_fde_loop:
+            y, attn_feat = self.feature_enc_layer(y) # (B, C, L), (B, C, C)
+        y = self.noise_proj_out_1(y) # (B, Cout, L)
+        y = self.noise_proj_out_2(y) # (B, Cout, L)
+        return y
+
 
 class diff_SAITS_new_2(nn.Module):
     def __init__(self, diff_steps, diff_emb_dim, n_layers, d_time, d_feature, d_model, d_inner, n_head, d_k, d_v,
@@ -673,7 +713,26 @@ class diff_SAITS_new_2(nn.Module):
         
         self.is_not_residual = self.ablation_config['is-not-residual']
 
-        if self.is_not_residual:
+        if self.ablation_config['enc-dec']:
+            channels = d_model
+            layers = []
+            for i in range(n_layers):
+                layer = ResBlockEncDec(cond_emb_channel=d_model, in_channels=channels, out_channels=int(channels/2), d_time=d_time, d_inner=d_inner,
+                                       n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout, diffusion_embedding_dim=diff_emb_dim, 
+                                       diagonal_attention_mask=diagonal_attention_mask, ablation_config=ablation_config)
+                layers.append(layer)
+                channels /= 2
+            self.layer_stack_for_encoder = nn.ModuleList(layers)
+
+            layers = []
+            for i in range(n_layers):
+                layer = ResBlockEncDec(cond_emb_channel=d_model, in_channels=channels, out_channels=2*channels, d_time=d_time, d_inner=d_inner,
+                                       n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout, diffusion_embedding_dim=diff_emb_dim, 
+                                       diagonal_attention_mask=diagonal_attention_mask, ablation_config=ablation_config)
+                layers.append(layer)
+                channels *= 2
+            self.layer_stack_for_decoder = nn.ModuleList(layers)
+        elif self.is_not_residual:
             self.layer_stack_for_first_block = nn.ModuleList([
                 ResidualEncoderLayer_new_3(channels=channels, d_time=d_time, actual_d_feature=d_feature, 
                             d_model=d_model, d_inner=d_inner, n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout,

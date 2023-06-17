@@ -50,6 +50,7 @@ def parse_id(id_, missing_ratio=0.1, is_test=False, forecasting=False, length=-1
         choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
         filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
         gt_masks = np.load(filename)
+        gt_masks = gt_masks * observed_masks
         eval_mask = gt_masks.reshape(-1).copy()
         gt_indices = np.where(eval_mask)[0].tolist()
         miss_indices = np.random.choice(

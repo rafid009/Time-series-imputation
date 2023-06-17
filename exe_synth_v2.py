@@ -154,7 +154,8 @@ config_dict_diffsaits = {
         'is-not-residual': True,
         'res-block-mask': False,
         'is-fde-loop': False,
-        'skip-connect-no-res-layer': True
+        'skip-connect-no-res-layer': False,
+        'enc-dec': False
     }
 }
 print(f"config: {config_dict_diffsaits}")

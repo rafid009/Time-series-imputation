@@ -18,6 +18,7 @@ def parse_data(sample, rate=0.2, is_test=False, length=100, include_features=Non
         # print(f"start: {pattern['start']} end: {(pattern['start'] + pattern['num_patterns'] - 1)} choice: {choice}")
         filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
         mask = np.load(filename)
+        mask = mask * obs_mask
         evals = sample.reshape(-1).copy()
         
         # while ((obs_mask == mask).all()):
