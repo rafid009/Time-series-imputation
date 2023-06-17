@@ -677,9 +677,10 @@ class ResBlockEncDec(nn.Module):
         B, C, L = x.shape
         y = self.noise_proj_init(x) # (B, C, L)
         cy = self.cond_proj_init(cond) # (B, C, L)
-
+        # print(f"y = {y.shape}, cy: {cy.shape}")
         diff_emb = self.diffusion_projection(diffusion_emb).unsqueeze(-1) # (B, C, 1)
-        y = y + diffusion_emb # (B, C, L)
+        # print(f"diff: {diff_emb.shape}")
+        y = y + diff_emb # (B, C, L)
 
         y = self.mid_proj(y) # (B, C, L)
         y = y + cy # (B, C, L)
