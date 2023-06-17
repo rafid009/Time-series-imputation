@@ -112,7 +112,7 @@ model_csdi = CSDI_Agaid(config_dict_csdi, device).to(device)
 model_folder = "./saved_model_agaid"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
-filename = 'model_csdi.pth'
+filename = f'model_csdi_{miss_type}.pth'
 train(
     model_csdi,
     config_dict_csdi["train"],
@@ -216,8 +216,8 @@ models = {
     # 'DiffSAITS': model_diff_saits#,
     # 'DiffSAITSsimple': model_diff_saits_simple
 }
-mse_folder = "results_agaid_qual"
-data_folder = "results_data_agaid_qual"
+mse_folder = f"results_agaid_qual_{miss_type}"
+data_folder = f"results_data_agaid_qual_{miss_type}"
 
 name = miss_type
 test_patterns_start = 15001
