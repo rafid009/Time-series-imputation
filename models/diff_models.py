@@ -678,7 +678,7 @@ class ResBlockEncDec(nn.Module):
         y = self.noise_proj_init(x) # (B, C, L)
         cy = self.cond_proj_init(cond) # (B, C, L)
 
-        diff_emb = self.diffusion_projection(diffusion_emb) # (B, C, 1)
+        diff_emb = self.diffusion_projection(diffusion_emb).unsqueeze(-1) # (B, C, 1)
         y = y + diffusion_emb # (B, C, L)
 
         y = self.mid_proj(y) # (B, C, L)
