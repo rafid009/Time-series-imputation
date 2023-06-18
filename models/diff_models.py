@@ -666,7 +666,7 @@ class ResBlockEncDec(nn.Module):
         self.noise_proj_init = Conv1d_with_init_saits_new(in_channels, in_channels, 1)
         self.cond_proj_init = Conv1d_with_init_saits_new(cond_emb_channel, in_channels, 1)
         # self.mid_proj = Conv1d_with_init_saits_new(in_channels, in_channels, 1)
-        self.noise_proj_out_1 = Conv1d_with_init_saits_new(in_channels, out_channels, 1)
+        self.noise_proj_out_1 = Conv1d_with_init_saits_new(in_channels, in_channels, 1)
         self.noise_proj_out_2 = Conv1d_with_init_saits_new(out_channels, out_channels, 1)
         self.diffusion_projection = nn.Linear(diffusion_embedding_dim, in_channels)
         if self.is_fde_loop:
@@ -677,21 +677,21 @@ class ResBlockEncDec(nn.Module):
         B, C, L = x.shape
         y = self.noise_proj_init(x) # (B, C, L)
         cy = self.cond_proj_init(cond) # (B, C, L)
+        y = y + cy
         # print(f"y = {y.shape}, cy: {cy.shape}")
         diff_emb = self.diffusion_projection(diffusion_emb).unsqueeze(-1) # (B, C, 1)
         # print(f"diff: {diff_emb.shape}")
         y = y + diff_emb # (B, C, L)
 
         # y = self.mid_proj(y) # (B, C, L)
-        y = y + cy # (B, C, L)
- 
+         # (B, C, L)
         y = torch.transpose(y, 1, 2) # (B, L, C)
         y, attn_time = self.time_enc_layer(y) # (B, L, C), (B, L, L)
         y = torch.transpose(y, 1, 2) # (B, C, L)
 
         if self.is_fde_loop:
             y, attn_feat = self.feature_enc_layer(y) # (B, C, L), (B, C, C)
-        y = self.noise_proj_out_1(y) # (B, Cout, L)
+        y = self.noise_proj_out_1(y) # (B, C, L)
         y = self.noise_proj_out_2(y) # (B, Cout, L)
         return y
 
