@@ -131,8 +131,8 @@ config_dict_diffsaits = {
         'loss_weight_f': 1,
         'd_time': n_steps,
         'n_feature': len(given_features),
-        'd_model': 512, # 256 for enc-dec
-        'd_inner': 256,
+        'd_model': 256, # 256 for enc-dec
+        'd_inner': 128,
         'n_head': 8,
         'd_k': 64, #len(given_features),
         'd_v': 64, #len(given_features),
@@ -149,7 +149,7 @@ config_dict_diffsaits = {
         'is_fde_2nd': False,
         'fde-pos-enc': False,
         'reduce-type': 'conv',
-        'embed-type': 'linear',
+        'embed-type': 'conv',
         'is_2nd_block': True,
         'is-not-residual': False,
         'res-block-mask': False,

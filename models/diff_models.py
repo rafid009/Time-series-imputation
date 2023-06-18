@@ -877,16 +877,33 @@ class diff_SAITS_new_2(nn.Module):
             noise = X[:, 1, :, :] # (B, K, L)
 
         if self.ablation_config['enc-dec']:
-            noise = torch.transpose(noise, 1, 2) # (B, L, K)
-            noise = torch.cat([noise, torch.transpose(masks[:, 1, :, :], 1, 2)], dim=-1) # (B, L, 2K)
-            noise = self.dropout(self.position_enc_noise(self.embedding_1(noise))) # (B, L, D)
-            noise = torch.transpose(noise, 1, 2) # (B, D, L)
+            if self.ablation_config['embed-type'] == 'linear':
+                noise = torch.transpose(noise, 1, 2) # (B, L, K)
+                noise = torch.cat([noise, torch.transpose(masks[:, 1, :, :], 1, 2)], dim=-1) # (B, L, 2K)
+                noise = self.dropout(self.position_enc_noise(self.embedding_1(noise))) # (B, L, D)
+                noise = torch.transpose(noise, 1, 2) # (B, D, L)
 
-            cond = torch.transpose(cond, 1, 2) # (B, L, K)
-            cond = torch.cat([cond, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
-            cond = self.position_enc_cond(self.embedding_cond(cond)) # (B, L, D)
-            cond = torch.transpose(cond, 1, 2) # (B, D, L)
-            
+                cond = torch.transpose(cond, 1, 2) # (B, L, K)
+                cond = torch.cat([cond, torch.transpose(masks[:, 0, :, :], 1, 2)], dim=-1) # (B, L, 2K)
+                cond = self.position_enc_cond(self.embedding_cond(cond)) # (B, L, D)
+                cond = torch.transpose(cond, 1, 2) # (B, D, L)
+            else:
+                noise = torch.stack([noise, masks[:, 1, :, :]], dim=1) # (B, 2, K, L)
+                noise = noise.permute(0, 2, 1, 3) # (B, K, 2, L)
+                noise = noise.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
+                noise = self.embedding_1(noise) # (B,2*K, L)
+                noise = torch.transpose(noise, 1, 2)
+                noise = self.position_enc_cond(noise) # (B, L, D)
+                noise = torch.transpose(noise, 1, 2)
+
+
+                cond = torch.stack([cond, masks[:, 1, :, :]], dim=1) # (B, 2, K, L)
+                cond = cond.permute(0, 2, 1, 3) # (B, K, 2, L)
+                cond = cond.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
+                cond = self.embedding_cond(cond) # (B,2*K, L)
+                cond = torch.transpose(cond, 1, 2)
+                cond = self.position_enc_cond(cond) # (B, L, D)
+                cond = torch.transpose(cond, 1, 2)
             diffusion_embed = self.diffusion_embedding(diffusion_step) 
             skips_tilde_2 = self.enc_dec_block_1(noise, cond, diffusion_embed) # (B, D, L)
 
