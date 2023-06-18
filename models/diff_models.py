@@ -762,9 +762,9 @@ class diff_SAITS_new_2(nn.Module):
             self.enc_dec_block_1 = EncoderDecoderBlock(n_layers=n_layers, d_model=d_model, d_time=d_time, d_inner=d_inner, n_head=n_head,
                                                 d_k=d_k, d_v=d_v, dropout=dropout, diff_emb_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask,
                                                 ablation_config=ablation_config)
-            self.enc_dec_block_2 = EncoderDecoderBlock(n_layers=n_layers, d_model=d_model, d_time=d_time, d_inner=d_inner, n_head=n_head,
-                                                d_k=d_k, d_v=d_v, dropout=dropout, diff_emb_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask,
-                                                ablation_config=ablation_config)
+            # self.enc_dec_block_2 = EncoderDecoderBlock(n_layers=n_layers, d_model=d_model, d_time=d_time, d_inner=d_inner, n_head=n_head,
+            #                                     d_k=d_k, d_v=d_v, dropout=dropout, diff_emb_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask,
+            #                                     ablation_config=ablation_config)
             
         elif self.is_not_residual:
             self.layer_stack_for_first_block = nn.ModuleList([
@@ -890,18 +890,18 @@ class diff_SAITS_new_2(nn.Module):
             diffusion_embed = self.diffusion_embedding(diffusion_step) 
             skips_tilde_2 = self.enc_dec_block_1(noise, cond, diffusion_embed) # (B, D, L)
 
-            if self.ablation_config['reduce-type'] == 'linear':
-                skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
-            skips_tilde_2 = self.reduce_skip_z(skips_tilde_2)
-            if self.ablation_config['reduce-type'] == 'linear':
-                skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
+            # if self.ablation_config['reduce-type'] == 'linear':
+            #     skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
+            # skips_tilde_2 = self.reduce_skip_z(skips_tilde_2)
+            # if self.ablation_config['reduce-type'] == 'linear':
+            #     skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
 
-            skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2) # (B, L, K)
-            skips_tilde_2 = torch.cat([skips_tilde_2, torch.transpose(masks[:, 1, :, :], 1, 2)], dim=-1) # (B, L, 2K)
-            skips_tilde_2 = self.position_enc_noise(self.embedding_2(skips_tilde_2))
-            skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2) # (B, D, L)
+            # skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2) # (B, L, K)
+            # skips_tilde_2 = torch.cat([skips_tilde_2, torch.transpose(masks[:, 1, :, :], 1, 2)], dim=-1) # (B, L, 2K)
+            # skips_tilde_2 = self.position_enc_noise(self.embedding_2(skips_tilde_2))
+            # skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2) # (B, D, L)
 
-            skips_tilde_2 = self.enc_dec_block_2(skips_tilde_2, cond, diffusion_embed)
+            # skips_tilde_2 = self.enc_dec_block_2(skips_tilde_2, cond, diffusion_embed)
             if self.ablation_config['reduce-type'] == 'linear':
                 skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
 
