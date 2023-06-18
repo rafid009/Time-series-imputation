@@ -426,7 +426,7 @@ class diff_SAITS_new(nn.Module):
 
         # X_tilde_1 = self.reduce_dim_z(enc_output)
 
-        if self.ablation_config['is_fde']:
+        if self.ablation_config['is_fde_2nd']:
             # Feature attention added
             attn_weights_f = attn_weights_f.squeeze(dim=1)  # namely term A_hat in Eq.
             if len(attn_weights_f.shape) == 4:
