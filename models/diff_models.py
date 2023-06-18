@@ -727,10 +727,12 @@ class EncoderDecoderBlock(nn.Module):
         for i in range(len(self.layer_stack_for_encoder)):
             y = self.layer_stack_for_encoder[i](y, cond, diff_emb)
             if i != len(self.layer_stack_for_encoder) - 1:
+                print(f"skips y: {torch.isnan(y).sum()}")
                 skips.append(y)
         
         for i in range(len(self.layer_stack_for_decoder)):
             if i != 0:
+                print(f"up skips: {torch.isnan(skips[len(self.layer_stack_for_encoder) - i - 1]).sum()}")
                 y = (y + skips[len(self.layer_stack_for_encoder) - i - 1]) * math.sqrt(0.5)
                 print(f"nan: {torch.isnan(y).sum()}")
             y = self.layer_stack_for_decoder[i](y, cond, diff_emb)
