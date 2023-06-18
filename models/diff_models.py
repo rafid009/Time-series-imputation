@@ -751,8 +751,8 @@ class diff_SAITS_new_2(nn.Module):
         self.d_time = d_time
         self.n_head = n_head
 
-        if self.ablation_config['embed-type'] != 'linear':
-            d_model = d_feature
+        # if self.ablation_config['embed-type'] != 'linear':
+        #     d_model = d_feature
         channels = d_model
         
         self.is_not_residual = self.ablation_config['is-not-residual']
@@ -880,7 +880,7 @@ class diff_SAITS_new_2(nn.Module):
             if self.ablation_config['embed-type'] == 'linear':
                 noise = torch.transpose(noise, 1, 2) # (B, L, K)
                 noise = torch.cat([noise, torch.transpose(masks[:, 1, :, :], 1, 2)], dim=-1) # (B, L, 2K)
-                noise = self.dropout(self.position_enc_noise(self.embedding_1(noise))) # (B, L, D)
+                noise = self.position_enc_noise(self.embedding_1(noise)) # (B, L, D)
                 noise = torch.transpose(noise, 1, 2) # (B, D, L)
 
                 cond = torch.transpose(cond, 1, 2) # (B, L, K)
