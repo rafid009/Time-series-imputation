@@ -886,7 +886,19 @@ class diff_SAITS_new_2(nn.Module):
             
             diffusion_embed = self.diffusion_embedding(diffusion_step) 
             skips_tilde_2 = self.enc_dec_block(noise, cond, diffusion_embed) # (B, D, L)
-            
+
+            if self.ablation_config['reduce-type'] == 'linear':
+                skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
+            skips_tilde_2 = self.reduce_skip_z(skips_tilde_2)
+            if self.ablation_config['reduce-type'] == 'linear':
+                skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
+
+            skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2) # (B, L, K)
+            skips_tilde_2 = torch.cat([skips_tilde_2, torch.transpose(masks[:, 1, :, :], 1, 2)], dim=-1) # (B, L, 2K)
+            skips_tilde_2 = self.position_enc_noise(self.embedding_2(skips_tilde_2))
+            skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2) # (B, D, L)
+
+            skips_tilde_2 = self.enc_dec_block(skips_tilde_2, cond, diffusion_embed)
             if self.ablation_config['reduce-type'] == 'linear':
                 skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
 
