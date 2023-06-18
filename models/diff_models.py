@@ -703,8 +703,8 @@ class EncoderDecoderBlock(nn.Module):
         channels = d_model
         layers = []
         for i in range(n_layers):
-            d_k = channels
-            d_v = channels
+            # d_k = channels
+            # d_v = channels
             layer = ResBlockEncDec(cond_emb_channel=d_model, in_channels=channels, out_channels=int(channels/2), d_time=d_time, d_inner=d_inner,
                                     n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout, diffusion_embedding_dim=diff_emb_dim, 
                                     diagonal_attention_mask=diagonal_attention_mask, ablation_config=ablation_config)
