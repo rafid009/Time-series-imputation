@@ -236,6 +236,7 @@ class CSDI_base(nn.Module):
             predicted_1, predicted_2, predicted_3 = self.diffmodel(inputs, t)
             residual_3 = (noise - predicted_3) * target_mask
             loss = (residual_3 ** 2).sum() / (num_eval if num_eval > 0 else 1)
+            print(f"loss: {loss}")
             
             if is_train != 0 and (predicted_1 is not None) and (predicted_2 is not None):
                 pred_loss_1 = (noise - predicted_1) * target_mask
