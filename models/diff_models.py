@@ -424,7 +424,7 @@ class diff_SAITS_new(nn.Module):
         skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
         
 
-        # X_tilde_1 = self.reduce_dim_z(enc_output)
+        X_tilde_1 = self.reduce_dim_z(enc_output)
 
         if self.ablation_config['is_fde_2nd']:
             # Feature attention added
