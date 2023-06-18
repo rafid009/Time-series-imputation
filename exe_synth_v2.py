@@ -107,7 +107,7 @@ config_dict_diffsaits = {
     'train': {
         'epochs':3000, # 3000 -> ds3
         'batch_size': 16 ,
-        'lr': 1.0e-2
+        'lr': 1.0e-4
     },      
     'diffusion': {
         'layers': 4, 
@@ -126,7 +126,7 @@ config_dict_diffsaits = {
         'featureemb': 16,
         'target_strategy': "mix", # noise mix
         'type': 'SAITS',
-        'n_layers': 3,
+        'n_layers': 4,
         'loss_weight_p': 1,
         'loss_weight_f': 1,
         'd_time': n_steps,
