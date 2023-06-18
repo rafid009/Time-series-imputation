@@ -667,7 +667,7 @@ class ResBlockEncDec(nn.Module):
         self.cond_proj_init = Conv1d_with_init_saits_new(cond_emb_channel, in_channels, 1)
         self.mid_proj = Conv1d_with_init_saits_new(in_channels, in_channels, 1)
         self.noise_proj_out_1 = Conv1d_with_init_saits_new(in_channels, out_channels, 1)
-        self.noise_proj_out_2 = Conv1d_with_init_saits_new(out_channels, out_channels, 1)
+        # self.noise_proj_out_2 = Conv1d_with_init_saits_new(out_channels, out_channels, 1)
         self.diffusion_projection = nn.Linear(diffusion_embedding_dim, in_channels)
         if self.is_fde_loop:
             self.feature_enc_layer = EncoderLayer(in_channels, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
@@ -692,7 +692,7 @@ class ResBlockEncDec(nn.Module):
         if self.is_fde_loop:
             y, attn_feat = self.feature_enc_layer(y) # (B, C, L), (B, C, C)
         y = self.noise_proj_out_1(y) # (B, Cout, L)
-        y = self.noise_proj_out_2(y) # (B, Cout, L)
+        # y = self.noise_proj_out_2(y) # (B, Cout, L)
         return y
 
 
@@ -726,15 +726,15 @@ class EncoderDecoderBlock(nn.Module):
         y = x
         for i in range(len(self.layer_stack_for_encoder)):
             y = self.layer_stack_for_encoder[i](y, cond, diff_emb)
-            # if i != len(self.layer_stack_for_encoder) - 1:
-                # print(f"skips y: {torch.isnan(y).sum()}")
-                # skips.append(y)
+            if i != len(self.layer_stack_for_encoder) - 1:
+                print(f"skips y: {torch.isnan(y).sum()}")
+                skips.append(y)
         
         for i in range(len(self.layer_stack_for_decoder)):
-            # if i != 0:
-            #     print(f"up skips: {torch.isnan(skips[len(self.layer_stack_for_encoder) - i - 1]).sum()}")
-            #     # y = (y + skips[len(self.layer_stack_for_encoder) - i - 1]) * math.sqrt(0.5)
-            #     print(f"nan: {torch.isnan(y).sum()}")
+            if i != 0:
+                print(f"up skips: {torch.isnan(skips[len(self.layer_stack_for_encoder) - i - 1]).sum()}")
+                y = (y + skips[len(self.layer_stack_for_encoder) - i - 1])# * math.sqrt(0.5)
+                print(f"nan: {torch.isnan(y).sum()}")
             y = self.layer_stack_for_decoder[i](y, cond, diff_emb)
         return y
 
