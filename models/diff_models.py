@@ -383,7 +383,7 @@ class diff_SAITS_new(nn.Module):
         if self.ablation_config['is_fde']:
             cond_X = X[:,0,:,:] + X[:,1,:,:] # (B, L, K)
             shp = cond_X.shape
-            if not self.ablation_config['no-mask']:
+            if not self.ablation_config['fde-no-mask']:
                 # In one branch, we do not apply the missing mask to the inputs of FDE
                 # and in the other we stack the mask with the input time-series for each feature
                 # and embed them together to get a masked informed time-series data for each feature.
@@ -424,7 +424,7 @@ class diff_SAITS_new(nn.Module):
         skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
         
 
-        X_tilde_1 = self.reduce_dim_z(enc_output)
+        # X_tilde_1 = self.reduce_dim_z(enc_output)
 
         if self.ablation_config['is_fde']:
             # Feature attention added
@@ -440,7 +440,7 @@ class diff_SAITS_new(nn.Module):
             X_tilde_1 = X_tilde_1 @ attn_weights_f + X[:, 1, :, :] #+ X[:, 0, :, :]#((cond_X + X[:, 1, :, :]) * (1 - masks[:, 1, :, :])) / 2 #cond_X #+ X_tilde_1
         else:
             # Old stable better
-            X_tilde_1 = X_tilde_1 + X[:, 1, :, :] 
+            X_tilde_1 = skips_tilde_1 + X[:, 1, :, :] 
 
         # second DMSA block
 
