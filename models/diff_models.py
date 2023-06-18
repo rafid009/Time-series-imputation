@@ -667,7 +667,7 @@ class ResBlockEncDec(nn.Module):
         self.cond_proj_init = Conv1d_with_init_saits_new(cond_emb_channel, in_channels, 1)
         # self.mid_proj = Conv1d_with_init_saits_new(in_channels, in_channels, 1)
         self.noise_proj_out_1 = Conv1d_with_init_saits_new(in_channels, in_channels, 1)
-        self.noise_proj_out_2 = Conv1d_with_init_saits_new(out_channels, out_channels, 1)
+        self.noise_proj_out_2 = Conv1d_with_init_saits_new(in_channels, out_channels, 1)
         self.diffusion_projection = nn.Linear(diffusion_embedding_dim, in_channels)
         if self.is_fde_loop:
             self.feature_enc_layer = EncoderLayer(in_channels, d_time, d_time, d_inner, n_head, d_time, d_time, dropout, 0,
