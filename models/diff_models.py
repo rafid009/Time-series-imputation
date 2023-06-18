@@ -751,7 +751,7 @@ class diff_SAITS_new_2(nn.Module):
         self.d_time = d_time
         self.n_head = n_head
 
-        if self.ablation_config['reduce-type'] != 'linear':
+        if self.ablation_config['embed-type'] != 'linear':
             d_model = d_feature
         channels = d_model
         
