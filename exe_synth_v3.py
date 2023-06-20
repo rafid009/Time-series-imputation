@@ -143,7 +143,7 @@ config_dict_diffsaits = {
         'fde-choice': 'fde-conv-multi',
         'fde-layers': 4,
         'is_fde': True,
-        'weight_combine': False,
+        'weight_combine': True,
         'fde-no-mask': True,
         'fde-diagonal': False,
         'is_fde_2nd': False,
@@ -158,7 +158,7 @@ config_dict_diffsaits = {
     }
 }
 print(f"config: {config_dict_diffsaits}")
-name = 'no_wt_comb_norm'
+name = 'wt_comb'
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
 filename = f"model_diffsaits_synth_v3_{name}_new.pth"
