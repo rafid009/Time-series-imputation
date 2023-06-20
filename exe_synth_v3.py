@@ -74,21 +74,21 @@ num_seasons = 50
 noise = False
 train_loader, valid_loader, mean, std = get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=np.random.randint(0,100), is_test=False, v2='v3', noise=noise)
 
-# model_csdi = CSDI_Synth(config_dict_csdi, device, target_dim=len(given_features)).to(device)
+model_csdi = CSDI_Synth(config_dict_csdi, device, target_dim=len(given_features)).to(device)
 model_folder = "./saved_model_synth_v3"
-# filename = f"model_csdi_synth_v3.pth"
-# if not os.path.isdir(model_folder):
-#     os.makedirs(model_folder)
-# print(f"\n\nCSDI training starts.....\n")
-# train(
-#     model_csdi,
-#     config_dict_csdi["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{filename}",
-#     is_saits=False
-# )
+filename = f"model_csdi_synth_v3.pth"
+if not os.path.isdir(model_folder):
+    os.makedirs(model_folder)
+print(f"\n\nCSDI training starts.....\n")
+train(
+    model_csdi,
+    config_dict_csdi["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{filename}",
+    is_saits=False
+)
 # model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # print(f"CSDI params: {get_num_params(model_csdi)}")
 
@@ -124,7 +124,7 @@ config_dict_diffsaits = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "mix", # noise mix
+        'target_strategy': "random", # noise mix
         'type': 'SAITS',
         'n_layers': 8,
         'loss_weight_p': 1,
@@ -134,23 +134,23 @@ config_dict_diffsaits = {
         'd_model': 128,
         'd_inner': 128,
         'n_head': 8,
-        'd_k': 128, # 64, #len(given_features),
-        'd_v': 128, # 64, #len(given_features),
+        'd_k': 64, # 64, #len(given_features),
+        'd_v': 64, # 64, #len(given_features),
         'dropout': 0.1,
         'diagonal_attention_mask': False
     },
     'ablation': {
         'fde-choice': 'fde-conv-multi',
         'fde-layers': 4,
-        'is_fde': False,
+        'is_fde': True,
         'weight_combine': False,
-        'fde-no-mask': False,
+        'fde-no-mask': True,
         'fde-diagonal': False,
         'is_fde_2nd': False,
         'fde-pos-enc': False,
         'reduce-type': 'linear',
         'embed-type': 'linear',
-        'is_2nd_block': False,
+        'is_2nd_block': True,
         'is-not-residual': True,
         'res-block-mask': False,
         'is-fde-loop': False,
@@ -158,7 +158,7 @@ config_dict_diffsaits = {
     }
 }
 print(f"config: {config_dict_diffsaits}")
-name = 'no_residual_skip_1'
+name = 'no_wt_comb_norm'
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
 filename = f"model_diffsaits_synth_v3_{name}_new.pth"
