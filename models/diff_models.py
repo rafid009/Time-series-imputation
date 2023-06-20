@@ -474,7 +474,7 @@ class diff_SAITS_new(nn.Module):
 
             skips_tilde_3 = (1 - combining_weights) * skips_tilde_1 + combining_weights * skips_tilde_2
         else:
-            skips_tilde_3 = (skips_tilde_1 + skips_tilde_2) / 2
+            skips_tilde_3 = (skips_tilde_1 + skips_tilde_2) * math.sqrt(0.5)
 
         skips_tilde_1 = torch.transpose(skips_tilde_1, 1, 2)
         skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)

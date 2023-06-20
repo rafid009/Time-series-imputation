@@ -159,7 +159,7 @@ config_dict_diffsaits = {
     }
 }
 print(f"config: {config_dict_diffsaits}")
-name = 'no_wt_comb'
+name = 'no_wt_comb_norm'
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
 filename = f"model_diffsaits_synth_v2_{name}_new_2.pth"
