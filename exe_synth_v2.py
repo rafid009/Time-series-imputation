@@ -124,7 +124,7 @@ config_dict_diffsaits = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "mix", # noise mix
+        'target_strategy': "random", # noise mix
         'type': 'SAITS',
         'n_layers': 4,
         'loss_weight_p': 1,
@@ -143,7 +143,7 @@ config_dict_diffsaits = {
         'fde-choice': 'fde-conv-multi',
         'fde-layers': 4,
         'is_fde': True,
-        'weight_combine': True,
+        'weight_combine': False,
         'fde-no-mask': True,
         'fde-diagonal': False,
         'is_fde_2nd': False,
