@@ -32,8 +32,8 @@ class NumpyArrayEncoder(JSONEncoder):
 
 seed = np.random.randint(10, 100)
 n_features = len(feats_v3)
-n_sample = 100
-d_time = 366
+n_sample = 50
+d_time = 100
 config_dict_csdi = {
     'train': {
         'epochs': 200,
