@@ -28,7 +28,7 @@ class NumpyArrayEncoder(JSONEncoder):
 
 given_features = feats_v3
 
-miss_type = 'random'
+miss_type = 'pattern'
 # seed = 10
 config_dict_csdi = {
     'train': {
@@ -75,7 +75,7 @@ n_steps = 100
 n_features = len(given_features)
 num_seasons = 50
 noise = False
-train_loader, valid_loader, mean, std = get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=np.random.randint(10,100), is_test=False, v2='v3', noise=noise)
+train_loader, valid_loader, mean, std = get_dataloader(n_steps, n_features, num_seasons, batch_size=32, missing_ratio=0.1, seed=np.random.randint(10,100), is_test=False, v2='v3', noise=noise, is_mcar=False, is_col_miss=None)
 
 model_csdi = CSDI_Synth(config_dict_csdi, device, target_dim=len(given_features)).to(device)
 model_folder = "./saved_model_synth_v3"
@@ -161,7 +161,7 @@ config_dict_diffsaits = {
     }
 }
 print(f"config: {config_dict_diffsaits}")
-name = 'wt_comb'
+name = 'pattern'
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
 filename = f"model_diffsaits_synth_v3_{name}_new.pth"
@@ -169,23 +169,23 @@ print(f"\n\DiffSAITS training starts.....\n")
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 
-train(
-    model_diff_saits,
-    config_dict_diffsaits["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename=f"{filename}",
-    is_saits=True
-)
+# train(
+#     model_diff_saits,
+#     config_dict_diffsaits["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename=f"{filename}",
+#     is_saits=True
+# )
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 models = {
-    # 'CSDI': model_csdi,
+    'CSDI': model_csdi,
     # 'SAITS': saits,
-    'DiffSAITS': model_diff_saits
+    # 'DiffSAITS': model_diff_saits
 }
 mse_folder = f"results_synth_v3_{name}_new/metric"
 data_folder = f"results_synth_v3_{name}_new/data"
