@@ -369,15 +369,12 @@ class diff_SAITS_new(nn.Module):
     def forward(self, inputs, diffusion_step):
         # print(f"Entered forward")
         X, masks = inputs['X'], inputs['missing_mask']
-        
         ## making the mask same
-
         masks[:,1,:,:] = masks[:,0,:,:]
         # B, L, K -> B=batch, L=time, K=feature
         X = torch.transpose(X, 2, 3)
         masks = torch.transpose(masks, 2, 3)
-
-        # Feature Dependency Encoder (FDE): We are trying to get a global feature time-series cross-sorrelation
+        # Feature Dependency Encoder (FDE): We are trying to get a global feature time-series cross-correlation
         # between features. Each feature's time-series will get global aggregated information from other features'
         # time-series. We also get a feature attention/dependency matrix (feature attention weights) from it.
         if self.ablation_config['is_fde']:

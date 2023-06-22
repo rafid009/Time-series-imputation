@@ -28,7 +28,7 @@ class NumpyArrayEncoder(JSONEncoder):
 
 given_features = feats_v3
 
-
+miss_type = 'random'
 # seed = 10
 config_dict_csdi = {
     'train': {
@@ -51,7 +51,7 @@ config_dict_csdi = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "random",
+        'target_strategy': miss_type,
         'type': 'CSDI',
         'n_layers': 3, 
         'd_time': 100,
@@ -62,7 +62,10 @@ config_dict_csdi = {
         'd_k': 64,
         'd_v': 64,
         'dropout': 0.1,
-        'diagonal_attention_mask': True
+        'diagonal_attention_mask': True,
+        'num_patterns': 15000,
+        'num_val_patterns': 5000,
+        'pattern_dir': './data/v3/miss_pattern'
     },
 }
 
@@ -72,7 +75,7 @@ n_steps = 100
 n_features = len(given_features)
 num_seasons = 50
 noise = False
-train_loader, valid_loader, mean, std = get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=np.random.randint(0,100), is_test=False, v2='v3', noise=noise)
+train_loader, valid_loader, mean, std = get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=np.random.randint(10,100), is_test=False, v2='v3', noise=noise)
 
 model_csdi = CSDI_Synth(config_dict_csdi, device, target_dim=len(given_features)).to(device)
 model_folder = "./saved_model_synth_v3"
@@ -186,6 +189,22 @@ models = {
 }
 mse_folder = f"results_synth_v3_{name}_new/metric"
 data_folder = f"results_synth_v3_{name}_new/data"
+
+name = miss_type
+test_patterns_start = 15001
+num_test_patterns = 5000
+
+test_pattern_config = {
+    'start': test_patterns_start,
+    'num_patterns': num_test_patterns,
+    'pattern_dir': './data/v3/miss_pattern',
+    'is_mcar': False,
+    'is_col_miss': None
+}
+
+
+evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, pattern=test_pattern_config, mean=mean, std=std)
+
 lengths = [10, 50, 90]
 for l in lengths:
     print(f"\nlength = {l}")

@@ -26,6 +26,7 @@ def add_rn_missing(X, length=-1, rate=-1):
     
 
 
+
 def create_synthetic_data(n_steps, num_seasons, seed=10, rate=0.05, length_rate=0.02):
     # num_seasons = 32
     np.random.seed(seed)
@@ -136,7 +137,7 @@ def create_synthetic_data_v2(n_steps, num_seasons, seed=10, rate=0.05, length_ra
     return data, mean, std
 
 
-def create_synthetic_data_v3(n_steps, num_seasons, seed=10, rate=0.05, length_rate=0.02, noise=False):
+def create_synthetic_data_v3(n_steps, num_seasons, seed=10, rate=0.05, length_rate=0.02, noise=False, is_mcar=False, is_col_miss=None):
     # num_seasons = 32
     np.random.seed(seed)
     
@@ -171,10 +172,16 @@ def create_synthetic_data_v3(n_steps, num_seasons, seed=10, rate=0.05, length_ra
                 noise_level = np.random.rand(data.shape[1]) * 0.5
                 data[i, :, feats_v3.index(feature)] += noise_level
 
-            if feature == 'sin' or feature == 'cos':
+            if not is_mcar and (feature == 'sin' or feature == 'cos'):
                 data[i, :, feats_v3.index(feature)] = add_rn_missing(data[i, :, feats_v3.index(feature)], length=lr)
-            
-        data[i] = add_rn_missing(data[i], rate=rate)
+    
+        if is_col_miss is not None:
+            r = np.random.randint(20, 80) * 0.01
+            data[i, :, feats_v3.index(is_col_miss)] = add_rn_missing(data[i, :, feats_v3.index(feature)], rate=r)
+            list_indices = [feats_v3.index(i) for i in feats_v3 if i != is_col_miss]
+            data[i, :, list_indices] = add_rn_missing(data[i, :, list_indices], rate=rate)
+        else:
+            data[i] = add_rn_missing(data[i], rate=rate)
      
     data_rows = data.reshape((-1, num_features))
     mean = np.nanmean(data_rows, axis=0)

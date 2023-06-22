@@ -65,7 +65,7 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
     return obs_data, obs_mask, mask, sample, gt_intact
 
 class Synth_Dataset(Dataset):
-    def __init__(self, n_steps, n_features, num_seasons, rate=0.1, is_test=False, length=100, exclude_features=None, seed=10, forward_trial=-1, random_trial=False, v2='v1', noise=False, mean=None, std=None) -> None:
+    def __init__(self, n_steps, n_features, num_seasons, rate=0.1, is_test=False, length=100, exclude_features=None, seed=10, forward_trial=-1, random_trial=False, v2='v1', noise=False, mean=None, std=None, is_mcar=False, is_col_miss=None) -> None:
         super().__init__()
         self.eval_length = n_steps
         self.observed_values = []
@@ -86,7 +86,7 @@ class Synth_Dataset(Dataset):
         elif v2 == 'v7':
             X, mu, sigma = create_synthetic_data_v7(n_steps, num_seasons, seed=seed, noise=noise)
         elif v2 == 'v3':
-            X, mu, sigma = create_synthetic_data_v3(n_steps, num_seasons, seed=seed, noise=noise)
+            X, mu, sigma = create_synthetic_data_v3(n_steps, num_seasons, seed=seed, noise=noise, is_mcar=is_mcar, is_col_miss=is_col_miss)
         
         if mean is not None and std is not None:
             self.mean = mean
@@ -143,9 +143,9 @@ class Synth_Dataset(Dataset):
         return len(self.observed_values)
 
 
-def get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=10, is_test=False, v2='v1',  noise=False):
+def get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=10, is_test=False, v2='v1',  noise=False, is_mcar=False, is_col_miss=None):
     np.random.seed(seed=seed)
-    train_dataset = Synth_Dataset(n_steps, n_features, num_seasons, rate=missing_ratio, seed=seed, v2=v2, noise=noise)
+    train_dataset = Synth_Dataset(n_steps, n_features, num_seasons, rate=missing_ratio, seed=seed, v2=v2, noise=noise, is_mcar=is_mcar, is_col_miss=is_col_miss)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     synth_dir = f"./data/synth/{v2}"
     if os.path.exists(f"{synth_dir}/mean.npy"):
