@@ -28,7 +28,7 @@ class NumpyArrayEncoder(JSONEncoder):
 
 given_features = feats_v3
 
-miss_type = 'pattern'
+miss_type = 'random'
 # seed = 10
 config_dict_csdi = {
     'train': {
