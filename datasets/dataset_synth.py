@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader, Dataset
 import os
 from datasets.synthetic_data import create_synthetic_data, create_synthetic_data_v2, create_synthetic_data_v3, create_synthetic_data_v4, create_synthetic_data_v5, create_synthetic_data_v6, create_synthetic_data_v7
 
-def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=None, forward_trial=-1, lte_idx=None, random_trial=False):
+def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=None, forward_trial=-1, lte_idx=None, random_trial=False, pattern=None):
     """Get mask of random points (missing at random) across channels based on k,
     where k == number of data points. Mask of sample's shape where 0's to be imputed, and 1's to preserved
     as per ts imputers"""
@@ -12,8 +12,32 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
         sample = sample.numpy()
 
     obs_mask = ~np.isnan(sample)
-    
-    if not is_test:
+    if pattern is not None:
+        shp = sample.shape
+        choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
+        # print(f"start: {pattern['start']} end: {(pattern['start'] + pattern['num_patterns'] - 1)} choice: {choice}")
+        filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
+        mask = np.load(filename)
+        mask = mask * obs_mask
+        evals = sample.reshape(-1).copy()
+        
+        while ((obs_mask == mask).all()):
+            choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
+            # print(f"start: {pattern['start']} end: {(pattern['start'] + pattern['num_patterns'] - 1)} choice: {choice}")
+            filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
+            mask = np.load(filename)
+        
+        eval_mask = mask.reshape(-1).copy()
+        gt_indices = np.where(eval_mask)[0].tolist()
+        miss_indices = np.random.choice(
+            gt_indices, (int)(len(gt_indices) * rate), replace=False
+        )
+        gt_intact = sample.reshape(-1).copy()
+        gt_intact[miss_indices] = np.nan
+        gt_intact = gt_intact.reshape(shp)
+        obs_data = np.nan_to_num(evals, copy=True)
+        obs_data = obs_data.reshape(shp)
+    elif not is_test:
         shp = sample.shape
         evals = sample.reshape(-1).copy()
         indices = np.where(~np.isnan(evals))[0].tolist()
@@ -65,7 +89,7 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
     return obs_data, obs_mask, mask, sample, gt_intact
 
 class Synth_Dataset(Dataset):
-    def __init__(self, n_steps, n_features, num_seasons, rate=0.1, is_test=False, length=100, exclude_features=None, seed=10, forward_trial=-1, random_trial=False, v2='v1', noise=False, mean=None, std=None, is_mcar=False, is_col_miss=None) -> None:
+    def __init__(self, n_steps, n_features, num_seasons, rate=0.1, is_test=False, length=100, exclude_features=None, seed=10, forward_trial=-1, random_trial=False, v2='v1', noise=False, mean=None, std=None, is_mcar=False, is_col_miss=None, pattern=None) -> None:
         super().__init__()
         self.eval_length = n_steps
         self.observed_values = []
@@ -86,7 +110,7 @@ class Synth_Dataset(Dataset):
         elif v2 == 'v7':
             X, mu, sigma = create_synthetic_data_v7(n_steps, num_seasons, seed=seed, noise=noise)
         elif v2 == 'v3':
-            X, mu, sigma = create_synthetic_data_v3(n_steps, num_seasons, seed=seed, noise=noise, is_mcar=is_mcar, is_col_miss=is_col_miss)
+            X, mu, sigma = create_synthetic_data_v3(n_steps, num_seasons, seed=seed, noise=noise, is_mcar=is_mcar, is_col_miss=is_col_miss, pattern=pattern)
         
         if mean is not None and std is not None:
             self.mean = mean

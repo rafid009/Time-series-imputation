@@ -83,17 +83,17 @@ filename = f"model_csdi_synth_v3.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI training starts.....\n")
-train(
-    model_csdi,
-    config_dict_csdi["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename=f"{filename}",
-    is_saits=False
-)
-# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-# print(f"CSDI params: {get_num_params(model_csdi)}")
+# train(
+#     model_csdi,
+#     config_dict_csdi["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename=f"{filename}",
+#     is_saits=False
+# )
+model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+print(f"CSDI params: {get_num_params(model_csdi)}")
 
 
 # saits_model_file = f"{model_folder}/saits_model_synth_v4{'_noise' if noise else ''}.pkl"
@@ -162,7 +162,7 @@ config_dict_diffsaits = {
 }
 print(f"config: {config_dict_diffsaits}")
 name = 'pattern'
-model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
+# model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
 filename = f"model_diffsaits_synth_v3_{name}_new.pth"
 print(f"\n\DiffSAITS training starts.....\n")
@@ -180,7 +180,7 @@ print(f"\n\DiffSAITS training starts.....\n")
 # )
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
+# print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 models = {
     'CSDI': model_csdi,
