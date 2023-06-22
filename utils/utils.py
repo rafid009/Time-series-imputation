@@ -706,7 +706,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
         elif dataset_name == 'synth_v2':
             test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v2', noise=noise, mean=mean, std=std)
         elif dataset_name == 'synth_v3':
-            test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v3', noise=noise, mean=mean, std=std)
+            test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v3', noise=noise, mean=mean, std=std, pattern=pattern)
         elif dataset_name == 'synth_v4':
             test_loader = get_testloader_synth(n_steps=100, n_features=4, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v4', noise=noise, mean=mean, std=std)
         elif dataset_name == 'synth_v5':

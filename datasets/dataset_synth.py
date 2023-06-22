@@ -89,7 +89,7 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
     return obs_data, obs_mask, mask, sample, gt_intact
 
 class Synth_Dataset(Dataset):
-    def __init__(self, n_steps, n_features, num_seasons, rate=0.1, is_test=False, length=100, exclude_features=None, seed=10, forward_trial=-1, random_trial=False, v2='v1', noise=False, mean=None, std=None, is_mcar=False, is_col_miss=None, pattern=None) -> None:
+    def __init__(self, n_steps, n_features, num_seasons, rate=0.1, is_test=False, length=100, exclude_features=None, seed=10, forward_trial=-1, random_trial=False, v2='v1', noise=False, mean=None, std=None, pattern=None) -> None:
         super().__init__()
         self.eval_length = n_steps
         self.observed_values = []
@@ -110,7 +110,7 @@ class Synth_Dataset(Dataset):
         elif v2 == 'v7':
             X, mu, sigma = create_synthetic_data_v7(n_steps, num_seasons, seed=seed, noise=noise)
         elif v2 == 'v3':
-            X, mu, sigma = create_synthetic_data_v3(n_steps, num_seasons, seed=seed, noise=noise, is_mcar=is_mcar, is_col_miss=is_col_miss, pattern=pattern)
+            X, mu, sigma = create_synthetic_data_v3(n_steps, num_seasons, seed=seed, noise=noise, is_mcar=pattern['is_mcar'], is_col_miss=pattern['is_col_miss'])
         
         if mean is not None and std is not None:
             self.mean = mean
@@ -131,7 +131,7 @@ class Synth_Dataset(Dataset):
         #             include_features.append(feats.index(feature))
 
         for i in range(X.shape[0]):
-            obs_val, obs_mask, mask, sample, obs_intact = parse_data(X[i], rate, is_test, length, include_features=include_features, forward_trial=forward_trial, random_trial=random_trial)
+            obs_val, obs_mask, mask, sample, obs_intact = parse_data(X[i], rate, is_test, length, include_features=include_features, forward_trial=forward_trial, random_trial=random_trial, pattern=pattern)
             self.observed_values.append(obs_val)
             self.observed_masks.append(obs_mask)
             self.gt_masks.append(mask)
@@ -198,12 +198,12 @@ def get_testloader(n_steps, n_features, num_seasons, missing_ratio=0.2, seed=10,
     test_loader = DataLoader(test_dataset, batch_size=1)
     return test_loader
 
-def get_testloader_synth(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.2, seed=10, exclude_features=None, length=100, forecasting=False, random_trial=False, v2='v1', noise=False, mean=None, std=None):
+def get_testloader_synth(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.2, seed=10, exclude_features=None, length=100, forecasting=False, random_trial=False, v2='v1', noise=False, mean=None, std=None, pattern=None):
     np.random.seed(seed=seed)
     if forecasting:
         forward = n_steps - length
-        test_dataset = Synth_Dataset(n_steps, n_features, num_seasons, rate=missing_ratio, is_test=True, length=length, exclude_features=exclude_features, seed=seed, forward_trial=forward, v2=v2, noise=noise, mean=mean, std=std)
+        test_dataset = Synth_Dataset(n_steps, n_features, num_seasons, rate=missing_ratio, is_test=True, length=length, exclude_features=exclude_features, seed=seed, forward_trial=forward, v2=v2, noise=noise, mean=mean, std=std, pattern=pattern)
     else:
-        test_dataset = Synth_Dataset(n_steps, n_features, num_seasons, rate=missing_ratio, is_test=True, length=length, exclude_features=exclude_features, seed=seed, random_trial=random_trial, v2=v2, noise=noise, mean=mean, std=std)
+        test_dataset = Synth_Dataset(n_steps, n_features, num_seasons, rate=missing_ratio, is_test=True, length=length, exclude_features=exclude_features, seed=seed, random_trial=random_trial, v2=v2, noise=noise, mean=mean, std=std, pattern=pattern)
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
     return test_loader
