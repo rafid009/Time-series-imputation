@@ -89,7 +89,7 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
     return obs_data, obs_mask, mask, sample, gt_intact
 
 class Synth_Dataset(Dataset):
-    def __init__(self, n_steps, n_features, num_seasons, rate=0.1, is_test=False, length=100, exclude_features=None, seed=10, forward_trial=-1, random_trial=False, v2='v1', noise=False, mean=None, std=None, pattern=None) -> None:
+    def __init__(self, n_steps, n_features, num_seasons, rate=0.1, is_test=False, length=100, exclude_features=None, seed=10, forward_trial=-1, is_mcar=False, is_col_miss=None, random_trial=False, v2='v1', noise=False, mean=None, std=None, pattern=None) -> None:
         super().__init__()
         self.eval_length = n_steps
         self.observed_values = []
@@ -110,7 +110,10 @@ class Synth_Dataset(Dataset):
         elif v2 == 'v7':
             X, mu, sigma = create_synthetic_data_v7(n_steps, num_seasons, seed=seed, noise=noise)
         elif v2 == 'v3':
-            X, mu, sigma = create_synthetic_data_v3(n_steps, num_seasons, seed=seed, noise=noise, is_mcar=pattern['is_mcar'], is_col_miss=pattern['is_col_miss'])
+            if pattern is not None:
+                is_mcar=pattern['is_mcar']
+                is_col_miss=pattern['is_col_miss']
+            X, mu, sigma = create_synthetic_data_v3(n_steps, num_seasons, seed=seed, noise=noise, is_mcar=is_mcar, is_col_miss=is_col_miss)
         
         if mean is not None and std is not None:
             self.mean = mean
@@ -181,7 +184,7 @@ def get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_rati
         std = np.load(f"{synth_dir}/std.npy")
     else:
         std = None
-    test_dataset = Synth_Dataset(n_steps, n_features, 10, rate=missing_ratio, seed=seed*5, v2=v2, noise=noise, mean=mean, std=std)
+    test_dataset = Synth_Dataset(n_steps, n_features, 10, rate=missing_ratio, seed=seed*5, v2=v2, noise=noise, mean=mean, std=std, is_mcar=is_mcar, is_col_miss=is_col_miss)
     if is_test:
         test_loader = DataLoader(test_dataset, batch_size=batch_size)
     else:
