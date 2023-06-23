@@ -161,7 +161,7 @@ config_dict_diffsaits = {
     }
 }
 print(f"config: {config_dict_diffsaits}")
-name = 'pattern'
+name = 'no_skip_to_next'
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
 filename = f"model_diffsaits_synth_v3_{name}_new.pth"
