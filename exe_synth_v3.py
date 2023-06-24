@@ -127,7 +127,7 @@ config_dict_diffsaits = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "random", # noise mix
+        'target_strategy': "mix", # noise mix
         'type': 'SAITS',
         'n_layers': 4,
         'loss_weight_p': 1,
@@ -201,7 +201,6 @@ test_pattern_config = {
     'is_mcar': False,
     'is_col_miss': None
 }
-
 
 evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, pattern=test_pattern_config, mean=mean, std=std)
 
