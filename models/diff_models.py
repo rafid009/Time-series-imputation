@@ -465,6 +465,7 @@ class diff_SAITS_new(nn.Module):
             cond_X = X_tilde_1 #X[:,1,:,:]
 
         # before combi 2
+        X_tilde_1 = cond_X
         input_X_for_second = torch.cat([X_tilde_1, masks[:,1,:,:]], dim=2)
         input_X_for_second = self.embedding_2(input_X_for_second)
         noise = input_X_for_second
