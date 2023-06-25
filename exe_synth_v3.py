@@ -108,7 +108,7 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 
 config_dict_diffsaits = {
     'train': {
-        'epochs':3000, # 3000 -> ds3
+        'epochs':5000, # 3000 -> ds3
         'batch_size': 16 ,
         'lr': 1.0e-4
     },      
@@ -161,7 +161,7 @@ config_dict_diffsaits = {
     }
 }
 print(f"config: {config_dict_diffsaits}")
-name = 'skip_fde_1st_mix'
+name = 'skip_fde_2nd_mix'
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
 filename = f"model_diffsaits_synth_v3_{name}_new.pth"
