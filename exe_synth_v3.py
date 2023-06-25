@@ -190,19 +190,18 @@ models = {
 mse_folder = f"results_synth_v3_{name}_new/metric"
 data_folder = f"results_synth_v3_{name}_new/data"
 
-name = miss_type
-test_patterns_start = 15001
-num_test_patterns = 5000
+# test_patterns_start = 15001
+# num_test_patterns = 5000
 
-test_pattern_config = {
-    'start': test_patterns_start,
-    'num_patterns': num_test_patterns,
-    'pattern_dir': './data/v3/miss_pattern',
-    'is_mcar': False,
-    'is_col_miss': None
-}
+# test_pattern_config = {
+#     'start': test_patterns_start,
+#     'num_patterns': num_test_patterns,
+#     'pattern_dir': './data/v3/miss_pattern',
+#     'is_mcar': False,
+#     'is_col_miss': None
+# }
 
-evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, pattern=test_pattern_config, mean=mean, std=std)
+# evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, pattern=test_pattern_config, mean=mean, std=std)
 
 lengths = [10, 50, 90]
 for l in lengths:
