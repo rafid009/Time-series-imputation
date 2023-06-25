@@ -377,28 +377,28 @@ class diff_SAITS_new(nn.Module):
         # Feature Dependency Encoder (FDE): We are trying to get a global feature time-series cross-correlation
         # between features. Each feature's time-series will get global aggregated information from other features'
         # time-series. We also get a feature attention/dependency matrix (feature attention weights) from it.
-        # if self.ablation_config['is_fde']:
-        #     cond_X = X[:,0,:,:] + X[:,1,:,:] # (B, L, K)
-        #     shp = cond_X.shape
-        #     if not self.ablation_config['fde-no-mask']:
-        #         # In one branch, we do not apply the missing mask to the inputs of FDE
-        #         # and in the other we stack the mask with the input time-series for each feature
-        #         # and embed them together to get a masked informed time-series data for each feature.
-        #         cond_X = torch.stack([cond_X, masks[:,1,:,:]], dim=1) # (B, 2, L, K)
-        #         cond_X = cond_X.permute(0, 3, 1, 2) # (B, K, 2, L)
-        #         cond_X = cond_X.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
-        #         cond_X = self.mask_conv(cond_X) # (B, K, L)
-        #     else:
-        #         cond_X = torch.transpose(cond_X, 1, 2) # (B, K, L)
+        if self.ablation_config['is_fde']:
+            cond_X = X[:,0,:,:] + X[:,1,:,:] # (B, L, K)
+            shp = cond_X.shape
+            if not self.ablation_config['fde-no-mask']:
+                # In one branch, we do not apply the missing mask to the inputs of FDE
+                # and in the other we stack the mask with the input time-series for each feature
+                # and embed them together to get a masked informed time-series data for each feature.
+                cond_X = torch.stack([cond_X, masks[:,1,:,:]], dim=1) # (B, 2, L, K)
+                cond_X = cond_X.permute(0, 3, 1, 2) # (B, K, 2, L)
+                cond_X = cond_X.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
+                cond_X = self.mask_conv(cond_X) # (B, K, L)
+            else:
+                cond_X = torch.transpose(cond_X, 1, 2) # (B, K, L)
 
-        #     for feat_enc_layer in self.layer_stack_for_feature_weights:
-        #         cond_X, attn_weights_f = feat_enc_layer(cond_X) # (B, K, L), (B, K, K)
+            for feat_enc_layer in self.layer_stack_for_feature_weights:
+                cond_X, attn_weights_f = feat_enc_layer(cond_X) # (B, K, L), (B, K, K)
 
-        #     cond_X = torch.transpose(cond_X, 1, 2)
-        # else:
-        #     cond_X = X[:,1,:,:]
+            cond_X = torch.transpose(cond_X, 1, 2)
+        else:
+            cond_X = X[:,1,:,:]
         # combi 2
-        cond_X = X[:,1,:,:]
+        # cond_X = X[:,1,:,:]
         input_X_for_first = torch.cat([cond_X, masks[:,1,:,:]], dim=2)
         input_X_for_first = self.embedding_1(input_X_for_first)
 
@@ -443,29 +443,29 @@ class diff_SAITS_new(nn.Module):
 
         # second DMSA block
 
-        if self.ablation_config['is_fde']:
-            cond_X = X_tilde_1 # X[:,0,:,:] + X[:,1,:,:] # (B, L, K)
-            shp = cond_X.shape
-            if not self.ablation_config['fde-no-mask']:
-                # In one branch, we do not apply the missing mask to the inputs of FDE
-                # and in the other we stack the mask with the input time-series for each feature
-                # and embed them together to get a masked informed time-series data for each feature.
-                cond_X = torch.stack([cond_X, masks[:,1,:,:]], dim=1) # (B, 2, L, K)
-                cond_X = cond_X.permute(0, 3, 1, 2) # (B, K, 2, L)
-                cond_X = cond_X.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
-                cond_X = self.mask_conv(cond_X) # (B, K, L)
-            else:
-                cond_X = torch.transpose(cond_X, 1, 2) # (B, K, L)
+        # if self.ablation_config['is_fde']:
+        #     cond_X = X_tilde_1 # X[:,0,:,:] + X[:,1,:,:] # (B, L, K)
+        #     shp = cond_X.shape
+        #     if not self.ablation_config['fde-no-mask']:
+        #         # In one branch, we do not apply the missing mask to the inputs of FDE
+        #         # and in the other we stack the mask with the input time-series for each feature
+        #         # and embed them together to get a masked informed time-series data for each feature.
+        #         cond_X = torch.stack([cond_X, masks[:,1,:,:]], dim=1) # (B, 2, L, K)
+        #         cond_X = cond_X.permute(0, 3, 1, 2) # (B, K, 2, L)
+        #         cond_X = cond_X.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
+        #         cond_X = self.mask_conv(cond_X) # (B, K, L)
+        #     else:
+        #         cond_X = torch.transpose(cond_X, 1, 2) # (B, K, L)
 
-            for feat_enc_layer in self.layer_stack_for_feature_weights:
-                cond_X, attn_weights_f = feat_enc_layer(cond_X) # (B, K, L), (B, K, K)
+        #     for feat_enc_layer in self.layer_stack_for_feature_weights:
+        #         cond_X, attn_weights_f = feat_enc_layer(cond_X) # (B, K, L), (B, K, K)
 
-            cond_X = torch.transpose(cond_X, 1, 2)
-        else:
-            cond_X = X_tilde_1 #X[:,1,:,:]
+        #     cond_X = torch.transpose(cond_X, 1, 2)
+        # else:
+        #     cond_X = X_tilde_1 #X[:,1,:,:]
 
         # before combi 2
-        X_tilde_1 = cond_X
+        # X_tilde_1 = cond_X
         input_X_for_second = torch.cat([X_tilde_1, masks[:,1,:,:]], dim=2)
         input_X_for_second = self.embedding_2(input_X_for_second)
         noise = input_X_for_second
