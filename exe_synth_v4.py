@@ -61,7 +61,9 @@ config_dict_csdi = {
         'd_k': 64,
         'd_v': 64,
         'dropout': 0.1,
-        'diagonal_attention_mask': True
+        'diagonal_attention_mask': True,
+        'is_stable': True,
+        'is_first': True
     },
 }
 
@@ -141,9 +143,9 @@ config_dict_diffsaits = {
     'ablation': {
         'fde-choice': 'fde-conv-multi',
         'fde-layers': 4,
-        'is_fde': False,
-        'weight_combine': False,
-        'fde-no-mask': False,
+        'is_fde': True,
+        'weight_combine': True,
+        'fde-no-mask': True,
         'fde-diagonal': False,
         'is_fde_2nd': False,
         'fde-pos-enc': False,
@@ -153,7 +155,9 @@ config_dict_diffsaits = {
         'is-not-residual': True,
         'res-block-mask': False,
         'is-fde-loop': False,
-        'skip-connect-no-res-layer': False
+        'skip-connect-no-res-layer': False,
+        'is_stable': True,
+        'is_first': True
     }
 }
 print(f"config: {config_dict_diffsaits}")

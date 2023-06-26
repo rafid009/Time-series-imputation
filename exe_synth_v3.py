@@ -108,7 +108,7 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 
 config_dict_diffsaits = {
     'train': {
-        'epochs':5000, # 3000 -> ds3
+        'epochs':4000, # 3000 -> ds3
         'batch_size': 16 ,
         'lr': 1.0e-4
     },      
@@ -157,7 +157,9 @@ config_dict_diffsaits = {
         'is-not-residual': True,
         'res-block-mask': False,
         'is-fde-loop': False,
-        'skip-connect-no-res-layer': True
+        'skip-connect-no-res-layer': True,
+        'is_stable': True,
+        'is_first': True
     }
 }
 print(f"config: {config_dict_diffsaits}")

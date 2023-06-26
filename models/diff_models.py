@@ -765,7 +765,7 @@ class diff_SAITS_new_2(nn.Module):
             dropout, diagonal_attention_mask=True, is_simple=False, ablation_config=None):
         super().__init__()
         self.n_layers = n_layers
-        # actual_d_feature = d_feature * 2
+        actual_d_feature = d_feature * 2
         self.is_simple = is_simple
         self.d_feature = d_feature
         self.ablation_config = ablation_config
@@ -778,7 +778,20 @@ class diff_SAITS_new_2(nn.Module):
         
         self.is_not_residual = self.ablation_config['is-not-residual']
 
-        if self.ablation_config['enc-dec']:
+        if self.ablation_config['stable']:
+            self.layer_stack_for_first_block = nn.ModuleList([
+                ResidualEncoderLayer(channels=channels, d_time=d_time, actual_d_feature=actual_d_feature, 
+                            d_model=d_model, d_inner=d_inner, n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout,
+                            diffusion_embedding_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask)
+                for _ in range(n_layers)
+            ])
+            self.layer_stack_for_second_block = nn.ModuleList([
+                ResidualEncoderLayer(channels=channels, d_time=d_time, actual_d_feature=actual_d_feature, 
+                            d_model=d_model, d_inner=d_inner, n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout,
+                            diffusion_embedding_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask)
+                for _ in range(n_layers)
+            ])
+        elif self.ablation_config['enc-dec']:
             
             self.enc_dec_block_1 = EncoderDecoderBlock(n_layers=n_layers, d_model=d_model, d_time=d_time, d_inner=d_inner, n_head=n_head,
                                                 d_k=d_k, d_v=d_v, dropout=dropout, diff_emb_dim=diff_emb_dim, diagonal_attention_mask=diagonal_attention_mask,
@@ -951,6 +964,130 @@ class diff_SAITS_new_2(nn.Module):
             skips_tilde_3 = skips_tilde_2 # (B, K, L)
             skips_tilde_2 = None
             skips_tilde_1 = None
+        elif self.ablation_config['stable']:
+            # Feature Dependency Encoder (FDE): We are trying to get a global feature time-series cross-correlation
+            # between features. Each feature's time-series will get global aggregated information from other features'
+            # time-series. We also get a feature attention/dependency matrix (feature attention weights) from it.
+            if self.ablation_config['is_fde'] and self.ablation_config['is_first']:
+                cond_X = X[:,0,:,:] + X[:,1,:,:] # (B, L, K)
+                shp = cond_X.shape
+                if not self.ablation_config['fde-no-mask']:
+                    # In one branch, we do not apply the missing mask to the inputs of FDE
+                    # and in the other we stack the mask with the input time-series for each 
+                    # feature and embed them together to get a masked informed time-series data
+                    # for each feature.
+                    cond_X = torch.stack([cond_X, masks[:,1,:,:]], dim=1) # (B, 2, L, K)
+                    cond_X = cond_X.permute(0, 3, 1, 2) # (B, K, 2, L)
+                    cond_X = cond_X.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
+                    cond_X = self.mask_conv(cond_X) # (B, K, L)
+                else:
+                    cond_X = torch.transpose(cond_X, 1, 2) # (B, K, L)
+
+                for feat_enc_layer in self.layer_stack_for_feature_weights:
+                    cond_X, attn_weights_f = feat_enc_layer(cond_X) # (B, K, L), (B, K, K)
+
+                cond_X = torch.transpose(cond_X, 1, 2)
+            else:
+                cond_X = X[:,1,:,:]
+            # combi 2
+            input_X_for_first = torch.cat([cond_X, masks[:,1,:,:]], dim=2)
+            input_X_for_first = self.embedding_1(input_X_for_first)
+
+            # cond separate
+            noise = input_X_for_first
+            cond = torch.cat([X[:,0,:,:], masks[:,0,:,:]], dim=2)
+            cond = self.embedding_cond(cond)
+
+            diff_emb = self.diffusion_embedding(diffusion_step)
+            pos_cond = self.position_enc_cond(cond)
+
+            enc_output = self.dropout(self.position_enc_noise(noise))
+            skips_tilde_1 = torch.zeros_like(enc_output)
+            for encoder_layer in self.layer_stack_for_first_block:
+                # old stable better
+                enc_output, skip, _ = encoder_layer(enc_output, pos_cond, diff_emb)
+                skips_tilde_1 += skip
+            skips_tilde_1 /= math.sqrt(len(self.layer_stack_for_first_block))
+            skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
+            
+            X_tilde_1 = self.reduce_dim_z(enc_output)
+
+            if self.ablation_config['is_fde_2nd']:
+                # Feature attention added
+                attn_weights_f = attn_weights_f.squeeze(dim=1)  # namely term A_hat in Eq.
+                if len(attn_weights_f.shape) == 4:
+                    # if having more than 1 head, then average attention weights from all heads
+                    attn_weights_f = torch.transpose(attn_weights_f, 1, 3)
+                    attn_weights_f = attn_weights_f.mean(dim=3)
+                    attn_weights_f = torch.transpose(attn_weights_f, 1, 2)
+                    attn_weights_f = torch.softmax(attn_weights_f, dim=-1)
+                # Feature encode for second block
+                # cond_X = (cond_X + X[:, 1, :, :])
+                X_tilde_1 = X_tilde_1 @ attn_weights_f + X[:, 1, :, :] #+ X[:, 0, :, :]#((cond_X + X[:, 1, :, :]) * (1 - masks[:, 1, :, :])) / 2 #cond_X #+ X_tilde_1
+            else:
+                # Old stable better
+                X_tilde_1 = X_tilde_1 + skips_tilde_1 + X[:, 1, :, :] # skips_tilde_1 + X[:, 1, :, :] 
+                # X_tilde_1 = X_tilde_1 + X[:, 1, :, :]
+
+            # second DMSA block
+            if not self.ablation_config['is_first']:
+                if self.ablation_config['is_fde']:
+                    cond_X = X_tilde_1 # X[:,0,:,:] + X[:,1,:,:] # (B, L, K)
+                    shp = cond_X.shape
+                    if not self.ablation_config['fde-no-mask']:
+                        # In one branch, we do not apply the missing mask to the inputs of FDE
+                        # and in the other we stack the mask with the input time-series for each feature
+                        # and embed them together to get a masked informed time-series data for each feature.
+                        cond_X = torch.stack([cond_X, masks[:,1,:,:]], dim=1) # (B, 2, L, K)
+                        cond_X = cond_X.permute(0, 3, 1, 2) # (B, K, 2, L)
+                        cond_X = cond_X.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
+                        cond_X = self.mask_conv(cond_X) # (B, K, L)
+                    else:
+                        cond_X = torch.transpose(cond_X, 1, 2) # (B, K, L)
+
+                    for feat_enc_layer in self.layer_stack_for_feature_weights:
+                        cond_X, attn_weights_f = feat_enc_layer(cond_X) # (B, K, L), (B, K, K)
+
+                    cond_X = torch.transpose(cond_X, 1, 2)
+                else:
+                    cond_X = X_tilde_1 #X[:,1,:,:]
+                X_tilde_1 = cond_X
+
+            # before combi 2
+            input_X_for_second = torch.cat([X_tilde_1, masks[:,1,:,:]], dim=2)
+            input_X_for_second = self.embedding_2(input_X_for_second)
+            noise = input_X_for_second
+
+            enc_output = self.position_enc_noise(noise)
+            skips_tilde_2 = torch.zeros_like(enc_output)
+            for encoder_layer in self.layer_stack_for_second_block:
+                enc_output, skip, attn_weights = encoder_layer(enc_output, pos_cond, diff_emb)
+                skips_tilde_2 += skip
+
+            # skip_tilde_2
+            skips_tilde_2 /= math.sqrt(len(self.layer_stack_for_second_block))
+            skips_tilde_2 = self.reduce_dim_gamma(F.relu(self.reduce_dim_beta(skips_tilde_2))) # self.reduce_dim_beta(skips_tilde_2)
+
+            if self.ablation_config['weight_combine']:
+                # attention-weighted combine
+                attn_weights = attn_weights.squeeze(dim=1)  # namely term A_hat in Eq.
+                if len(attn_weights.shape) == 4:
+                    # if having more than 1 head, then average attention weights from all heads
+                    attn_weights = torch.transpose(attn_weights, 1, 3)
+                    attn_weights = attn_weights.mean(dim=3)
+                    attn_weights = torch.transpose(attn_weights, 1, 2)
+
+                combining_weights = torch.sigmoid(
+                    self.weight_combine(torch.cat([masks[:, 0, :, :], attn_weights], dim=2))
+                )  # namely term eta
+                skips_tilde_3 = (1 - combining_weights) * skips_tilde_1 + combining_weights * skips_tilde_2
+            else:
+                skips_tilde_3 = (skips_tilde_1 + skips_tilde_2) * math.sqrt(0.5)
+
+            skips_tilde_1 = torch.transpose(skips_tilde_1, 1, 2)
+            skips_tilde_2 = torch.transpose(skips_tilde_2, 1, 2)
+            skips_tilde_3 = torch.transpose(skips_tilde_3, 1, 2)
+
         else:
             if not self.ablation_config['res-block-mask']:
                 noise = torch.transpose(noise, 1, 2) # (B, L, K)
