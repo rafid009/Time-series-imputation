@@ -160,7 +160,7 @@ config_dict_diffsaits = {
         'is-fde-loop': False,
         'skip-connect-no-res-layer': False,
         'is_stable': True,
-        'is_first': True
+        'is_first': False
     }
 }
 print(f"config: {config_dict_diffsaits}")

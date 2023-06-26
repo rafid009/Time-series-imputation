@@ -160,11 +160,11 @@ config_dict_diffsaits = {
         'is-fde-loop': False,
         'skip-connect-no-res-layer': True,
         'is_stable': True,
-        'is_first': True
+        'is_first': False
     }
 }
 print(f"config: {config_dict_diffsaits}")
-name = f'skip_fde_1st_{miss_type_diffsaits}'
+name = f'skip_fde_2nd_{miss_type_diffsaits}'
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
 filename = f"model_diffsaits_synth_v3_{miss_type_diffsaits}_{name}_new.pth"
