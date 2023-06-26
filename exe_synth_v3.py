@@ -28,7 +28,8 @@ class NumpyArrayEncoder(JSONEncoder):
 
 given_features = feats_v3
 
-miss_type = 'random'
+miss_type_csdi = 'blackout'
+miss_type_diffsaits = 'blackout'
 # seed = 10
 config_dict_csdi = {
     'train': {
@@ -51,9 +52,9 @@ config_dict_csdi = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': miss_type,
+        'target_strategy': miss_type_csdi,
         'type': 'CSDI',
-        'n_layers': 3, 
+        'n_layers': 4, 
         'd_time': 100,
         'n_feature': len(given_features),
         'd_model': 128,
@@ -127,7 +128,7 @@ config_dict_diffsaits = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "mix", # noise mix
+        'target_strategy': miss_type_diffsaits, # noise mix
         'type': 'SAITS',
         'n_layers': 4,
         'loss_weight_p': 1,

@@ -28,6 +28,8 @@ class NumpyArrayEncoder(JSONEncoder):
 
 given_features = feats_v6
 
+miss_type_csdi = 'blackout'
+miss_type_diffsaits = 'blackout'
 
 seed = np.random.randint(10, 100)
 config_dict_csdi = {
@@ -51,7 +53,7 @@ config_dict_csdi = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "random",
+        'target_strategy': miss_type_csdi,
         'type': 'CSDI',
         'n_layers': 3, 
         'd_time': 100,
@@ -126,7 +128,7 @@ config_dict_diffsaits = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "mix", # noise mix
+        'target_strategy': miss_type_diffsaits, # noise mix
         'type': 'SAITS',
         'n_layers': 4,
         'loss_weight_p': 1,
@@ -197,12 +199,12 @@ for l in lengths:
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v6', batch_size=32, length=l, noise=noise, mean=mean, std=std)
     # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
-print(f"\nForecasting:")
-evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v6', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
-# evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True, noise=noise)
+# print(f"\nForecasting:")
+# evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v6', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
+# # evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
-miss_ratios = [0.1, 0.5, 0.9]
-for ratio in miss_ratios:
-    print(f"\nRandom Missing: ratio ({ratio})")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v6', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise, mean=mean, std=std)
+# miss_ratios = [0.1, 0.5, 0.9]
+# for ratio in miss_ratios:
+#     print(f"\nRandom Missing: ratio ({ratio})")
+#     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v6', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise, mean=mean, std=std)
     # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, noise=noise)

@@ -29,6 +29,8 @@ class NumpyArrayEncoder(JSONEncoder):
 
 given_features = feats_v2
 
+miss_type_csdi = 'blackout'
+miss_type_diffsaits = 'blackout'
 
 config_dict_csdi = {
     'train': {
@@ -51,7 +53,7 @@ config_dict_csdi = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "blackout",
+        'target_strategy': miss_type_csdi,
         'type': 'CSDI',
         'n_layers': 3, 
         'd_time': 100,
@@ -124,7 +126,7 @@ config_dict_diffsaits = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "blackout", # noise mix
+        'target_strategy': miss_type_diffsaits, # noise mix
         'type': 'SAITS',
         'n_layers': 4,
         'loss_weight_p': 1,
