@@ -778,7 +778,7 @@ class diff_SAITS_new_2(nn.Module):
         
         self.is_not_residual = self.ablation_config['is-not-residual']
 
-        if self.ablation_config['stable']:
+        if self.ablation_config['is_stable']:
             self.layer_stack_for_first_block = nn.ModuleList([
                 ResidualEncoderLayer(channels=channels, d_time=d_time, actual_d_feature=actual_d_feature, 
                             d_model=d_model, d_inner=d_inner, n_head=n_head, d_k=d_k, d_v=d_v, dropout=dropout,
@@ -964,7 +964,7 @@ class diff_SAITS_new_2(nn.Module):
             skips_tilde_3 = skips_tilde_2 # (B, K, L)
             skips_tilde_2 = None
             skips_tilde_1 = None
-        elif self.ablation_config['stable']:
+        elif self.ablation_config['is_stable']:
             # Feature Dependency Encoder (FDE): We are trying to get a global feature time-series cross-correlation
             # between features. Each feature's time-series will get global aggregated information from other features'
             # time-series. We also get a feature attention/dependency matrix (feature attention weights) from it.
