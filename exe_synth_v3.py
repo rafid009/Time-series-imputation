@@ -211,7 +211,7 @@ for l in lengths:
     print(f"\nlength = {l}")
     print(f"\nBlackout:")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, length=l, noise=noise, mean=mean, std=std)
-    # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v3', length=l, trials=1, batch_size=1, data=True, noise=noise)
+    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v3', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
 # print(f"\nForecasting:")
 # evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
