@@ -51,7 +51,7 @@ config_dict_csdi = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "random",
+        'target_strategy': "blackout",
         'type': 'CSDI',
         'n_layers': 3, 
         'd_time': 100,
@@ -124,7 +124,7 @@ config_dict_diffsaits = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "mix", # noise mix
+        'target_strategy': "blackout", # noise mix
         'type': 'SAITS',
         'n_layers': 4,
         'loss_weight_p': 1,
@@ -157,7 +157,8 @@ config_dict_diffsaits = {
         'skip-connect-no-res-layer': False,
         'enc-dec': False,
         'is_stable': True,
-        'is_first': True
+        'is_first': True,
+        'blackout': False
     }
 }
 print(f"config: {config_dict_diffsaits}")
@@ -210,16 +211,16 @@ for l in lengths:
     print(f"\nlength = {l}")
     print(f"\nBlackout:")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=32, length=l, noise=noise, mean=mean, std=std)
-    evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, length=l, data=True, noise=noise, mean=mean, std=std)
+    # evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, length=l, data=True, noise=noise, mean=mean, std=std)
 
-print(f"\nForecasting:")
-evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
-evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, length=50, forecasting=True, data=True, noise=noise, mean=mean, std=std)
+# print(f"\nForecasting:")
+# evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
+# evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, length=50, forecasting=True, data=True, noise=noise, mean=mean, std=std)
 # evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
-miss_ratios = [0.1, 0.5, 0.9]
-for ratio in miss_ratios:
-    print(f"\nRandom Missing: ratio ({ratio})")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise, mean=mean, std=std)
-    evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, missing_ratio=ratio, random_trial=True, data=True, noise=noise, mean=mean, std=std)
+# miss_ratios = [0.1, 0.5, 0.9]
+# for ratio in miss_ratios:
+#     print(f"\nRandom Missing: ratio ({ratio})")
+#     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise, mean=mean, std=std)
+    # evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, missing_ratio=ratio, random_trial=True, data=True, noise=noise, mean=mean, std=std)
     # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, noise=noise)

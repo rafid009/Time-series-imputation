@@ -114,6 +114,14 @@ class CSDI_base(nn.Module):
                 cond_mask[i] = cond_mask[i] * for_pattern_mask[i - 1] 
         return cond_mask
     
+    def get_bm_mask(self, observed_mask):
+        cond_mask = observed_mask.clone()
+        for i in range(cond_mask.shape[0]):
+            start = np.random.randint(0, cond_mask.shape[2] - 1)
+            length = np.random.randint(1, cond_mask.shape[2] - start - 1)
+            cond_mask[i, :, start + length] = 0.0
+        return cond_mask
+    
     def get_pattern_mask(self, observed_mask: torch.Tensor, is_val=False, pattern_folder=None):
         B, K, L = observed_mask.shape
         patterns = []
@@ -326,6 +334,7 @@ class CSDI_base(nn.Module):
             imputed_samples[:, i] = current_sample.detach()
         return imputed_samples
 
+
     def forward(self, batch, is_train=1):
         (
             observed_data,
@@ -351,6 +360,10 @@ class CSDI_base(nn.Module):
         elif self.target_strategy == "mix":
             cond_mask = self.get_hist_mask(
                 observed_mask, for_pattern_mask=for_pattern_mask
+            )
+        elif self.target_strategy == 'blackout':
+            cond_mask = self.get_bm_mask(
+                observed_mask
             )
         else:
             cond_mask = self.get_randmask(observed_mask)

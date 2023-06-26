@@ -83,15 +83,15 @@ filename = f"model_csdi_synth_v3_{miss_type}.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI training starts.....\n")
-# train(
-#     model_csdi,
-#     config_dict_csdi["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{filename}",
-#     is_saits=False
-# )
+train(
+    model_csdi,
+    config_dict_csdi["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{filename}",
+    is_saits=False
+)
 model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
@@ -210,14 +210,14 @@ for l in lengths:
     print(f"\nlength = {l}")
     print(f"\nBlackout:")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, length=l, noise=noise, mean=mean, std=std)
-    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v3', length=l, trials=1, batch_size=1, data=True, noise=noise)
+    # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v3', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
-print(f"\nForecasting:")
-evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
-evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v3', length=l, trials=1, batch_size=1, data=True, noise=noise)
+# print(f"\nForecasting:")
+# evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
+# evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v3', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
-miss_ratios = [0.1, 0.5, 0.9]
-for ratio in miss_ratios:
-    print(f"\nRandom Missing: ratio ({ratio})")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise, mean=mean, std=std)
-    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v3', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, noise=noise)
+# miss_ratios = [0.1, 0.5, 0.9]
+# for ratio in miss_ratios:
+#     print(f"\nRandom Missing: ratio ({ratio})")
+#     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise, mean=mean, std=std)
+    # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v3', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, noise=noise)
