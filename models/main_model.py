@@ -117,9 +117,9 @@ class CSDI_base(nn.Module):
     def get_bm_mask(self, observed_mask):
         cond_mask = observed_mask.clone()
         for i in range(cond_mask.shape[0]):
-            start = np.random.randint(0, cond_mask.shape[2] - 1)
+            start = np.random.randint(0, cond_mask.shape[2] - int(cond_mask.shape[2] * 0.1))
             length = np.random.randint(int(cond_mask.shape[2] * 0.1), int(cond_mask.shape[2] * 0.2))
-            cond_mask[i, :, start + length] = 0.0
+            cond_mask[i, :, start : (start + length - 1)] = 0.0
         return cond_mask
     
     def get_pattern_mask(self, observed_mask: torch.Tensor, is_val=False, pattern_folder=None):
