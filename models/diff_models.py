@@ -927,7 +927,6 @@ class diff_SAITS_new_2(nn.Module):
                 noise = self.position_enc_cond(noise) # (B, L, D)
                 noise = torch.transpose(noise, 1, 2)
 
-
                 cond = torch.stack([cond, masks[:, 1, :, :]], dim=1) # (B, 2, K, L)
                 cond = cond.permute(0, 2, 1, 3) # (B, K, 2, L)
                 cond = cond.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)

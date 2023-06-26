@@ -29,8 +29,8 @@ class NumpyArrayEncoder(JSONEncoder):
 
 given_features = feats_v2
 
-miss_type_csdi = 'blackout'
-miss_type_diffsaits = 'blackout'
+miss_type_csdi = 'random'
+miss_type_diffsaits = 'mix'
 
 config_dict_csdi = {
     'train': {
@@ -82,16 +82,16 @@ filename = f"model_csdi_synth_v2.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI training starts.....\n")
-# train(
-#     model_csdi,
-#     config_dict_csdi["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{filename}",
-#     is_saits=False
-# )
-model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+train(
+    model_csdi,
+    config_dict_csdi["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{filename}",
+    is_saits=False
+)
+# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
 
@@ -164,7 +164,7 @@ config_dict_diffsaits = {
     }
 }
 print(f"config: {config_dict_diffsaits}")
-name = 'blackout'
+name = f'skip_fde_1st_{miss_type_diffsaits}'
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
 filename = f"model_diffsaits_synth_v2_{name}_new_2.pth"
@@ -215,14 +215,14 @@ for l in lengths:
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=32, length=l, noise=noise, mean=mean, std=std)
     evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, length=l, data=True, noise=noise, mean=mean, std=std)
 
-# print(f"\nForecasting:")
-# evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
-# evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, length=50, forecasting=True, data=True, noise=noise, mean=mean, std=std)
+print(f"\nForecasting:")
+evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
+evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, length=50, forecasting=True, data=True, noise=noise, mean=mean, std=std)
 # evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
-# miss_ratios = [0.1, 0.5, 0.9]
-# for ratio in miss_ratios:
-#     print(f"\nRandom Missing: ratio ({ratio})")
-#     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise, mean=mean, std=std)
-    # evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, missing_ratio=ratio, random_trial=True, data=True, noise=noise, mean=mean, std=std)
+miss_ratios = [0.1, 0.5, 0.9]
+for ratio in miss_ratios:
+    print(f"\nRandom Missing: ratio ({ratio})")
+    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise, mean=mean, std=std)
+    evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v2', batch_size=1, missing_ratio=ratio, random_trial=True, data=True, noise=noise, mean=mean, std=std)
     # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, noise=noise)
