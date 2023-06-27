@@ -160,7 +160,8 @@ config_dict_diffsaits = {
         'enc-dec': False,
         'is_stable': True,
         'is_first': False,
-        'blackout': False
+        'blackout': False,
+        'is_dual': False
     }
 }
 print(f"config: {config_dict_diffsaits}")
