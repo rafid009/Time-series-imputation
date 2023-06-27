@@ -159,6 +159,7 @@ config_dict_diffsaits = {
         'res-block-mask': False,
         'is-fde-loop': False,
         'skip-connect-no-res-layer': True,
+        'enc-dec': False,
         'is_stable': True,
         'is_first': False,
         'is_dual': False
