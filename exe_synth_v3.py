@@ -130,7 +130,7 @@ config_dict_diffsaits = {
         'featureemb': 16,
         'target_strategy': miss_type_diffsaits, # noise mix
         'type': 'SAITS',
-        'n_layers': 4,
+        'n_layers': 3,
         'loss_weight_p': 1,
         'loss_weight_f': 1,
         'd_time': n_steps,
@@ -145,7 +145,7 @@ config_dict_diffsaits = {
     },
     'ablation': {
         'fde-choice': 'fde-conv-multi',
-        'fde-layers': 4,
+        'fde-layers': 3,
         'is_fde': True,
         'weight_combine': True,
         'fde-no-mask': True,
