@@ -1063,6 +1063,8 @@ class diff_SAITS_new_2(nn.Module):
             enc_output = torch.transpose(enc_output, 1, 2)
 
         elif self.ablation_config['is_stable']:
+            X = torch.transpose(X, 2, 3)
+            masks = torch.transpose(masks, 2, 3)
             # Feature Dependency Encoder (FDE): We are trying to get a global feature time-series cross-correlation
             # between features. Each feature's time-series will get global aggregated information from other features'
             # time-series. We also get a feature attention/dependency matrix (feature attention weights) from it.
