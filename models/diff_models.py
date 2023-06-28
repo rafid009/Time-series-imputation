@@ -399,7 +399,6 @@ class diff_SAITS_new(nn.Module):
         input_X_for_first = torch.cat([cond_X, masks[:,1,:,:]], dim=2)
         input_X_for_first = self.embedding_1(input_X_for_first)
 
-
         # cond separate
         noise = input_X_for_first
         cond = torch.cat([X[:,0,:,:], masks[:,0,:,:]], dim=2)
@@ -433,7 +432,7 @@ class diff_SAITS_new(nn.Module):
             X_tilde_1 = X_tilde_1 @ attn_weights_f + X[:, 1, :, :] #+ X[:, 0, :, :]#((cond_X + X[:, 1, :, :]) * (1 - masks[:, 1, :, :])) / 2 #cond_X #+ X_tilde_1
         else:
             # Old stable better
-            X_tilde_1 = X_tilde_1 + skips_tilde_1 #+ X[:, 1, :, :] # skips_tilde_1 + X[:, 1, :, :] 
+            X_tilde_1 = (X_tilde_1 + skips_tilde_1) * math.sqrt(0.5) #+ X[:, 1, :, :] # skips_tilde_1 + X[:, 1, :, :] 
             # X_tilde_1 = X_tilde_1 + X[:, 1, :, :]
 
         # second DMSA block
