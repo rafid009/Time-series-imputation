@@ -432,7 +432,7 @@ class diff_SAITS_new(nn.Module):
             X_tilde_1 = X_tilde_1 @ attn_weights_f + X[:, 1, :, :] #+ X[:, 0, :, :]#((cond_X + X[:, 1, :, :]) * (1 - masks[:, 1, :, :])) / 2 #cond_X #+ X_tilde_1
         else:
             # Old stable better
-            X_tilde_1 = (X_tilde_1 + skips_tilde_1) * math.sqrt(0.5) #+ X[:, 1, :, :] # skips_tilde_1 + X[:, 1, :, :] 
+            X_tilde_1 = (X_tilde_1 + skips_tilde_1) #* math.sqrt(0.5) #+ X[:, 1, :, :] # skips_tilde_1 + X[:, 1, :, :] 
             # X_tilde_1 = X_tilde_1 + X[:, 1, :, :]
 
         # second DMSA block
