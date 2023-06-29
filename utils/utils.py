@@ -779,7 +779,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
                 if 'DiffSAITS' in models.keys():
                         results_data[j]['diff_saits_mean'] = samples_diff_saits_mean[0, :, :].cpu().numpy()
                         results_data[j]['diff_saits_samples'] = samples_diff_saits[0].cpu().numpy()
-                        results_data[j]['diff_saits_median'] = samples_diff_saits_median[0].cpu().numpy()
+                        results_data[j]['diff_saits_median'] = samples_diff_saits_median.values[0, :, :].cpu().numpy()
 
                 if 'SAITS' in models.keys():
                     results_data[j]['saits']: saits_output[0, :, :]
