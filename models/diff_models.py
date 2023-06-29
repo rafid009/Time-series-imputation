@@ -417,7 +417,7 @@ class diff_SAITS_new(nn.Module):
         skips_tilde_1 = self.reduce_skip_z(skips_tilde_1)
 
         X_tilde_1 = self.reduce_dim_z(enc_output)
-        pre_X_tilde = None
+        # pre_X_tilde = None
         if self.ablation_config['is_fde_2nd']:
             # Feature attention added
             attn_weights_f = attn_weights_f.squeeze(dim=1)  # namely term A_hat in Eq.
@@ -432,7 +432,7 @@ class diff_SAITS_new(nn.Module):
             X_tilde_1 = X_tilde_1 @ attn_weights_f + X[:, 1, :, :] #+ X[:, 0, :, :]#((cond_X + X[:, 1, :, :]) * (1 - masks[:, 1, :, :])) / 2 #cond_X #+ X_tilde_1
         else:
             # Old stable better
-            pre_X_tilde = X_tilde_1
+            # pre_X_tilde = X_tilde_1
             X_tilde_1 = X_tilde_1 + skips_tilde_1 + X[:, 1, :, :] # skips_tilde_1 + X[:, 1, :, :] 
            
             # X_tilde_1 = X_tilde_1 + X[:, 1, :, :]
