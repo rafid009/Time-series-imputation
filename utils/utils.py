@@ -803,7 +803,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
                     rmse_diff_saits = rmse_diff_saits.sum().item() / eval_points.sum().item()
                     diffsaits_rmse_avg += rmse_diff_saits
 
-                    mse_diff_saits_median = ((samples_diff_saits_median - c_target) * eval_points) ** 2
+                    mse_diff_saits_median = ((samples_diff_saits_median.values - c_target) * eval_points) ** 2
                     mse_diff_saits_median = mse_diff_saits_median.sum().item() / eval_points.sum().item()
                     diffsaits_median_avg += mse_diff_saits_median
 
