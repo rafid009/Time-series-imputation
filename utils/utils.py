@@ -683,8 +683,8 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
 
     results_trials_mse = {'csdi': {}, 'diffsaits': {}, 'saits': {}}
     results_trials_mae = {'csdi': {}, 'diffsaits': {}, 'saits': {}}
-    results_mse = {'csdi': 0, 'diffsaits': 0, 'saits': 0}
-    results_mae = {'csdi': 0, 'diffsaits': 0, 'saits': 0}
+    results_mse = {'csdi': 0, 'diffsaits': 0, 'diffsaits_median': 0, 'saits': 0}
+    results_mae = {'csdi': 0, 'diffsaits': 0, 'diffsaits_median': 0, 'saits': 0}
     results_crps = {
         'csdi_trials':{}, 'csdi': 0, 
         'diffsaits_trials': {}, 'diffsaits': 0, 
@@ -727,6 +727,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
         
         csdi_rmse_avg = 0
         diffsaits_rmse_avg = 0
+        diffsaits_median_avg = 0
         saits_rmse_avg = 0
 
         csdi_mae_avg = 0
@@ -757,7 +758,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
                 else:
                     samples_diff_saits, _, _, _, _, _, _ = output_diff_saits
                 samples_diff_saits = samples_diff_saits.permute(0, 1, 3, 2)
-                # samples_diff_saits_median = samples_diff_saits.median(dim=1)
+                samples_diff_saits_median = samples_diff_saits.median(dim=1)
                 samples_diff_saits_mean = samples_diff_saits.mean(dim=1)
             
             if 'SAITS' in models.keys():
@@ -778,6 +779,8 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
                 if 'DiffSAITS' in models.keys():
                         results_data[j]['diff_saits_mean'] = samples_diff_saits_mean[0, :, :].cpu().numpy()
                         results_data[j]['diff_saits_samples'] = samples_diff_saits[0].cpu().numpy()
+                        results_data[j]['diff_saits_median'] = samples_diff_saits_median[0].cpu().numpy()
+
                 if 'SAITS' in models.keys():
                     results_data[j]['saits']: saits_output[0, :, :]
             else:
@@ -799,6 +802,10 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
                     rmse_diff_saits = ((samples_diff_saits_mean - c_target) * eval_points) ** 2
                     rmse_diff_saits = rmse_diff_saits.sum().item() / eval_points.sum().item()
                     diffsaits_rmse_avg += rmse_diff_saits
+
+                    mse_diff_saits_median = ((samples_diff_saits_median - c_target) * eval_points) ** 2
+                    mse_diff_saits_median = mse_diff_saits_median.sum().item() / eval_points.sum().item()
+                    diffsaits_median_avg += mse_diff_saits_median
 
                     mae_diff_saits = torch.abs((samples_diff_saits_mean - c_target) * eval_points)
                     mae_diff_saits = mae_diff_saits.sum().item() / eval_points.sum().item()
@@ -830,10 +837,12 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
             if 'DiffSAITS' in models.keys():
                 results_trials_mse['diffsaits'][trial] = diffsaits_rmse_avg / batch_size
                 results_mse['diffsaits'] += diffsaits_rmse_avg / batch_size
+                results_mse['diffsaits_median'] += diffsaits_median_avg / batch_size
                 results_trials_mae['diffsaits'][trial] = diffsaits_mae_avg / batch_size
                 results_mae['diffsaits'] += diffsaits_mae_avg / batch_size
                 results_crps['diffsaits_trials'][trial] = diffsaits_crps_avg / batch_size
                 results_crps['diffsaits'] += diffsaits_crps_avg / batch_size
+                
 
             if 'SAITS' in models.keys():
                 results_trials_mse['saits'][trial] = saits_rmse_avg / batch_size
@@ -848,8 +857,9 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
     if not data:
         results_mse['csdi'] /= trials
         results_mse['diffsaits'] /= trials
+        results_mse['diffsaits_median'] /= trials
         results_mse['saits'] /= trials
-        print(f"MSE loss:\n\tCSDI: {results_mse['csdi']}\n\tDiffSAITS: {results_mse['diffsaits']}\n\tSAITS: {results_mse['saits']}")
+        print(f"MSE loss:\n\tCSDI: {results_mse['csdi']}\n\tDiffSAITS: {results_mse['diffsaits']}\n\tDiffSAITS median: {results_mse['diffsaits_median']}\n\tSAITS: {results_mse['saits']}")
 
         results_mae['csdi'] /= trials
         results_mae['diffsaits'] /= trials
