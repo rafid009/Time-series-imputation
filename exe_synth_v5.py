@@ -138,8 +138,8 @@ config_dict_diffsaits = {
         'd_model': 128,
         'd_inner': 128,
         'n_head': 8,
-        'd_k': 128, #64, #len(given_features),
-        'd_v': 128, #64, #len(given_features),
+        'd_k': 64, #64, #len(given_features),
+        'd_v': 64, #64, #len(given_features),
         'dropout': 0.1,
         'diagonal_attention_mask': False
     },
@@ -169,7 +169,7 @@ print(f"config: {config_dict_diffsaits}")
 name = f'skip_fde_2nd_{miss_type_diffsaits}'
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
-filename = f"model_diffsaits_synth_v5_{name}_new.pth"
+filename = f"model_diffsaits_synth_v5_{name}.pth"
 print(f"\nDiffSAITS training starts.....\n")
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
@@ -192,8 +192,8 @@ models = {
     # 'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }
-mse_folder = f"results_synth_v5_{name}_new/metric"
-data_folder = f"results_synth_v5_{name}_new/data"
+mse_folder = f"results_synth_v5_{name}/metric"
+data_folder = f"results_synth_v5_{name}/data"
 lengths = [10, 50, 90]
 for l in lengths:
     print(f"\nlength = {l}")
@@ -203,7 +203,7 @@ for l in lengths:
 
 print(f"\nForecasting:")
 evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v5', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
-evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v5', length=l, trials=1, batch_size=1, data=True, noise=noise)
+evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v5', length=50, trials=1, batch_size=1, data=True, noise=noise)
 
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
