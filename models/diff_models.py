@@ -433,7 +433,7 @@ class diff_SAITS_new(nn.Module):
         else:
             # Old stable better
             # pre_X_tilde = X_tilde_1
-            X_tilde_1 = X_tilde_1 + skips_tilde_1 + X[:, 1, :, :] # skips_tilde_1 + X[:, 1, :, :] 
+            X_tilde_1 = X_tilde_1 + skips_tilde_1 #+ X[:, 1, :, :] # skips_tilde_1 + X[:, 1, :, :] 
            
             # X_tilde_1 = X_tilde_1 + X[:, 1, :, :]
 
@@ -456,7 +456,7 @@ class diff_SAITS_new(nn.Module):
                 cond_X, attn_weights_f = feat_enc_layer(cond_X) # (B, K, L), (B, K, K)
 
             cond_X = torch.transpose(cond_X, 1, 2)
-            # cond_X = cond_X + skips_tilde_1
+            cond_X = cond_X + X[:, 1, :, :]
         else:
             cond_X = X_tilde_1 #X[:,1,:,:]
 
