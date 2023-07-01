@@ -161,7 +161,7 @@ config_dict_diffsaits = {
         'skip-connect-no-res-layer': False,
         'enc-dec': False,
         'is_stable': True,
-        'is_first': False,
+        'is_first': True,
         'is_dual': False
     }
 }

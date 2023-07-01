@@ -235,8 +235,8 @@ def train(
             if is_saits:
                 # if data_type != 'pm25' and data_type != 'synth_v2' and data_type != 'synth_v3':
                 #     lr_scheduler.step()
-                pass
-                # lr_scheduler.step()
+                # pass
+                lr_scheduler.step()
             else:
                 lr_scheduler.step()
                 # pass
