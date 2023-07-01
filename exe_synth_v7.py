@@ -13,6 +13,7 @@ from datasets.synthetic_data import feats_v7
 import json
 from json import JSONEncoder
 import math
+from config_ablation import common_config
 matplotlib.rc('xtick', labelsize=20) 
 matplotlib.rc('ytick', labelsize=20) 
 # torch.manual_seed(42)
@@ -165,6 +166,8 @@ config_dict_diffsaits = {
         'is_dual': False
     }
 }
+config_dict_diffsaits['ablation'] = common_config['ablation']
+config_dict_diffsaits['model']['n_layers'] = common_config['n_layers']
 print(f"config: {config_dict_diffsaits}")
 name = f'skip_fde_2nd_{miss_type_diffsaits}'
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
