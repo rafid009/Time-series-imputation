@@ -150,7 +150,7 @@ config_dict_diffsaits = {
         'weight_combine': True,
         'fde-no-mask': True,
         'fde-diagonal': False,
-        'is_fde_2nd': False,
+        'is_fde_2nd': True,
         'fde-pos-enc': False,
         'reduce-type': 'linear',
         'embed-type': 'linear',
