@@ -8,7 +8,7 @@ common_config = {
         'fde-no-mask': False,
         'fde-diagonal': False,
         'is_fde_2nd': True,
-        'fde-pos-enc': False,
+        'fde-pos-enc': True,
         'reduce-type': 'linear',
         'embed-type': 'linear',
         'is_2nd_block': True,
@@ -19,7 +19,7 @@ common_config = {
         'enc-dec': False,
         'is_stable': True,
         'is_first': True,
-        'is_dual': False
+        'is_dual': False,
     },
     'name': 'skip_fde_1st_mask'
 }
