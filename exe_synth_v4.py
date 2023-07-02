@@ -170,7 +170,7 @@ config_dict_diffsaits['ablation'] = common_config['ablation']
 config_dict_diffsaits['model']['n_layers'] = common_config['n_layers']
 config_dict_diffsaits['name'] = common_config['name']
 print(f"config: {config_dict_diffsaits}")
-name = f'skip_fde_2nd_{miss_type_diffsaits}'
+name = config_dict_diffsaits['name']
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
 filename = f"model_diffsaits_synth_v4_{name}{'_noise' if noise else ''}_new.pth"

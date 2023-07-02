@@ -169,10 +169,10 @@ config_dict_diffsaits['ablation'] = common_config['ablation']
 config_dict_diffsaits['model']['n_layers'] = common_config['n_layers']
 config_dict_diffsaits['name'] = common_config['name']
 print(f"config: {config_dict_diffsaits}")
-name = f'skip_fde_2nd_{miss_type_diffsaits}'
+name = config_dict_diffsaits['name']
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
-filename = f"model_diffsaits_synth_v2_{name}_new_2.pth"
+filename = f"model_diffsaits_synth_v2_{name}_new.pth"
 print(f"\n\DiffSAITS training starts.....\n")
 
 # # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
