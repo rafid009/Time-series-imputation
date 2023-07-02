@@ -108,7 +108,7 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 
 config_dict_diffsaits = {
     'train': {
-        'epochs':6000, # 3000 -> ds3
+        'epochs':7000, # 3000 -> ds3
         'batch_size': 16 ,
         'lr': 1.0e-4
     },      
@@ -188,7 +188,7 @@ train(
 )
 
 # # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
+# print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 models = {
     'CSDI': model_csdi,
