@@ -168,6 +168,7 @@ config_dict_diffsaits = {
 }
 config_dict_diffsaits['ablation'] = common_config['ablation']
 config_dict_diffsaits['model']['n_layers'] = common_config['n_layers']
+config_dict_diffsaits['name'] = common_config['name']
 print(f"config: {config_dict_diffsaits}")
 name = common_config['name'] # f'skip_fde_1st_mask_{miss_type_diffsaits}'
 model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
