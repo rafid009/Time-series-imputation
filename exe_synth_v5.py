@@ -190,10 +190,10 @@ train(
 )
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-start = time.time()
-print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
-end = time.time()
-print(f"num param time: {end - start}")
+# start = time.time()
+# print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
+# end = time.time()
+# print(f"num param time: {end - start}")
 
 models = {
     'CSDI': model_csdi,
