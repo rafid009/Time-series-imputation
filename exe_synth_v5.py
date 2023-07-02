@@ -13,6 +13,7 @@ from datasets.synthetic_data import feats_v5
 import json
 from json import JSONEncoder
 import math
+import time
 from config_ablation import common_config
 matplotlib.rc('xtick', labelsize=20) 
 matplotlib.rc('ytick', labelsize=20) 
@@ -85,16 +86,16 @@ filename = f"model_csdi_synth_v5_{miss_type_csdi}.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI training starts.....\n")
-train(
-    model_csdi,
-    config_dict_csdi["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename=f"{filename}",
-    is_saits=False
-)
-# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# train(
+#     model_csdi,
+#     config_dict_csdi["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename=f"{filename}",
+#     is_saits=False
+# )
+model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
 
@@ -110,7 +111,7 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 
 config_dict_diffsaits = {
     'train': {
-        'epochs':3000, # 3000 -> ds3
+        'epochs':7000, # 3000 -> ds3
         'batch_size': 16 ,
         'lr': 1.0e-4
     },      
@@ -189,7 +190,10 @@ train(
 )
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+start = time.time()
 print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
+end = time.time()
+print(f"num param time: {end - start}")
 
 models = {
     'CSDI': model_csdi,
@@ -199,18 +203,26 @@ models = {
 mse_folder = f"results_synth_v5_{name}/metric"
 data_folder = f"results_synth_v5_{name}/data"
 lengths = [10, 50, 90]
+start = time.time()
 for l in lengths:
-    print(f"\nlength = {l}")
-    print(f"\nBlackout:")
+    print(f"\nBlackout length = {l}:")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v5', batch_size=32, length=l, noise=noise, mean=mean, std=std)
     evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v5', length=l, trials=1, batch_size=1, data=True, noise=noise)
+end = time.time()
+print(f"num param time: {end - start}")
 
 print(f"\nForecasting:")
+start = time.time()
 evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v5', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
 evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v5', length=50, trials=1, batch_size=1, data=True, noise=noise)
+end = time.time()
+print(f"num param time: {end - start}")
 
+start = time.time()
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v5', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise, mean=mean, std=std)
     evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v5', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, noise=noise)
+end = time.time()
+print(f"num param time: {end - start}")
