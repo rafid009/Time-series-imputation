@@ -177,7 +177,7 @@ model_diff_saits = CSDI_Synth(config_dict_diffsaits, device, target_dim=len(give
 filename = f"model_diffsaits_synth_v5_{name}.pth"
 print(f"\nDiffSAITS training starts.....\n")
 
-model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 
 train(
     model_diff_saits,
