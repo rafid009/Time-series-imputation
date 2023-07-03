@@ -36,9 +36,9 @@ miss_type_diffsaits = 'mix'
 seed = np.random.randint(10, 100)
 config_dict_csdi = {
     'train': {
-        'epochs': 2500,
+        'epochs': 3000,
         'batch_size': 16 ,
-        'lr': 1.0e-3
+        'lr': 1.0e-4
     },      
     'diffusion': {
         'layers': 4, 
