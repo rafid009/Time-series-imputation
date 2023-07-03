@@ -94,7 +94,7 @@ print(f"\n\nCSDI training starts.....\n")
 #     filename=f"{filename}",
 #     is_saits=False
 # )
-# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
 
