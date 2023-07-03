@@ -762,7 +762,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
                 samples_diff_saits = samples_diff_saits.permute(0, 1, 3, 2)
                 samples_diff_saits_median = samples_diff_saits.median(dim=1)
                 samples_diff_saits_mean = samples_diff_saits.mean(dim=1)
-                samples_diff_saits_mean_med = torch.mean(torch.stack([samples_diff_saits_median.values, samples_diff_saits_mean], dimn=1), dim=1)
+                samples_diff_saits_mean_med = torch.mean(torch.stack([samples_diff_saits_median.values, samples_diff_saits_mean], dim=1), dim=1)
 
             
             if 'SAITS' in models.keys():
