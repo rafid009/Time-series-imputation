@@ -196,7 +196,7 @@ train(
 # print(f"num param time: {end - start}")
 
 models = {
-    'CSDI': model_csdi,
+    # 'CSDI': model_csdi,
     # 'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }

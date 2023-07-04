@@ -191,7 +191,7 @@ train(
 # print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 models = {
-    'CSDI': model_csdi,
+    # 'CSDI': model_csdi,
     # 'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }
