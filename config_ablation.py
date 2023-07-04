@@ -21,5 +21,5 @@ common_config = {
         'is_first': True,
         'is_dual': False,
     },
-    'name': 'skip_fde_1st_mask_loss_p'
+    'name': 'skip_fde_1st_mask_loss_p_attn_1'
 }
