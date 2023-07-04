@@ -5,8 +5,8 @@ common_config = {
         "fde-layers": 4,
         "is_fde": True,
         'weight_combine': True,
-        'fde-no-mask': False,
-        'fde-diagonal': False,
+        'fde-no-mask': True,
+        'fde-diagonal': True,
         'is_fde_2nd': True,
         'fde-pos-enc': False,
         'reduce-type': 'linear',
@@ -21,5 +21,5 @@ common_config = {
         'is_first': True,
         'is_dual': False,
     },
-    'name': 'skip_fde_1st_mask'
+    'name': 'skip_fde_1st'
 }
