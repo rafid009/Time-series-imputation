@@ -75,7 +75,7 @@ n_steps = 100
 n_features = len(given_features)
 num_seasons = 50
 noise = False
-train_loader, valid_loader, mean, std = get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=np.random.randint(10,100), is_test=False, v2='v2', noise=noise)
+train_loader, valid_loader, mean, std = get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=400, is_test=False, v2='v2', noise=noise)
 
 model_csdi = CSDI_Synth(config_dict_csdi, device, target_dim=len(given_features)).to(device)
 model_folder = "./saved_model_synth_v2"

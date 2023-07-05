@@ -33,7 +33,7 @@ given_features = feats_v5
 miss_type_csdi = 'random'
 miss_type_diffsaits = 'mix'
 
-seed = np.random.randint(10, 100)
+seed = 400 #np.random.randint(10, 100)
 config_dict_csdi = {
     'train': {
         'epochs': 3000,
@@ -200,8 +200,8 @@ models = {
     # 'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }
-mse_folder = f"results_synth_v5_{name}/metric"
-data_folder = f"results_synth_v5_{name}/data"
+mse_folder = f"results_synth_v5_{name}_new/metric"
+data_folder = f"results_synth_v5_{name}_new/data"
 lengths = [10, 50, 90]
 start = time.time()
 for l in lengths:

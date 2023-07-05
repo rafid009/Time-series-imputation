@@ -32,7 +32,7 @@ given_features = feats_v4 #['sin', 'cos2', 'harmonic', 'weight', 'lin_comb', 'no
 miss_type_csdi = 'random'
 miss_type_diffsaits = 'mix'
 
-seed = np.random.randint(10, 100)
+seed = 400 #np.random.randint(10, 100)
 config_dict_csdi = {
     'train': {
         'epochs': 2500,

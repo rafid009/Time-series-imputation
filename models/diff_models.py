@@ -442,14 +442,17 @@ class diff_SAITS_new(nn.Module):
             else:
                 # Old stable better
                 # pre_X_tilde = X_tilde_1
-                X_tilde_1 = X_tilde_1 + skips_tilde_1 + X[:, 1, :, :] # skips_tilde_1 + X[:, 1, :, :] 
+                if self.ablation_config['is_fde'] and not self.ablation_config['is_first']:
+                    X_tilde_1 = X_tilde_1 + skips_tilde_1
+                else:
+                    X_tilde_1 = X_tilde_1 + skips_tilde_1 + X[:, 1, :, :] # skips_tilde_1 + X[:, 1, :, :] 
            
             # X_tilde_1 = X_tilde_1 + X[:, 1, :, :]
 
             # second DMSA block
 
             if self.ablation_config['is_fde'] and not self.ablation_config['is_first']:
-                cond_X = X_tilde_1 # X[:,0,:,:] + X[:,1,:,:] # (B, L, K)
+                cond_X = X_tilde_1 + X[:,0,:,:] #+ X[:,1,:,:] # (B, L, K)
                 if not self.ablation_config['fde-no-mask']:
                     # In one branch, we do not apply the missing mask to the inputs of FDE
                     # and in the other we stack the mask with the input time-series for each feature
@@ -458,6 +461,8 @@ class diff_SAITS_new(nn.Module):
                     cond_X = cond_X.permute(0, 3, 1, 2) # (B, K, 2, L)
                     cond_X = cond_X.reshape(-1, 2 * self.d_feature, self.d_time) # (B, 2*K, L)
                     cond_X = self.mask_conv(cond_X) # (B, K, L)
+                    if self.ablation_config['fde-pos-enc']:
+                        cond_X = self.fde_pos_enc(cond_X) # (B, K, L)
                 else:
                     cond_X = torch.transpose(cond_X, 1, 2) # (B, K, L)
 
@@ -465,7 +470,7 @@ class diff_SAITS_new(nn.Module):
                     cond_X, attn_weights_f = feat_enc_layer(cond_X) # (B, K, L), (B, K, K)
 
                 cond_X = torch.transpose(cond_X, 1, 2)
-                # cond_X = cond_X + X[:, 1, :, :]
+                cond_X = cond_X + X[:, 1, :, :]
             else:
                 cond_X = X_tilde_1 #X[:,1,:,:]
 
