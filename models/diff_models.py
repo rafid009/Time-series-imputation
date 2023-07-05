@@ -288,7 +288,7 @@ class ResidualEncoderLayer(nn.Module):
         skip = torch.transpose(skip, 1, 2) # (B, L, K)
 
 
-        attn_weights = attn_weights_1 #(attn_weights_1 + attn_weights_2) / 2 #torch.softmax(attn_weights_1 + attn_weights_2, dim=-1)
+        attn_weights = (attn_weights_1 + attn_weights_2) / 2 #torch.softmax(attn_weights_1 + attn_weights_2, dim=-1)
 
         return (x + residual) * math.sqrt(0.5), skip, attn_weights
 
