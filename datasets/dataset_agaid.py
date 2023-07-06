@@ -131,8 +131,8 @@ class Agaid_Dataset(Dataset):
         self.gt_masks = []
         self.gt_intact = []
         
-        self.mean = torch.tensor(mean, dtype=torch.float32)
-        self.std = torch.tensor(std, dtype=torch.float32)
+        self.mean = torch.tensor(mean) #, dtype=torch.float32)
+        self.std = torch.tensor(std) #, dtype=torch.float32)
 
         # print(f"X: {X.shape} in {'Test' if is_test else 'Train'}")
         
