@@ -18,8 +18,8 @@ common_config = {
         'skip-connect-no-res-layer': False,
         'enc-dec': False,
         'is_stable': True,
-        'is_first': False,
+        'is_first': True,
         'is_dual': False,
     },
-    'name': 'skip_fde_2nd_mask_pos_enc_loss_p'
+    'name': 'skip_fde_1st_mask_pos_enc_loss_p'
 }

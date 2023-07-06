@@ -8,6 +8,7 @@ import os
 from pypots.imputation import SAITS
 from datasets.process_data import *
 import pickle
+from config_ablation import common_config
 
 np.set_printoptions(threshold=np.inf)
 torch.set_printoptions(threshold=torch.inf)
@@ -122,69 +123,69 @@ train(
     filename=filename
 )
 # nsample = 50
-model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-print(f"CSDI params: {get_num_params(model_csdi)}")
+# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# print(f"CSDI params: {get_num_params(model_csdi)}")
 # evaluate(model_csdi, valid_loader, nsample=nsample, scaler=1, foldername=model_folder)
-# model_folder_exp = "./saved_model_explode"
-# if not os.path.isdir(model_folder_exp):
-#     os.makedirs(model_folder_exp)
+
     
-# config_dict_diffsaits = {
-#     'train': {
-#         'epochs': 5000,
-#         'batch_size': 16 ,
-#         'lr': 1.0e-3
-#     },      
-#     'diffusion': {
-#         'layers': 4, 
-#         'channels': 64,
-#         'nheads': 8,
-#         'diffusion_embedding_dim': 128,
-#         'beta_start': 0.0001,
-#         'beta_end': 0.5,
-#         'num_steps': 50,
-#         'schedule': "quad"
-#     },
-#     'model': {
-#         'is_unconditional': 0,
-#         'timeemb': 128,
-#         'featureemb': 16,
-#         'target_strategy': "random",
-#         'type': 'SAITS',
-#         'n_layers': 3,
-#         'loss_weight_p': 1,
-#         'loss_weight_f': 1,
-#         'd_time': 252,
-#         'n_feature': len(features),
-#         'd_model': 128,
-#         'd_inner': 128,
-#         'n_head': 8,
-#         'd_k': 64,
-#         'd_v': 64,
-#         'dropout': 0.2,
-#         'diagonal_attention_mask': True
-#     }
-# }
-# print(config_dict_diffsaits)
-# # model_diff_saits_simple = CSDI_Agaid(config_dict, device, is_simple=True).to(device)
-# model_diff_saits = CSDI_Agaid(config_dict_diffsaits, device, is_simple=False).to(device)
-# filename_simple = 'model_diff_saits_simple.pth'
-# filename = 'model_diff_saits_final.pth'
-# config_info = 'model_diff_saits_final.pth'
+config_dict_diffsaits = {
+    'train': {
+        'epochs': 5000,
+        'batch_size': 16 ,
+        'lr': 1.0e-3
+    },      
+    'diffusion': {
+        'layers': 4, 
+        'channels': 64,
+        'nheads': 8,
+        'diffusion_embedding_dim': 128,
+        'beta_start': 0.0001,
+        'beta_end': 0.5,
+        'num_steps': 50,
+        'schedule': "quad"
+    },
+    'model': {
+        'is_unconditional': 0,
+        'timeemb': 128,
+        'featureemb': 16,
+        'target_strategy': "random",
+        'type': 'SAITS',
+        'n_layers': 3,
+        'loss_weight_p': 1,
+        'loss_weight_f': 1,
+        'd_time': 252,
+        'n_feature': len(features),
+        'd_model': 128,
+        'd_inner': 128,
+        'n_head': 8,
+        'd_k': 64,
+        'd_v': 64,
+        'dropout': 0.1,
+        'diagonal_attention_mask': True
+    }
+}
+config_dict_diffsaits['ablation'] = common_config['ablation']
+config_dict_diffsaits['model']['n_layers'] = common_config['n_layers']
+config_dict_diffsaits['name'] = common_config['name']
+name = config_dict_diffsaits['name']
+print(config_dict_diffsaits)
+# model_diff_saits_simple = CSDI_Agaid(config_dict, device, is_simple=True).to(device)
+model_diff_saits = CSDI_Agaid(config_dict_diffsaits, device, is_simple=False).to(device)
+filename = f'model_diff_saits_{name}.pth'
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # 
-# train(
-#     model_diff_saits,
-#     config_dict_diffsaits["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{filename}",
-#     is_saits=True,
-#     data_type='agaid'
-# )
-# nsample = 100
+train(
+    model_diff_saits,
+    config_dict_diffsaits["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{filename}",
+    is_saits=True,
+    data_type='agaid'
+)
+nsample = 50
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
@@ -213,45 +214,45 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 models = {
     'CSDI': model_csdi,
     # 'SAITS': saits,
-    # 'DiffSAITS': model_diff_saits#,
+    'DiffSAITS': model_diff_saits
     # 'DiffSAITSsimple': model_diff_saits_simple
 }
-mse_folder = f"results_agaid_qual_{miss_type}"
-data_folder = f"results_data_agaid_qual_{miss_type}"
-
-name = miss_type
-test_patterns_start = 15001
-num_test_patterns = 5000
-
-test_pattern_config = {
-    'start': test_patterns_start,
-    'num_patterns': num_test_patterns,
-    'pattern_dir': './data/AgAid/miss_pattern'
-}
-
-evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, pattern=test_pattern_config, test_indices=[32,33], mean=mean, std=std)
+mse_folder = f"results_agaid_qual_{name}/metric"
+data_folder = f"results_agaid_qual_{name}/data"
 
 
-# lengths = [ 50, 100, 200]
+# test_patterns_start = 15001
+# num_test_patterns = 5000
 
-# for l in lengths:
-#     print(f"length = {l}")
-#     print(f"\nBlackout:\n")
-#     evaluate_imputation_all(models=models, trials=20, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, length=l)
-#     # evaluate_imputation(models, data_folder, length=l, trials=1, data=True)
-#     evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', length=l, trials=1, batch_size=1, data=True)
+# test_pattern_config = {
+#     'start': test_patterns_start,
+#     'num_patterns': num_test_patterns,
+#     'pattern_dir': './data/AgAid/miss_pattern'
+# }
+
+# evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, pattern=test_pattern_config, test_indices=[32,33], mean=mean, std=std)
+
+
+lengths = [ 50, 100, 200]
+
+print(f"\nBlackout:\n")
+for l in lengths:
+    print(f"length = {l}")
+    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, length=l)
+    # evaluate_imputation(models, data_folder, length=l, trials=1, data=True)
+    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', length=l, trials=1, batch_size=1, data=True)
 
 print(f"\nForecasting:\n")
-evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, length=(30, 150), forecasting=True, test_indices=[32,33], mean=mean, std=std)
+evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, length=(30, 150), forecasting=True, test_indices=[32,33], mean=mean, std=std)
     # evaluate_imputation(models, mse_folder=data_folder, length=l, forecasting=True, trials=1, data=True)
-# evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='agaid', length=100, trials=1, batch_size=1, data=True)
+evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='agaid', length=100, trials=1, batch_size=1, data=True)
 
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})\n")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=8, missing_ratio=ratio, random_trial=True, test_indices=[32,33], mean=mean, std=std)
+    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, missing_ratio=ratio, random_trial=True, test_indices=[32,33], mean=mean, std=std)
     # evaluate_imputation(models, mse_folder=data_folder, random_trial=True, trials=1, data=True, missing_ratio=ratio)
-    # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True)
+    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True)
 
 
 # print("For All")
