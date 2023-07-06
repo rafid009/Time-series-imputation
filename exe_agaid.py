@@ -114,16 +114,16 @@ model_folder = "./saved_model_agaid"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 filename = f'model_csdi_{miss_type}.pth'
-train(
-    model_csdi,
-    config_dict_csdi["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename=filename
-)
+# train(
+#     model_csdi,
+#     config_dict_csdi["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename=filename
+# )
 # nsample = 50
-# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # print(f"CSDI params: {get_num_params(model_csdi)}")
 # evaluate(model_csdi, valid_loader, nsample=nsample, scaler=1, foldername=model_folder)
 
@@ -176,18 +176,18 @@ filename = f'model_diff_saits_{name}.pth'
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # 
-train(
-    model_diff_saits,
-    config_dict_diffsaits["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename=f"{filename}",
-    is_saits=True,
-    data_type='agaid'
-)
+# train(
+#     model_diff_saits,
+#     config_dict_diffsaits["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename=f"{filename}",
+#     is_saits=True,
+#     data_type='agaid'
+# )
 nsample = 50
-# model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 
@@ -239,7 +239,7 @@ lengths = [ 50, 100, 200]
 print(f"\nBlackout:\n")
 for l in lengths:
     print(f"length = {l}")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, length=l, mean=mean, std=std)
+    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, length=l, test_indices=[32,33], mean=mean, std=std)
     # evaluate_imputation(models, data_folder, length=l, trials=1, data=True)
     evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', length=l, trials=1, batch_size=1, data=True, mean=mean, std=std)
 
