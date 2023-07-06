@@ -14,6 +14,7 @@ from datasets.preprocess_awn import features
 import json
 from json import JSONEncoder
 import math
+from config_ablation import common_config
 matplotlib.rc('xtick', labelsize=20) 
 matplotlib.rc('ytick', labelsize=20) 
 # torch.manual_seed(42)
@@ -130,16 +131,16 @@ if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 print(f"\n\nCSDI training starts.....\n")
 # model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-# train(
-#     model_csdi,
-#     config_dict_csdi["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{filename}",
-#     is_saits=False
-# )
-model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+train(
+    model_csdi,
+    config_dict_csdi["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{filename}",
+    is_saits=False
+)
+# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 print(f"CSDI params: {get_num_params(model_csdi)}")
 
 
@@ -151,72 +152,77 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 # pickle.dump(saits, open(saits_model_file, 'wb'))
 # saits = pickle.load(open(saits_model_file, 'rb'))
 
-# config_dict_diffsaits = {
-#     'train': {
-#         'epochs':4000, # 3000 -> ds3
-#         'batch_size': 16 ,
-#         'lr': 1.0e-3
-#     },      
-#     'diffusion': {
-#         'layers': 4, 
-#         'channels': 64,
-#         'nheads': 8,
-#         'diffusion_embedding_dim': 128,
-#         'beta_start': 0.0001,
-#         'beta_end': 0.5,
-#         'num_steps': 50,
-#         'schedule': "quad",
-#          'is_fast': False,
-#     },
-#     'model': {
-#         'is_unconditional': 0,
-#         'timeemb': 128,
-#         'featureemb': 16,
-#         'target_strategy': "mix", # noise mix
-#         'type': 'SAITS',
-#         'n_layers': 4,
-#         'loss_weight_p': 1,
-#         'loss_weight_f': 1,
-#         'd_time': n_steps,
-#         'n_feature': len(given_features),
-#         'd_model': 128,
-#         'd_inner': 128,
-#         'n_head': 8,
-#         'd_k': 64, #len(given_features),
-#         'd_v': 64, #len(given_features),
-#         'dropout': 0.1,
-#         'diagonal_attention_mask': False,
-#     },
-#     'ablation': {
-#         'fde-choice': 'fde-conv-multi',
-#         'fde-layers': 4,
-#         'is_fde': True,
-#         'weight_combine': False,
-#         'no-mask': False,
-#         'fde-diagonal': True,
-#         'is_fde_2nd': False,
-#         'reduce-type': 'linear',
-#         'is_2nd_block': True
-#     }
-# }
+config_dict_diffsaits = {
+    'train': {
+        'epochs':4000, # 3000 -> ds3
+        'batch_size': 16 ,
+        'lr': 1.0e-3
+    },      
+    'diffusion': {
+        'layers': 4, 
+        'channels': 64,
+        'nheads': 8,
+        'diffusion_embedding_dim': 128,
+        'beta_start': 0.0001,
+        'beta_end': 0.5,
+        'num_steps': 50,
+        'schedule': "quad",
+         'is_fast': False,
+    },
+    'model': {
+        'is_unconditional': 0,
+        'timeemb': 128,
+        'featureemb': 16,
+        'target_strategy': "mix", # noise mix
+        'type': 'SAITS',
+        'n_layers': 4,
+        'loss_weight_p': 1,
+        'loss_weight_f': 1,
+        'd_time': n_steps,
+        'n_feature': len(given_features),
+        'd_model': 128,
+        'd_inner': 128,
+        'n_head': 8,
+        'd_k': 64, #len(given_features),
+        'd_v': 64, #len(given_features),
+        'dropout': 0.1,
+        'diagonal_attention_mask': False,
+    },
+    'ablation': {
+        'fde-choice': 'fde-conv-multi',
+        'fde-layers': 4,
+        'is_fde': True,
+        'weight_combine': False,
+        'no-mask': False,
+        'fde-diagonal': True,
+        'is_fde_2nd': False,
+        'reduce-type': 'linear',
+        'is_2nd_block': True
+    }
+}
 # print(f"config: {config_dict_diffsaits}")
 # name = 'fde-conv-multi'
-# model_diff_saits = CSDI_AWN(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
+config_dict_diffsaits['ablation'] = common_config['ablation']
+config_dict_diffsaits['model']['n_layers'] = common_config['n_layers']
+config_dict_diffsaits['name'] = common_config['name']
+name = config_dict_diffsaits['name']
+print(config_dict_diffsaits)
+model_diff_saits = CSDI_AWN(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 
-# filename = f"model_diffsaits_{dataset_name}_{name}_new.pth"
-# print(f"\n\DiffSAITS training starts.....\n")
+filename = f"model_diffsaits_{name}.pth"
+print(f"\n\DiffSAITS training starts.....\n")
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 
-# train(
-#     model_diff_saits,
-#     config_dict_diffsaits["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{filename}",
-#     is_saits=True
-# )
+train(
+    model_diff_saits,
+    config_dict_diffsaits["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{filename}",
+    is_saits=True
+)
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
@@ -224,39 +230,37 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 models = {
     'CSDI': model_csdi,
     # 'SAITS': saits,
-    # 'DiffSAITS': model_diff_saits
+    'DiffSAITS': model_diff_saits
 }
 # mse_folder = f"results_{dataset_name}_{name}_new/metric"
 # data_folder = f"results_{dataset_name}_{name}_new/data"
 name = miss_type
-mse_folder = f"results_{dataset_name}_{name}/metric"
-data_folder = f"results_{dataset_name}_{name}/data"
+mse_folder = f"results_awn_{name}/metric"
+data_folder = f"results_awn_{name}/data"
 
-test_patterns_start = 15001
-num_test_patterns = 5000
+# test_patterns_start = 15001
+# num_test_patterns = 5000
 
-test_pattern_config = {
-    'start': test_patterns_start,
-    'num_patterns': num_test_patterns,
-    'pattern_dir': './data/Daily/miss_pattern'
-}
+# test_pattern_config = {
+#     'start': test_patterns_start,
+#     'num_patterns': num_test_patterns,
+#     'pattern_dir': './data/Daily/miss_pattern'
+# }
 
-evaluate_imputation_all(models=models, trials=20, mse_folder=mse_folder, dataset_name='awn', batch_size=4, pattern=test_pattern_config, test_indices=test_season)
-# lengths = [50, 100, 200]
-# for l in lengths:
-#     print(f"\nlength = {l}")
-#     print(f"\nBlackout:")
-#     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=l, test_indices=test_season)
-    # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True)
+# evaluate_imputation_all(models=models, trials=20, mse_folder=mse_folder, dataset_name='awn', batch_size=4, pattern=test_pattern_config, test_indices=test_season)
+lengths = [50, 100, 200]
+for l in lengths:
+    print(f"\nlength = {l}")
+    print(f"\nBlackout:")
+    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=l, test_indices=test_season)
+    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True)
 
 print(f"\nForecasting:")
 evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=(50, 200), forecasting=True, test_indices=test_season)
-# evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True)
+evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True)
 
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, missing_ratio=ratio, random_trial=True, test_indices=test_season)
-    # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True)
-
-print(f"new, not new_2")
+    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True)
