@@ -60,7 +60,7 @@ config_dict_csdi_pattern = {
 
 config_dict_csdi_random = {
     'train': {
-        'epochs': 3000,
+        'epochs': 5000,
         'batch_size': 8,
         'lr': 1.0e-4
     },      
@@ -71,7 +71,7 @@ config_dict_csdi_random = {
         'diffusion_embedding_dim': 128,
         'beta_start': 0.0001,
         'beta_end': 0.5,
-        'num_steps': 70,
+        'num_steps': 50,
         'schedule': "quad",
         'is_fast': False,
     },
@@ -79,7 +79,7 @@ config_dict_csdi_random = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "mix",
+        'target_strategy': "random",
         'type': 'CSDI',
         'n_layers': 3, 
         'd_time': 252,
@@ -114,16 +114,16 @@ model_folder = "./saved_model_agaid"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 filename = f'model_csdi_{miss_type}.pth'
-# train(
-#     model_csdi,
-#     config_dict_csdi["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=filename
-# )
+train(
+    model_csdi,
+    config_dict_csdi["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=filename
+)
 # nsample = 50
-model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # print(f"CSDI params: {get_num_params(model_csdi)}")
 # evaluate(model_csdi, valid_loader, nsample=nsample, scaler=1, foldername=model_folder)
 

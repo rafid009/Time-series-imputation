@@ -199,6 +199,7 @@ def get_dataloader(filename='ColdHardiness_Grape_Merlot_2.csv', batch_size=16, m
     train_X = np.array(train_X)
     train_X_real = np.reshape(train_X, (-1, len(features)))
     mean, std = np.nanmean(train_X_real, axis=0), np.nanstd(train_X_real, axis=0)
+    print(f"mean: {mean}\nstd: {std}")
     train_dataset = Agaid_Dataset(train_X, mean, std, rate=missing_ratio)
     test_dataset = Agaid_Dataset(test_X, mean, std, rate=missing_ratio, is_test=is_test)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)

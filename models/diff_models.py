@@ -442,17 +442,17 @@ class diff_SAITS_new(nn.Module):
             else:
                 # Old stable better
                 # pre_X_tilde = X_tilde_1
-                if self.ablation_config['is_fde'] and not self.ablation_config['is_first']:
-                    X_tilde_1 = X_tilde_1 + skips_tilde_1
-                else:
-                    X_tilde_1 = X_tilde_1 + skips_tilde_1 + X[:, 1, :, :] # skips_tilde_1 + X[:, 1, :, :] 
+                # if self.ablation_config['is_fde'] and not self.ablation_config['is_first']:
+                #     X_tilde_1 = X_tilde_1 + skips_tilde_1
+                # else:
+                X_tilde_1 = X_tilde_1 + skips_tilde_1 + X[:, 1, :, :] # skips_tilde_1 + X[:, 1, :, :] 
            
             # X_tilde_1 = X_tilde_1 + X[:, 1, :, :]
 
             # second DMSA block
 
             if self.ablation_config['is_fde'] and not self.ablation_config['is_first']:
-                cond_X = X_tilde_1 + X[:,0,:,:] #+ X[:,1,:,:] # (B, L, K)
+                cond_X = X_tilde_1 #+ X[:,0,:,:] #+ X[:,1,:,:] # (B, L, K)
                 if not self.ablation_config['fde-no-mask']:
                     # In one branch, we do not apply the missing mask to the inputs of FDE
                     # and in the other we stack the mask with the input time-series for each feature
