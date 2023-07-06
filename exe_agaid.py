@@ -241,19 +241,19 @@ for l in lengths:
     print(f"length = {l}")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, length=l, test_indices=[32,33], mean=mean, std=std)
     # evaluate_imputation(models, data_folder, length=l, trials=1, data=True)
-    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', length=l, trials=1, batch_size=1, data=True, mean=mean, std=std)
+    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', length=l, trials=1, batch_size=1, test_indices=[33], data=True, mean=mean, std=std)
 
 print(f"\nForecasting:\n")
 evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, length=(30, 150), forecasting=True, test_indices=[32,33], mean=mean, std=std)
     # evaluate_imputation(models, mse_folder=data_folder, length=l, forecasting=True, trials=1, data=True)
-evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='agaid', length=100, trials=1, batch_size=1, data=True, mean=mean, std=std)
+evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='agaid', length=100, trials=1, batch_size=1, test_indices=[33], data=True, mean=mean, std=std)
 
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})\n")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, missing_ratio=ratio, random_trial=True, test_indices=[32,33], mean=mean, std=std)
     # evaluate_imputation(models, mse_folder=data_folder, random_trial=True, trials=1, data=True, missing_ratio=ratio)
-    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, mean=mean, std=std)
+    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', trials=1, batch_size=1, data=True, missing_ratio=ratio, test_indices=[33], random_trial=True, mean=mean, std=std)
 
 
 # print("For All")
