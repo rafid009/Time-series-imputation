@@ -156,7 +156,7 @@ config_dict_diffsaits = {
     'train': {
         'epochs':5000, # 3000 -> ds3
         'batch_size': 16 ,
-        'lr': 1.0e-4
+        'lr': 1.0e-3
     },      
     'diffusion': {
         'layers': 4, 
@@ -173,7 +173,7 @@ config_dict_diffsaits = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "mix", # noise mix
+        'target_strategy': "random", # noise mix
         'type': 'SAITS',
         'n_layers': 4,
         'loss_weight_p': 1,
@@ -253,14 +253,14 @@ for l in lengths:
     print(f"\nlength = {l}")
     print(f"\nBlackout:")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=l, test_indices=test_season)
-    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True)
+    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='awn', length=l, trials=1, batch_size=1, data=True)
 
 print(f"\nForecasting:")
 evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=(50, 200), forecasting=True, test_indices=test_season)
-evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v4', length=l, trials=1, batch_size=1, data=True)
+evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='awn', length=l, trials=1, batch_size=1, data=True)
 
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, missing_ratio=ratio, random_trial=True, test_indices=test_season)
-    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v4', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True)
+    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='awn', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True)
