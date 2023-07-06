@@ -131,8 +131,8 @@ class Agaid_Dataset(Dataset):
         self.gt_masks = []
         self.gt_intact = []
         
-        self.mean = torch.tensor(mean) #, dtype=torch.float32)
-        self.std = torch.tensor(std) #, dtype=torch.float32)
+        self.mean = torch.from_numpy(mean) #, dtype=torch.float32)
+        self.std = torch.from_numpy(std) #, dtype=torch.float32)
 
         # print(f"X: {X.shape} in {'Test' if is_test else 'Train'}")
         
@@ -199,7 +199,7 @@ def get_dataloader(filename='ColdHardiness_Grape_Merlot_2.csv', batch_size=16, m
     train_X = np.array(train_X)
     train_X_real = np.reshape(train_X, (-1, len(features)))
     mean, std = np.nanmean(train_X_real, axis=0), np.nanstd(train_X_real, axis=0)
-    # print(f"mean: {mean}\nstd: {std}")
+    print(f"mean: {mean}\nstd: {std}")
     train_dataset = Agaid_Dataset(train_X, mean, std, rate=missing_ratio)
     test_dataset = Agaid_Dataset(test_X, mean, std, rate=missing_ratio, is_test=is_test)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -221,6 +221,7 @@ def get_testloader(filename='ColdHardiness_Grape_Merlot_2.csv', missing_ratio=0.
         train_season_df = season_df.drop(season_array[-1], axis=0)
         train_season_df = train_season_df.drop(season_array[-2], axis=0)
     mean, std = get_mean_std(train_season_df, features)
+    print(f"mean: {mean}\nstd: {std}")
     X, Y = split_XY(season_df, max_length, season_array, features)
     X = np.expand_dims(X[season_idx], 0)
     if forecastig:
