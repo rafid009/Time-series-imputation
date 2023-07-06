@@ -214,17 +214,17 @@ print(f"\n\DiffSAITS training starts.....\n")
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 
-train(
-    model_diff_saits,
-    config_dict_diffsaits["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename=f"{filename}",
-    is_saits=True
-)
+# train(
+#     model_diff_saits,
+#     config_dict_diffsaits["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename=f"{filename}",
+#     is_saits=True
+# )
 
-# model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 models = {
@@ -234,7 +234,7 @@ models = {
 }
 # mse_folder = f"results_{dataset_name}_{name}_new/metric"
 # data_folder = f"results_{dataset_name}_{name}_new/data"
-name = miss_type
+# name = miss_type
 mse_folder = f"results_awn_{name}/metric"
 data_folder = f"results_awn_{name}/data"
 
@@ -253,14 +253,14 @@ for l in lengths:
     print(f"\nlength = {l}")
     print(f"\nBlackout:")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=l, test_indices=test_season)
-    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='awn', length=l, trials=1, batch_size=1, data=True)
+    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='awn', length=l, trials=1, batch_size=1, data=True, test_indices=test_season)
 
 print(f"\nForecasting:")
 evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=(50, 200), forecasting=True, test_indices=test_season)
-evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='awn', length=l, trials=1, batch_size=1, data=True)
+evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='awn', length=l, trials=1, batch_size=1, data=True, test_indices=test_season)
 
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, missing_ratio=ratio, random_trial=True, test_indices=test_season)
-    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='awn', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True)
+    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='awn', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, test_indices=test_season)
