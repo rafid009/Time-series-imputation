@@ -114,16 +114,16 @@ model_folder = "./saved_model_agaid"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 filename = f'model_csdi_{miss_type}.pth'
-train(
-    model_csdi,
-    config_dict_csdi["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename=filename
-)
+# train(
+#     model_csdi,
+#     config_dict_csdi["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename=filename
+# )
 # nsample = 50
-# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # print(f"CSDI params: {get_num_params(model_csdi)}")
 # evaluate(model_csdi, valid_loader, nsample=nsample, scaler=1, foldername=model_folder)
 
@@ -142,7 +142,8 @@ config_dict_diffsaits = {
         'beta_start': 0.0001,
         'beta_end': 0.5,
         'num_steps': 50,
-        'schedule': "quad"
+        'schedule': "quad",
+        'is_fast': False
     },
     'model': {
         'is_unconditional': 0,
