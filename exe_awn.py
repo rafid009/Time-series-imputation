@@ -154,7 +154,7 @@ print(f"CSDI params: {get_num_params(model_csdi)}")
 
 config_dict_diffsaits = {
     'train': {
-        'epochs':5000, # 3000 -> ds3
+        'epochs':7000, # 3000 -> ds3
         'batch_size': 16 ,
         'lr': 1.0e-3
     },      
@@ -203,7 +203,7 @@ config_dict_diffsaits = {
 # print(f"config: {config_dict_diffsaits}")
 # name = 'fde-conv-multi'
 config_dict_diffsaits['ablation'] = common_config['ablation']
-config_dict_diffsaits['model']['n_layers'] = 3 #common_config['n_layers']
+config_dict_diffsaits['model']['n_layers'] = common_config['n_layers']
 config_dict_diffsaits['name'] = common_config['name']
 
 name = config_dict_diffsaits['name']
@@ -251,17 +251,16 @@ data_folder = f"results_awn_{name}/data"
 # evaluate_imputation_all(models=models, trials=20, mse_folder=mse_folder, dataset_name='awn', batch_size=4, pattern=test_pattern_config, test_indices=test_season)
 lengths = [50, 100, 200]
 for l in lengths:
-    print(f"\nlength = {l}")
-    print(f"\nBlackout:")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=l, test_indices=test_season)
+    print(f"\nBlackout length = {l}")
+    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=16, length=l, test_indices=test_season)
     evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='awn', length=l, trials=1, batch_size=1, data=True, test_indices=test_season)
 
 print(f"\nForecasting:")
-evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, length=(50, 200), forecasting=True, test_indices=test_season)
+evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=16, length=(50, 200), forecasting=True, test_indices=test_season)
 evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='awn', length=l, trials=1, batch_size=1, data=True, test_indices=test_season)
 
 miss_ratios = [0.1, 0.5, 0.9]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=4, missing_ratio=ratio, random_trial=True, test_indices=test_season)
+    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=16, missing_ratio=ratio, random_trial=True, test_indices=test_season)
     evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='awn', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, test_indices=test_season)
