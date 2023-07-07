@@ -203,8 +203,9 @@ config_dict_diffsaits = {
 # print(f"config: {config_dict_diffsaits}")
 # name = 'fde-conv-multi'
 config_dict_diffsaits['ablation'] = common_config['ablation']
-config_dict_diffsaits['model']['n_layers'] = common_config['n_layers']
+config_dict_diffsaits['model']['n_layers'] = 3 #common_config['n_layers']
 config_dict_diffsaits['name'] = common_config['name']
+
 name = config_dict_diffsaits['name']
 print(config_dict_diffsaits)
 model_diff_saits = CSDI_AWN(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
@@ -214,17 +215,17 @@ print(f"\n\DiffSAITS training starts.....\n")
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 
-# train(
-#     model_diff_saits,
-#     config_dict_diffsaits["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{filename}",
-#     is_saits=True
-# )
+train(
+    model_diff_saits,
+    config_dict_diffsaits["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{filename}",
+    is_saits=True
+)
 
-model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 models = {
