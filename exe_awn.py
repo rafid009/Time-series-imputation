@@ -156,7 +156,7 @@ config_dict_diffsaits = {
     'train': {
         'epochs':7000, # 3000 -> ds3
         'batch_size': 16 ,
-        'lr': 1.0e-4
+        'lr': 1.0e-3
     },      
     'diffusion': {
         'layers': 4, 
@@ -164,7 +164,7 @@ config_dict_diffsaits = {
         'nheads': 8,
         'diffusion_embedding_dim': 128,
         'beta_start': 0.0001,
-        'beta_end': 0.5,
+        'beta_end': 0.7,
         'num_steps': 50,
         'schedule': "quad",
          'is_fast': False,
