@@ -172,22 +172,22 @@ name = config_dict_diffsaits['name']
 print(config_dict_diffsaits)
 # model_diff_saits_simple = CSDI_Agaid(config_dict, device, is_simple=True).to(device)
 model_diff_saits = CSDI_Agaid(config_dict_diffsaits, device, is_simple=False).to(device)
-filename = f'model_diff_saits_{name}.pth'
+filename = f'model_diff_saits_{name}_1.pth'
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # 
-# train(
-#     model_diff_saits,
-#     config_dict_diffsaits["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{filename}",
-#     is_saits=True,
-#     data_type='agaid'
-# )
+train(
+    model_diff_saits,
+    config_dict_diffsaits["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{filename}",
+    is_saits=True,
+    data_type='agaid'
+)
 nsample = 50
-model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 
