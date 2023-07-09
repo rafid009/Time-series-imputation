@@ -6,13 +6,14 @@ import yaml
 import os
 from datasets.dataset_pm25 import get_dataloader
 from models.main_model import CSDI_PM25
+from config_ablation import common_config
 from utils.utils import train, evaluate_imputation_all, get_num_params
 import pickle
 import numpy as np
 from pypots.imputation import SAITS
 
 
-miss_pattern = 'pattern'
+miss_pattern = 'random'
 args = {
     'config': 'base.yaml',
     'device': 'cuda:0',
@@ -63,9 +64,9 @@ train_loader, valid_loader, test_loader, scaler, mean_scaler = get_dataloader(
 
 config['model']['type'] = 'CSDI'
 config['diffusion']['is_fast'] = False
-config['model']['num_patterns'] = 20000
-config['model']['num_val_patterns'] = 5000
-config['model']['pattern_dir'] = './data/pm25/miss_patterns'
+# config['model']['num_patterns'] = 20000
+# config['model']['num_val_patterns'] = 5000
+# config['model']['pattern_dir'] = './data/pm25/miss_patterns'
 
 model_csdi = CSDI_PM25(config, args['device']).to(args['device'])
 
@@ -83,59 +84,63 @@ train(
     filename=filename
 )
 # model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-# config_dict_diffsaits = {
-#     'train': {
-#         'epochs': 3500,
-#         'batch_size': 16 ,
-#         'lr': 1.0e-4
-#     },      
-#     'diffusion': {
-#         'layers': 4, 
-#         'channels': 64,
-#         'nheads': 8,
-#         'diffusion_embedding_dim': 128,
-#         'beta_start': 0.0001,
-#         'beta_end': 0.5,
-#         'num_steps': 50,
-#         'schedule': "quad"
-#     },
-#     'model': {
-#         'is_unconditional': 0,
-#         'timeemb': 128,
-#         'featureemb': 16,
-#         'target_strategy': "mix",
-#         'type': 'SAITS',
-#         'n_layers': 3,
-#         'loss_weight_p': 0.5,
-#         'loss_weight_f': 1,
-#         'd_time': 36,
-#         'n_feature': 36, #len(attributes),
-#         'd_model': 128,
-#         'd_inner': 128,
-#         'n_head': 8,
-#         'd_k': 64,
-#         'd_v': 64,
-#         'dropout': 0.1,
-#         'diagonal_attention_mask': False
-#     }
-# }
-# print(f"config: {config_dict_diffsaits}")
-# model_diff_saits = CSDI_PM25(config_dict_diffsaits, args['device'], is_simple=False).to(args['device'])
-# # filename_simple = 'model_diff_saits_simple.pth'
-# filename = 'model_diff_saits_pm25.pth'
+config_dict_diffsaits = {
+    'train': {
+        'epochs': 3500,
+        'batch_size': 16 ,
+        'lr': 1.0e-4
+    },      
+    'diffusion': {
+        'layers': 4, 
+        'channels': 64,
+        'nheads': 8,
+        'diffusion_embedding_dim': 128,
+        'beta_start': 0.0001,
+        'beta_end': 0.7,
+        'num_steps': 50,
+        'schedule': "quad"
+    },
+    'model': {
+        'is_unconditional': 0,
+        'timeemb': 128,
+        'featureemb': 16,
+        'target_strategy': "mix",
+        'type': 'SAITS',
+        'n_layers': 3,
+        'loss_weight_p': 0.5,
+        'loss_weight_f': 1,
+        'd_time': 36,
+        'n_feature': 36, #len(attributes),
+        'd_model': 128,
+        'd_inner': 128,
+        'n_head': 8,
+        'd_k': 64,
+        'd_v': 64,
+        'dropout': 0.1,
+        'diagonal_attention_mask': False
+    }
+}
+config_dict_diffsaits['ablation'] = common_config['ablation']
+config_dict_diffsaits['model']['n_layers'] = common_config['n_layers']
+config_dict_diffsaits['name'] = common_config['name']
+name = config_dict_diffsaits['name']
+print(f"config: {config_dict_diffsaits}")
+model_diff_saits = CSDI_PM25(config_dict_diffsaits, args['device'], is_simple=False).to(args['device'])
+# filename_simple = 'model_diff_saits_simple.pth'
+filename = f'model_diff_saits_pm25_{name}.pth'
 
 # # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # # 
-# train(
-#     model_diff_saits,
-#     config_dict_diffsaits["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{filename}",
-#     is_saits=True,
-#     data_type='pm25'
-# )
+train(
+    model_diff_saits,
+    config_dict_diffsaits["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{filename}",
+    is_saits=True,
+    data_type='pm25'
+)
 # nsample = 100
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
@@ -175,10 +180,10 @@ train(
 models = {
     'CSDI': model_csdi,
     # 'SAITS': saits,
-    # 'DiffSAITS': model_diff_saits
+    'DiffSAITS': model_diff_saits
 }
-mse_folder = "results_pm25"
-data_folder = "results_pm25_data"
+mse_folder = f"results_pm25_{name}/metric"
+data_folder = f"results_pm25_{name}/data"
 
 test_patterns_start = 25001
 num_test_patterns = 5000
