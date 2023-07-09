@@ -912,3 +912,4 @@ def clip_pattern_mask(mask):
     mask = np.where(mask < 0, 0, mask)
     mask = np.where(mask > 1, 1, mask)
     return np.round(mask)
+

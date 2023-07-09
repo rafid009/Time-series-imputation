@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader, Dataset
 import os
 from datasets.synthetic_data import create_synthetic_data, create_synthetic_data_v2, create_synthetic_data_v3, create_synthetic_data_v4, create_synthetic_data_v5, create_synthetic_data_v6, create_synthetic_data_v7
 
-def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=None, forward_trial=-1, lte_idx=None, random_trial=False, pattern=None):
+def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=None, forward_trial=-1, lte_idx=None, random_trial=False, pattern=None, partial_bm=None):
     """Get mask of random points (missing at random) across channels based on k,
     where k == number of data points. Mask of sample's shape where 0's to be imputed, and 1's to preserved
     as per ts imputers"""
@@ -89,7 +89,7 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
     return obs_data, obs_mask, mask, sample, gt_intact
 
 class Synth_Dataset(Dataset):
-    def __init__(self, n_steps, n_features, num_seasons, rate=0.1, is_test=False, length=100, exclude_features=None, seed=10, forward_trial=-1, is_mcar=False, is_col_miss=None, random_trial=False, v2='v1', noise=False, mean=None, std=None, pattern=None) -> None:
+    def __init__(self, n_steps, n_features, num_seasons, rate=0.1, is_test=False, length=100, exclude_features=None, seed=10, forward_trial=-1, is_mcar=False, is_col_miss=None, random_trial=False, v2='v1', noise=False, mean=None, std=None, pattern=None, partial_bm=None) -> None:
         super().__init__()
         self.eval_length = n_steps
         self.observed_values = []

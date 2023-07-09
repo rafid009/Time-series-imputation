@@ -75,15 +75,15 @@ filename = "model_csdi_pm25.pth"
 if not os.path.isdir(model_folder):
     os.makedirs(model_folder)
 
-train(
-    model_csdi,
-    config["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename=filename
-)
-# model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# train(
+#     model_csdi,
+#     config["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename=filename
+# )
+model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 config_dict_diffsaits = {
     'train': {
         'epochs': 3500,
@@ -98,7 +98,8 @@ config_dict_diffsaits = {
         'beta_start': 0.0001,
         'beta_end': 0.7,
         'num_steps': 50,
-        'schedule': "quad"
+        'schedule': "quad",
+        'is_fast': False
     },
     'model': {
         'is_unconditional': 0,
