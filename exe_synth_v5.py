@@ -196,7 +196,7 @@ model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # print(f"num param time: {end - start}")
 
 models = {
-    # 'CSDI': model_csdi,
+    'CSDI': model_csdi,
     # 'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }
