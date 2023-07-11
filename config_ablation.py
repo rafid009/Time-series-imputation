@@ -30,8 +30,8 @@ common_config = {
 }
 
 partial_bm_config = {
-    'features': 1,
-    'length_range': (10, 50),
+    'features': 2,
+    'length_range': (10, 30),
     'n_chunks': 2
 }
 
