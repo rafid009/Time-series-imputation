@@ -26,7 +26,7 @@ common_config = {
         'is_first': True,
         'is_dual': False,
     },
-    'name': 'skip_fde_1st_mask_pos_enc_loss_p_bm2'
+    'name': 'skip_fde_1st_mask_pos_enc_loss_p_bm'
 }
 
 partial_bm_config = {

@@ -200,8 +200,8 @@ models = {
     # 'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }
-mse_folder = f"results_synth_v5_{name}_new/metric"
-data_folder = f"results_synth_v5_{name}_new/data"
+mse_folder = f"results_synth_v5_{name}2_new/metric"
+data_folder = f"results_synth_v5_{name}2_new/data"
 
 evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v5', batch_size=32, mean=mean, std=std, partial_bm_config=partial_bm_config)
 

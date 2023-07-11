@@ -196,8 +196,8 @@ models = {
     # 'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }
-mse_folder = f"results_synth_v2_{name}_new/metric"
-data_folder = f"results_synth_v2_{name}_new/data"
+mse_folder = f"results_synth_v2_{name}2_new/metric"
+data_folder = f"results_synth_v2_{name}2_new/data"
 
 
 # test_patterns_start = 15001
