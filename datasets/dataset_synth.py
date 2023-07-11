@@ -64,7 +64,7 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
     elif partial_bm_config is not None:
         total_features = np.arange(sample.shape[1])
         features = np.random.choice(total_features, partial_bm_config['features'])
-        obs_data, mask, sample, gt_intact = partial_bm(sample, features, partial_bm_config['length_range'], partial_bm_config['n_chunks'])
+        obs_data, mask, gt_intact = partial_bm(sample, features, partial_bm_config['length_range'], partial_bm_config['n_chunks'])
     elif forward_trial != -1:
         indices = np.where(~np.isnan(sample[:, lte_idx]))[0].tolist()
         start = indices[forward_trial]
