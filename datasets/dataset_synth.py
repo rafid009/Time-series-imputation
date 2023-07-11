@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
 import os
-from utils.utils import partial_bm
+from config_ablation import partial_bm
 from datasets.synthetic_data import create_synthetic_data, create_synthetic_data_v2, create_synthetic_data_v3, create_synthetic_data_v4, create_synthetic_data_v5, create_synthetic_data_v6, create_synthetic_data_v7
 
 def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=None, forward_trial=-1, lte_idx=None, random_trial=False, pattern=None, partial_bm_config=None):
