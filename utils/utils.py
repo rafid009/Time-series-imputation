@@ -19,6 +19,7 @@ import math
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 matplotlib.rc('xtick', labelsize=20) 
 matplotlib.rc('ytick', labelsize=20) 
+np.set_printoptions(threshold=sys.maxsize)
 
 def get_num_params(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -543,7 +544,7 @@ def evaluate_imputation(models, mse_folder, exclude_key='', exclude_features=Non
                     samples_diff_saits_median = samples_diff_saits.median(dim=1)
                     samples_diff_saits_mean = samples_diff_saits.mean(dim=1)
                     samples_diff_saits_mean_med = torch.mean(torch.stack([samples_diff_saits_median, samples_diff_saits_mean], dimn=1), dim=1)
-
+                print(f"target: {c_target}")
                 # gt_intact = gt_intact.squeeze(axis=0)
                 saits_X = gt_intact #test_batch['obs_data_intact']
                 saits_output = models['SAITS'].impute(saits_X)
@@ -764,7 +765,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
                 samples_diff_saits_mean = samples_diff_saits.mean(dim=1)
                 samples_diff_saits_mean_med = torch.mean(torch.stack([samples_diff_saits_median.values, samples_diff_saits_mean], dim=1), dim=1)
 
-            
+            print(f"c_target: {c_target}")
             if 'SAITS' in models.keys():
                 gt_intact = gt_intact.squeeze(axis=0)
                 saits_X = gt_intact #test_batch['obs_data_intact']
