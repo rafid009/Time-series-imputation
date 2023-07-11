@@ -94,7 +94,7 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
     return obs_data, obs_mask, mask, sample, gt_intact
 
 class Synth_Dataset(Dataset):
-    def __init__(self, n_steps, n_features, num_seasons, rate=0.1, is_test=False, length=100, exclude_features=None, seed=10, forward_trial=-1, is_mcar=False, is_col_miss=None, random_trial=False, v2='v1', noise=False, mean=None, std=None, pattern=None, partial_bm=None) -> None:
+    def __init__(self, n_steps, n_features, num_seasons, rate=0.1, is_test=False, length=100, exclude_features=None, seed=10, forward_trial=-1, is_mcar=False, is_col_miss=None, random_trial=False, v2='v1', noise=False, mean=None, std=None, pattern=None, partial_bm_config=None) -> None:
         super().__init__()
         self.eval_length = n_steps
         self.observed_values = []
@@ -139,7 +139,7 @@ class Synth_Dataset(Dataset):
         #             include_features.append(feats.index(feature))
 
         for i in range(X.shape[0]):
-            obs_val, obs_mask, mask, sample, obs_intact = parse_data(X[i], rate, is_test, length, include_features=include_features, forward_trial=forward_trial, random_trial=random_trial, pattern=pattern, partial_bm_config=partial_bm)
+            obs_val, obs_mask, mask, sample, obs_intact = parse_data(X[i], rate, is_test, length, include_features=include_features, forward_trial=forward_trial, random_trial=random_trial, pattern=pattern, partial_bm_config=partial_bm_config)
             self.observed_values.append(obs_val)
             self.observed_masks.append(obs_mask)
             self.gt_masks.append(mask)
