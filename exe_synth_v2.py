@@ -19,6 +19,7 @@ matplotlib.rc('xtick', labelsize=20)
 matplotlib.rc('ytick', labelsize=20) 
 # torch.manual_seed(42)
 np.set_printoptions(threshold=sys.maxsize)
+torch.set_printoptions(threshold=torch.inf)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

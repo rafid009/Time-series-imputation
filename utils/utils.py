@@ -20,6 +20,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 matplotlib.rc('xtick', labelsize=20) 
 matplotlib.rc('ytick', labelsize=20) 
 np.set_printoptions(threshold=sys.maxsize)
+torch.set_printoptions(threshold=torch.inf)
 
 def get_num_params(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -765,7 +766,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
                 samples_diff_saits_mean = samples_diff_saits.mean(dim=1)
                 samples_diff_saits_mean_med = torch.mean(torch.stack([samples_diff_saits_median.values, samples_diff_saits_mean], dim=1), dim=1)
 
-            print(f"c_target: {c_target}")
+            print(f"c_target: {c_target}\nmask: {eval_points}")
             if 'SAITS' in models.keys():
                 gt_intact = gt_intact.squeeze(axis=0)
                 saits_X = gt_intact #test_batch['obs_data_intact']
