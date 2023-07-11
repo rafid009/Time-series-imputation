@@ -30,7 +30,7 @@ common_config = {
 partial_bm_config = {
     'features': 1,
     'length_range': (5, 15),
-    'chunks': 2
+    'n_chunks': 2
 }
 
 def partial_bm(sample, selected_features, length_range, n_chunks):
