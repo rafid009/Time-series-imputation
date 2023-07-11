@@ -61,7 +61,7 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
         mask = ~np.isnan(values)
         gt_intact = values
         obs_data = np.nan_to_num(evals, copy=True)
-    if partial_bm_config is not None:
+    elif partial_bm_config is not None:
         total_features = np.arange(sample.shape[1])
         features = np.random.choice(total_features, partial_bm_config['features'])
         obs_data, mask, sample, gt_intact = partial_bm(sample, features, partial_bm_config['length_range'], partial_bm_config['n_chunks'])
