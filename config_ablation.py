@@ -48,8 +48,8 @@ def partial_bm(sample, selected_features, length_range, n_chunks):
     # print(f"mask: {mask[selected_features][s_nan[0]:(s_nan[-1] + 1)]}")
     for chunk in range(n_chunks):
         # mask[selected_features][s_nan[chunk][0]:s_nan[chunk][-1] + 1] = 0
-        gt_intact[selected_features][s_nan[chunk][0]:s_nan[chunk][-1] + 1] = np.nan
-        print(f"gt: {gt_intact}\ngt_snan: {gt_intact[selected_features][s_nan[chunk][0]:s_nan[chunk][-1] + 1]}")
+        gt_intact[s_nan[chunk][0]:s_nan[chunk][-1] + 1, selected_features] = np.nan
+        print(f"gt: {gt_intact}\ngt_snan: {gt_intact[s_nan[chunk][0]:s_nan[chunk][-1] + 1, selected_features]}")
     obs_data = np.nan_to_num(sample, copy=True)
     mask = ~np.isnan(gt_intact) * 1.0
     print(f"mask 1: {mask}")
