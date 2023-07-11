@@ -23,3 +23,9 @@ common_config = {
     },
     'name': 'skip_fde_1st_mask_pos_enc_loss_p'
 }
+
+partial_bm_config = {
+    'features': 1,
+    'length_range': (5, 15),
+    'chunks': 2
+}

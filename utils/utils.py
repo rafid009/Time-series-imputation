@@ -675,7 +675,7 @@ def evaluate_imputation(models, mse_folder, exclude_key='', exclude_features=Non
         out_file.close()
 
 
-def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, trials=10, length=-1, random_trial=False, forecasting=False, missing_ratio=0.01, test_indices=None, data=False, noise=False, filename='data/Daily/data_yy.npy', is_yearly=True, n_steps=366, pattern=None, mean=None, std=None):  
+def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, trials=10, length=-1, random_trial=False, forecasting=False, missing_ratio=0.01, test_indices=None, data=False, noise=False, filename='data/Daily/data_yy.npy', is_yearly=True, n_steps=366, pattern=None, mean=None, std=None, partial_bm_config=None):  
     nsample = 50
     if 'CSDI' in models.keys():
         models['CSDI'].eval()
@@ -706,17 +706,17 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
         if dataset_name == 'synth':
             test_loader = get_testloader_synth(n_steps=100, n_features=7, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting)
         elif dataset_name == 'synth_v2':
-            test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v2', noise=noise, mean=mean, std=std)
+            test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v2', noise=noise, mean=mean, std=std, partial_bm_config=partial_bm_config)
         elif dataset_name == 'synth_v3':
-            test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v3', noise=noise, mean=mean, std=std, pattern=pattern)
+            test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v3', noise=noise, mean=mean, std=std, pattern=pattern, partial_bm_config=partial_bm_config)
         elif dataset_name == 'synth_v4':
-            test_loader = get_testloader_synth(n_steps=100, n_features=4, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v4', noise=noise, mean=mean, std=std)
+            test_loader = get_testloader_synth(n_steps=100, n_features=4, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v4', noise=noise, mean=mean, std=std, partial_bm_config=partial_bm_config)
         elif dataset_name == 'synth_v5':
-            test_loader = get_testloader_synth(n_steps=100, n_features=6, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v5', noise=noise, mean=mean, std=std)
+            test_loader = get_testloader_synth(n_steps=100, n_features=6, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v5', noise=noise, mean=mean, std=std, partial_bm_config=partial_bm_config)
         elif dataset_name == 'synth_v6':
-            test_loader = get_testloader_synth(n_steps=100, n_features=5, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v6', noise=noise, mean=mean, std=std)
+            test_loader = get_testloader_synth(n_steps=100, n_features=5, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v6', noise=noise, mean=mean, std=std, partial_bm_config=partial_bm_config)
         elif dataset_name == 'synth_v7':
-            test_loader = get_testloader_synth(n_steps=100, n_features=4, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v7', noise=noise, mean=mean, std=std)
+            test_loader = get_testloader_synth(n_steps=100, n_features=4, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v7', noise=noise, mean=mean, std=std, partial_bm_config=partial_bm_config)
         elif dataset_name == 'awn':
             test_loader = get_testloader_awn(filename, is_year=is_yearly, n_steps=n_steps, batch_size=batch_size, missing_ratio=missing_ratio, seed=(s + trial), test_index=test_indices, length=length, forecasting=forecasting, random_trial=random_trial, pattern=pattern)
         elif dataset_name == 'physio':
@@ -913,3 +913,34 @@ def clip_pattern_mask(mask):
     mask = np.where(mask > 1, 1, mask)
     return np.round(mask)
 
+def partial_bm(sample, selected_features, length_range, n_chunks):
+    length = np.random.randint(length_range[0], length_range[1] + 1)
+    k = length
+    mask = np.ones(sample.shape)
+    length_index = torch.tensor(range(mask.shape[0]))
+    list_of_segments_index = torch.split(length_index, k)
+    s_nan = np.random.choice(list_of_segments_index, n_chunks, replace=False)
+    mask[selected_features, s_nan[0]:s_nan[-1] + 1] = 0
+    gt_intact = sample.copy()
+    gt_intact[selected_features, s_nan[0]:s_nan[-1] + 1] = np.nan
+    obs_data = np.nan_to_num(sample, copy=True)
+    return obs_data, mask, sample, gt_intact
+
+
+
+    # a = np.arange(sample.shape[0] - length)
+    # start_idx = np.random.choice(a)
+    # # print(f"random choice: {start_idx}")
+    # end_idx = start_idx + length
+    # obs_data_intact = sample.copy()
+    # if include_features is None or len(include_features) == 0:
+    #     obs_data_intact[start_idx:end_idx, :] = np.nan
+    # else:
+    #     obs_data_intact[start_idx:end_idx, include_features] = np.nan
+    # mask = ~np.isnan(obs_data_intact)
+    # gt_intact = obs_data_intact
+    # obs_data = np.nan_to_num(evals, copy=True)
+    # obs_data = obs_data.reshape(shp)
+    #     # obs_intact = np.nan_to_num(obs_intact, copy=True)
+    # # print(f"\n\nobs data 1: {obs_data}")
+    # return obs_data, obs_mask, mask, sample, gt_intact

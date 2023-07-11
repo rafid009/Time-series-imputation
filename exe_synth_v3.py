@@ -13,7 +13,7 @@ from datasets.synthetic_data import feats_v3
 import json
 from json import JSONEncoder
 import math
-from config_ablation import common_config
+from config_ablation import common_config, partial_bm_config
 matplotlib.rc('xtick', labelsize=20) 
 matplotlib.rc('ytick', labelsize=20) 
 # torch.manual_seed(42)
@@ -120,7 +120,7 @@ config_dict_diffsaits = {
         'nheads': 8,
         'diffusion_embedding_dim': 128,
         'beta_start': 0.0001,
-        'beta_end': 0.7,
+        'beta_end': 0.5,
         'num_steps': 50,
         'schedule': "quad",
          'is_fast': False,
@@ -192,7 +192,7 @@ train(
 # print(f"DiffSAITS params: {get_num_params(model_diff_saits)}")
 
 models = {
-    # 'CSDI': model_csdi,
+    'CSDI': model_csdi,
     # 'SAITS': saits,
     'DiffSAITS': model_diff_saits
 }
@@ -211,20 +211,22 @@ data_folder = f"results_synth_v3_{name}_new/data"
 # }
 
 # evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, pattern=test_pattern_config, mean=mean, std=std)
+evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, mean=mean, std=std, partial_bm_config=partial_bm_config)
 
-lengths = [10, 50, 90]
-for l in lengths:
-    print(f"\nlength = {l}")
-    print(f"\nBlackout:")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, length=l, noise=noise, mean=mean, std=std)
-    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v3', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
-print(f"\nForecasting:")
-evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
-evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v3', length=l, trials=1, batch_size=1, data=True, noise=noise)
+# lengths = [10, 50, 90]
+# for l in lengths:
+#     print(f"\nlength = {l}")
+#     print(f"\nBlackout:")
+#     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, length=l, noise=noise, mean=mean, std=std)
+#     evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v3', length=l, trials=1, batch_size=1, data=True, noise=noise)
 
-miss_ratios = [0.1, 0.5, 0.9]
-for ratio in miss_ratios:
-    print(f"\nRandom Missing: ratio ({ratio})")
-    evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise, mean=mean, std=std)
-    evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v3', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, noise=noise)
+# print(f"\nForecasting:")
+# evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
+# evaluate_imputation_all(models=models, mse_folder=data_folder, forecasting=True, dataset_name='synth_v3', length=l, trials=1, batch_size=1, data=True, noise=noise)
+
+# miss_ratios = [0.1, 0.5, 0.9]
+# for ratio in miss_ratios:
+#     print(f"\nRandom Missing: ratio ({ratio})")
+#     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='synth_v3', batch_size=32, missing_ratio=ratio, random_trial=True, noise=noise, mean=mean, std=std)
+#     evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='synth_v3', trials=1, batch_size=1, data=True, missing_ratio=ratio, random_trial=True, noise=noise)
