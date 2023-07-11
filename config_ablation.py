@@ -39,7 +39,7 @@ def partial_bm(sample, selected_features, length_range, n_chunks):
     length = np.random.randint(length_range[0], length_range[1] + 1)
     k = length
     # mask = ~np.isnan(sample) * 1.0
-    length_index = torch.tensor(range(mask.shape[0]))
+    length_index = torch.tensor(range(sample.shape[0]))
     list_of_segments_index = torch.split(length_index, k)
     s_nan = np.random.choice(list_of_segments_index, n_chunks, replace=False)
     gt_intact = sample.copy()
