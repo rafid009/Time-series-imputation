@@ -1,5 +1,7 @@
 import numpy as np
 import torch
+np.set_printoptions(threshold=np.inf)
+torch.set_printoptions(threshold=torch.inf)
 
 common_config = {
     'n_layers': 4,
@@ -29,7 +31,7 @@ common_config = {
 
 partial_bm_config = {
     'features': 1,
-    'length_range': (5, 15),
+    'length_range': (10, 50),
     'n_chunks': 2
 }
 
@@ -48,4 +50,5 @@ def partial_bm(sample, selected_features, length_range, n_chunks):
         mask[selected_features][s_nan[chunk][0]:s_nan[chunk][-1] + 1] = 0
         gt_intact[selected_features][s_nan[chunk][0]:s_nan[chunk][-1] + 1] = np.nan
     obs_data = np.nan_to_num(sample, copy=True)
+    print(f"mask 1: {mask}")
     return obs_data, mask, gt_intact
