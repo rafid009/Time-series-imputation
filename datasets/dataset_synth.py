@@ -177,7 +177,7 @@ class Synth_Dataset(Dataset):
 
 def get_dataloader(n_steps, n_features, num_seasons, batch_size=16, missing_ratio=0.1, seed=10, is_test=False, v2='v1',  noise=False, is_mcar=False, is_col_miss=None):
     np.random.seed(seed=seed)
-    train_dataset = Synth_Dataset(n_steps, n_features, num_seasons, rate=missing_ratio, seed=seed, v2=v2, noise=noise, is_mcar=is_mcar, is_col_miss=is_col_miss)
+    train_dataset = Synth_Dataset(n_steps, n_features, num_seasons, rate=missing_ratio, seed=seed, v2=v2, noise=noise, is_mcar=is_mcar, is_col_miss=is_col_miss, is_test=is_test)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     synth_dir = f"./data/synth/{v2}"
     if os.path.exists(f"{synth_dir}/mean.npy"):
