@@ -766,7 +766,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
                 samples_diff_saits_mean = samples_diff_saits.mean(dim=1)
                 samples_diff_saits_mean_med = torch.mean(torch.stack([samples_diff_saits_median.values, samples_diff_saits_mean], dim=1), dim=1)
 
-            print(f"c_target: {c_target}\nmask: {eval_points}")
+            print(f"c_target: {gt_intact}\nmask: {eval_points}")
             if 'SAITS' in models.keys():
                 gt_intact = gt_intact.squeeze(axis=0)
                 saits_X = gt_intact #test_batch['obs_data_intact']
