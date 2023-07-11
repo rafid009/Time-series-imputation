@@ -15,7 +15,7 @@ import matplotlib
 from models.main_model import CSDI_Agaid
 from pypots.imputation import SAITS
 import math
-
+import sys
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 matplotlib.rc('xtick', labelsize=20) 
 matplotlib.rc('ytick', labelsize=20) 
