@@ -41,7 +41,8 @@ def partial_bm(sample, selected_features, length_range, n_chunks):
     list_of_segments_index = torch.split(length_index, k)
     s_nan = np.random.choice(list_of_segments_index, n_chunks, replace=False)
     print(f"feats: {mask[selected_features]}")
-    print(f"mask: {mask[selected_features][s_nan[0]:s_nan[-1] + 1]}")
+    print(f"snan: {s_nan}")
+    print(f"mask: {mask[selected_features][s_nan[0]:(s_nan[-1] + 1)]}")
     mask[selected_features][s_nan[0]:s_nan[-1] + 1] = 0
     gt_intact = sample.copy()
     gt_intact[selected_features, s_nan[0]:s_nan[-1] + 1] = np.nan
