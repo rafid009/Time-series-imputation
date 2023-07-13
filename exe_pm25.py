@@ -86,9 +86,9 @@ if not os.path.isdir(model_folder):
 model_csdi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 config_dict_diffsaits = {
     'train': {
-        'epochs': 3500,
+        'epochs': 3000,
         'batch_size': 16 ,
-        'lr': 1.0e-4
+        'lr': 1.0e-3
     },      
     'diffusion': {
         'layers': 4, 
@@ -96,7 +96,7 @@ config_dict_diffsaits = {
         'nheads': 8,
         'diffusion_embedding_dim': 128,
         'beta_start': 0.0001,
-        'beta_end': 0.7,
+        'beta_end': 0.5,
         'num_steps': 50,
         'schedule': "quad",
         'is_fast': False
@@ -186,17 +186,17 @@ models = {
 mse_folder = f"results_pm25_{name}/metric"
 data_folder = f"results_pm25_{name}/data"
 
-test_patterns_start = 25001
-num_test_patterns = 5000
+# test_patterns_start = 25001
+# num_test_patterns = 5000
 
-test_pattern_config = {
-    'start': test_patterns_start,
-    'num_patterns': num_test_patterns,
-    'pattern_dir': config['model']['pattern_dir']
-}
+# test_pattern_config = {
+#     'start': test_patterns_start,
+#     'num_patterns': num_test_patterns,
+#     'pattern_dir': config['model']['pattern_dir']
+# }
 
-evaluate_imputation_all(models=models, trials=5, mse_folder=mse_folder, dataset_name='pm25', batch_size=32, test_indices=test_loader, pattern=test_pattern_config)
 evaluate_imputation_all(models=models, trials=5, mse_folder=mse_folder, dataset_name='pm25', batch_size=32, test_indices=test_loader)
+# evaluate_imputation_all(models=models, trials=5, mse_folder=mse_folder, dataset_name='pm25', batch_size=32, test_indices=test_loader)
 
 # lengths = [10, 20, 30]
 # for l in lengths:
